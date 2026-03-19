@@ -193,11 +193,12 @@ for row in ws3.iter_rows(min_row=2, values_only=True):
     for field, idx in PAPER_FIELDS:
         paper_obj[field] = clean(row[idx])
 
-    papers_new.append(paper_obj)
-
-    # 算法分类（X列，index 23）
+    # 算法分类（X列，index 23）直接写入 paper 对象
     algo_tags = split_algo_tags(row[23])
+    paper_obj["algo_tags"] = algo_tags
     paper_algo[str(pid_int)] = algo_tags
+
+    papers_new.append(paper_obj)
 
 papers_new.sort(key=lambda p: p["paper_id"])
 print(f"Sheet3 解析完成：{len(papers_new)} 篇文献，"
@@ -275,9 +276,11 @@ print(f"\n✅ 同步完成！")
 print(f"   items  : {len(new_items)} 条")
 print(f"   papers : {len(papers_new)} 篇 (原 {len(existing['papers'])} 篇)")
 
-# 验证 paper_models 填充情况
-filled = sum(1 for item in new_items if item["paper_models"])
-print(f"   paper_models 非空: {filled}/{len(new_items)} 条")
+# 验证 paper_models / algo_tags 填充情况
+filled_items   = sum(1 for item in new_items if item["paper_models"])
+filled_papers  = sum(1 for p in papers_new if p["algo_tags"])
+print(f"   items  paper_models 非空: {filled_items}/{len(new_items)} 条")
+print(f"   papers algo_tags    非空: {filled_papers}/{len(papers_new)} 篇")
 
 # 打印 paper_models 样例
 print("\n── paper_models 样例（前3条非空）──")
