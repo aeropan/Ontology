@@ -1705,6 +1705,63 @@
       gap: 4px;
     }
 
+    /* ═══ MODEL DIAGRAM – extra input-node colors (新增) ═══ */
+    .input-node.n-amber {
+      border-color: rgba(251, 191, 36, 0.35);
+      background: rgba(251, 191, 36, 0.08);
+      color: #fbbf24;
+    }
+    .input-node.n-emerald {
+      border-color: rgba(52, 211, 153, 0.35);
+      background: rgba(52, 211, 153, 0.08);
+      color: #34d399;
+    }
+    .input-node.n-rose {
+      border-color: rgba(244, 63, 94, 0.35);
+      background: rgba(244, 63, 94, 0.08);
+      color: #f43f5e;
+    }
+    .input-node.n-violet {
+      border-color: rgba(139, 92, 246, 0.35);
+      background: rgba(139, 92, 246, 0.08);
+      color: #8b5cf6;
+    }
+
+    /* ═══ ALGO GROUP BOXES ═══ */
+    .algo-group-box {
+      border-radius: 10px;
+      border: 1px solid;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+    }
+    .algo-group-box.algo-xingque {
+      border-color: rgba(56, 189, 248, 0.3);
+      background: rgba(56, 189, 248, 0.04);
+    }
+    .algo-group-box.algo-classic {
+      border-color: rgba(251, 191, 36, 0.25);
+      background: rgba(251, 191, 36, 0.03);
+    }
+    .algo-group-label {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 7px;
+      text-align: center;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-family: var(--mono);
+    }
+    .role-box.r-ts   { border-color:rgba(56,189,248,0.25);  background:rgba(56,189,248,0.05);  color:#38bdf8; }
+    .role-box.r-ml   { border-color:rgba(168,85,247,0.25);  background:rgba(168,85,247,0.05);  color:#a855f7; }
+    .role-box.r-dl   { border-color:rgba(52,211,153,0.25);  background:rgba(52,211,153,0.05);  color:#34d399; }
+    .role-box.r-stgnn{ border-color:rgba(251,146,60,0.25);  background:rgba(251,146,60,0.05);  color:#fb923c; }
+    .role-box.r-ens  { border-color:rgba(251,191,36,0.25);  background:rgba(251,191,36,0.05);  color:#fbbf24; }
+    .role-box.r-prob { border-color:rgba(244,63,94,0.25);   background:rgba(244,63,94,0.05);   color:#f43f5e; }
+    .role-box.r-phys { border-color:rgba(20,184,166,0.25);  background:rgba(20,184,166,0.05);  color:#14b8a6; }
+    .role-box.r-other{ border-color:rgba(148,163,184,0.25); background:rgba(148,163,184,0.05); color:var(--text3); }
+
     /* Excel table */
     .excel-wrap {
       background: var(--panel);
@@ -2576,69 +2633,106 @@
                 <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">数据 → 模型角色 → 预测输出</div>
               </div>
               <div style="padding:18px;">
-                <div style="display:flex;gap:0;min-height:320px;align-items:stretch;position:relative;">
-                  <!-- 数据输入列：动态渲染 cat_label，3份宽 -->
-                  <div style="flex:3;min-width:0;display:flex;flex-direction:column;gap:5px;" id="modelInputCol">
+                <div id="modelDiagram" style="position:relative;display:flex;gap:20px;align-items:flex-start;">
+                  <!-- SVG 连线层 -->
+                  <svg id="modelDiagramSvg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;"></svg>
+
+                  <!-- 数据输入列 -->
+                  <div style="flex:3;min-width:0;display:flex;flex-direction:column;gap:5px;z-index:1;">
                     <div class="model-col-label">数据输入</div>
-                    <!-- 动态渲染，见 renderModelDiagram() -->
+                    <div class="input-node n-blue"   id="md1">原生ERA5数据</div>
+                    <div class="input-node n-blue"   id="md2">ERA5数据推导的数据</div>
+                    <div class="input-node n-blue"   id="md3">以ERA5为边界条件的数据</div>
+                    <div class="input-node n-blue"   id="md4">以ERA5为验证做对比基准</div>
+                    <div class="input-node n-teal"   id="md5">海洋气象数据</div>
+                    <div class="input-node n-purple" id="md6">天气雷达数据</div>
+                    <div class="input-node n-amber"  id="md7">大气状态与派生指数数据</div>
+                    <div class="input-node n-orange" id="md8">官方业务全球预报数据</div>
+                    <div class="input-node n-green"  id="md9">WRF数据</div>
+                    <div class="input-node n-rose"   id="md10">地理与地表信息数据</div>
+                    <div class="input-node n-indigo" id="md11">遥感观测数据</div>
+                    <div class="input-node n-emerald"id="md12">风电场特定数据</div>
+                    <div class="input-node n-violet" id="md13">时空上下文特征数据</div>
+                    <div class="input-node n-sky"    id="md14">历史与误差信息数据</div>
                   </div>
-                  <!-- 大箭头1 -->
-                  <div style="width:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-                    <svg width="36" height="40" viewBox="0 0 36 40" xmlns="http://www.w3.org/2000/svg">
-                      <polygon points="0,8 22,8 22,0 36,20 22,40 22,32 0,32" fill="rgba(251,146,60,0.55)" />
-                    </svg>
-                  </div>
-                  <!-- 模型角色列，4份宽 -->
-                  <div style="flex:4;min-width:0;display:flex;flex-direction:column;gap:6px;">
+
+                  <!-- 模型角色列 -->
+                  <div style="flex:4;min-width:0;display:flex;flex-direction:column;gap:10px;z-index:1;">
                     <div class="model-col-label">模型角色</div>
-                    <div class="role-box r-ft" style="flex:none;padding:6px 10px;">
-                      <div class="role-icon">🎯</div>
-                      <div class="role-name">星阙大模型 微调 / 训练标签</div>
-                      <div class="role-count">气象站实测 · SCADA</div>
+
+                    <!-- 星阙大模型 -->
+                    <div class="algo-group-box algo-xingque" id="mdXingque">
+                      <div class="algo-group-label">⭐ 星阙大模型</div>
+                      <div style="display:flex;flex-direction:column;gap:5px;">
+                        <div class="role-box r-ft" style="flex:none;padding:6px 10px;">
+                          <div class="role-icon">🎯</div>
+                          <div class="role-name">微调</div>
+                          <div class="role-count">训练标签 · 气象站实测 · SCADA</div>
+                        </div>
+                        <div class="role-box r-pp" style="flex:none;padding:6px 10px;">
+                          <div class="role-icon">🔧</div>
+                          <div class="role-name">后处理</div>
+                          <div class="role-count">SCADA · 功率输出 · 误差校正</div>
+                        </div>
+                        <div class="role-box r-ch" style="flex:none;padding:6px 10px;">
+                          <div class="role-icon">📡</div>
+                          <div class="role-name">增加输入通道</div>
+                          <div class="role-count">DEM · 温压湿 · BLH · 时间</div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="role-box r-ch" style="flex:none;padding:6px 10px;">
-                      <div class="role-icon">📡</div>
-                      <div class="role-name">增加用 星阙大模型 输入通道层</div>
-                      <div class="role-count">DEM · 温压湿 · BLH · 时间</div>
-                    </div>
-                    <div class="role-box r-pp" style="flex:none;padding:6px 10px;">
-                      <div class="role-icon">🔧</div>
-                      <div class="role-name">星阙大模型 后处理校正</div>
-                      <div class="role-count">SCADA · 功率输出 · 误差</div>
-                    </div>
-                    <div class="role-box r-gn" style="flex:none;padding:6px 10px;">
-                      <div class="role-icon">🕸️</div>
-                      <div class="role-name">星阙大模型 图神经网络</div>
-                      <div class="role-count">风机布局 · SCADA节点</div>
-                    </div>
-                    <div class="role-box r-fu" style="flex:none;padding:6px 10px;">
-                      <div class="role-icon">🔀</div>
-                      <div class="role-name">星阙大模型 特征融合分支</div>
-                      <div class="role-count">卫星云图 · WRF · 集合预报</div>
-                    </div>
-                    <div class="role-box r-ci" style="flex:none;padding:6px 10px;">
-                      <div class="role-icon">💉</div>
-                      <div class="role-name">星阙大模型 条件注入</div>
-                      <div class="role-count">稳定度 · 时间 · 天气分型</div>
+
+                    <!-- 常规与经典算法模组 -->
+                    <div class="algo-group-box algo-classic" id="mdClassic">
+                      <div class="algo-group-label">⚙ 常规与经典算法模组</div>
+                      <div style="display:flex;flex-direction:column;gap:5px;">
+                        <div class="role-box r-ts" style="flex:none;padding:6px 10px;">
+                          <div class="role-name">传统统计与时间序列模型</div>
+                          <div class="role-count">自回归/滑动平均 · 条件异方差</div>
+                        </div>
+                        <div class="role-box r-ml" style="flex:none;padding:6px 10px;">
+                          <div class="role-name">经典机器学习模型</div>
+                          <div class="role-count">支持向量机 · 树模型与集成方法</div>
+                        </div>
+                        <div class="role-box r-dl" style="flex:none;padding:6px 10px;">
+                          <div class="role-name">神经网络与深度学习模型</div>
+                          <div class="role-count">前馈神经网络 · 循环神经网络</div>
+                        </div>
+                        <div class="role-box r-stgnn" style="flex:none;padding:6px 10px;">
+                          <div class="role-name">时空预测与图神经网络模型</div>
+                          <div class="role-count">时空模型 · 图神经网络</div>
+                        </div>
+                        <div class="role-box r-ens" style="flex:none;padding:6px 10px;">
+                          <div class="role-name">集成、组合与优化模型</div>
+                          <div class="role-count">集成方法 · 分解-预测混合框架</div>
+                        </div>
+                        <div class="role-box r-prob" style="flex:none;padding:6px 10px;">
+                          <div class="role-name">概率预测与不确定性量化方法</div>
+                          <div class="role-count">分位数回归 · 贝叶斯方法 · 生成与扩散模型</div>
+                        </div>
+                        <div class="role-box r-phys" style="flex:none;padding:6px 10px;">
+                          <div class="role-name">气象与物理类专业模型/方法</div>
+                          <div class="role-count">数值天气预报模型 · 物理降尺度</div>
+                        </div>
+                        <div class="role-box r-other" style="flex:none;padding:6px 10px;">
+                          <div class="role-name">其他与特定范式模型</div>
+                          <div class="role-count">规则系统与灰色理论 · 强化学习组件</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <!-- 大箭头2 -->
-                  <div style="width:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
-                    <svg width="36" height="40" viewBox="0 0 36 40" xmlns="http://www.w3.org/2000/svg">
-                      <polygon points="0,8 22,8 22,0 36,20 22,40 22,32 0,32" fill="rgba(251,146,60,0.55)" />
-                    </svg>
-                  </div>
-                  <!-- 预测输出列，3份宽 -->
-                  <div style="flex:3;min-width:0;display:flex;flex-direction:column;gap:6px;">
-                    <div class="model-col-label">预测输出</div>
-                    <div class="output-node" style="flex:1;">
+
+                  <!-- 预测输出列 -->
+                  <div style="flex:2.5;min-width:0;display:flex;flex-direction:column;gap:8px;z-index:1;">
+                    <div class="model-col-label">预测输出结果</div>
+                    <div class="output-node" id="mdOutPoint" style="flex:1;">
                       <div style="font-size:18px;">🎯</div>
-                      <div style="font-size:11px;color:var(--blue);font-weight:600;">点预测值</div>
-                      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">wind speed<br>wind power</div>
+                      <div style="font-size:11px;color:var(--blue);font-weight:600;">风速预测值</div>
+                      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">wind power<br>wind speed</div>
                     </div>
-                    <div class="output-node" style="flex:1;border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.06);">
+                    <div class="output-node" id="mdOutUncert" style="flex:1;border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.06);">
                       <div style="font-size:18px;">📊</div>
-                      <div style="font-size:11px;color:var(--green);font-weight:600;">不确定性</div>
+                      <div style="font-size:11px;color:var(--green);font-weight:600;">不确定性预测</div>
                       <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">上下界<br>置信度</div>
                     </div>
                   </div>
@@ -3151,6 +3245,7 @@
       // 溯源页锁定 body 滚动，其他页恢复
       document.body.classList.toggle('prov-active', id === 'provenance');
       if (id === 'provenance') initProvenance();
+      if (id === 'detail') setTimeout(drawDiagramLines, 50);
       if (window.parent !== window) {
         const crumbs = id === 'list' ? ['行业分析']
           : id === 'provenance' ? ['行业分析', '风力发电功率预测', '数据与文献溯源']
@@ -3299,22 +3394,73 @@
     }
 
     // ════════════════════════════════════════
-    // RENDER: MODEL DIAGRAM INPUT NODES
+    // STATIC MODEL DIAGRAM – SVG LINES
     // ════════════════════════════════════════
-    function renderModelDiagram() {
-      // 收集去重有序的 cat_label 列表
-      const seen = new Set();
-      const labels = [];
-      ITEMS.forEach(i => { if (i.cat_label && !seen.has(i.cat_label)) { seen.add(i.cat_label); labels.push(i.cat_label); } });
+    function drawDiagramLines() {
+      const svg = document.getElementById('modelDiagramSvg');
+      if (!svg) return;
+      svg.innerHTML = '';
+      const container = document.getElementById('modelDiagram');
+      if (!container) return;
+      const cr = container.getBoundingClientRect();
+      if (cr.width === 0) return; // 尚未可见
 
-      const col = document.getElementById('modelInputCol');
-      col.innerHTML = '<div class="model-col-label">数据输入</div>' +
-        labels.map((label, idx) => {
-          const colorClass = CAT_LABEL_COLORS[idx % CAT_LABEL_COLORS.length];
-          const shortLabel = label.length > 7 ? label.slice(0,7)+'…' : label;
-          return `<div class="input-node ${colorClass}" title="${label}" style="font-size:11px;padding:5px 8px;text-align:center;">${label}</div>`;
-        }).join('');
+      function rel(id) {
+        const el = document.getElementById(id);
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return {
+          l: r.left - cr.left, r: r.right - cr.left,
+          t: r.top  - cr.top,  b: r.bottom - cr.top,
+          my: (r.top + r.bottom) / 2 - cr.top
+        };
+      }
+
+      function bezier(x1, y1, x2, y2, color) {
+        const dx = (x2 - x1) * 0.5;
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        p.setAttribute('d', `M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`);
+        p.setAttribute('fill', 'none');
+        p.setAttribute('stroke', color);
+        p.setAttribute('stroke-width', '1.5');
+        p.setAttribute('stroke-opacity', '0.5');
+        svg.appendChild(p);
+      }
+
+      const COLORS = {
+        md1:'#38bdf8', md2:'#38bdf8', md3:'#38bdf8', md4:'#38bdf8',
+        md5:'#14b8a6', md6:'#a855f7', md7:'#fbbf24', md8:'#f59e0b',
+        md9:'#10b981', md10:'#f43f5e', md11:'#6366f1', md12:'#34d399',
+        md13:'#8b5cf6', md14:'#0ea5e9'
+      };
+
+      const xq = rel('mdXingque');
+      const cl = rel('mdClassic');
+      const op = rel('mdOutPoint');
+      const ou = rel('mdOutUncert');
+
+      // ERA5 (md1-md4) → 星阙
+      ['md1','md2','md3','md4'].forEach(id => {
+        const r = rel(id);
+        if (r && xq) bezier(r.r, r.my, xq.l, xq.my, COLORS[id]);
+      });
+
+      // 其余 10 条 → 常规算法组
+      ['md5','md6','md7','md8','md9','md10','md11','md12','md13','md14'].forEach(id => {
+        const r = rel(id);
+        if (r && cl) bezier(r.r, r.my, cl.l, cl.my, COLORS[id]);
+      });
+
+      // 星阙 → 风速预测值
+      if (xq && op) bezier(xq.r, xq.my, op.l, op.my, '#38bdf8');
+
+      // 常规算法组 → 风速预测值 + 不确定性预测
+      if (cl && op) bezier(cl.r, cl.my, op.l, op.my, '#fbbf24');
+      if (cl && ou) bezier(cl.r, cl.my, ou.l, ou.my, '#fbbf24');
     }
+
+    // 兼容旧调用（renderAll 中保留名称，但实际调 drawDiagramLines）
+    function renderModelDiagram() { setTimeout(drawDiagramLines, 30); }
 
     // ════════════════════════════════════════
     // RENDER ALL（初始化 + 刷新后调用）
