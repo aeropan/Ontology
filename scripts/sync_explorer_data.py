@@ -298,3 +298,43 @@ old_pids = set(p["paper_id"] for p in existing["papers"])
 new_pids = set(p["paper_id"] for p in papers_new)
 added = sorted(new_pids - old_pids)
 print(f"\n── 新增论文 ID ({len(added)} 篇): {added} ──")
+
+# ═══════════════════════════════════════════
+# 计算 algo_tag_stats：每个算法标签对应多少个去重 item
+# 逻辑：algo_tag → paper_ids → item_ids（去重后计数）
+# ═══════════════════════════════════════════
+
+# 1. paper_id → set of item_ids
+paper_to_items = defaultdict(set)
+for item in new_items:
+    for pid in item["paper_ids"]:
+        paper_to_items[pid].add(item["id"])
+
+# 2. algo_tag → set of paper_ids
+algo_to_papers = defaultdict(set)
+for paper in papers_new:
+    pid = paper["paper_id"]
+    for tag in paper.get("algo_tags", []):
+        if tag:
+            algo_to_papers[tag].add(pid)
+
+# 3. algo_tag → set of item_ids（通过 paper_id 中转）→ 去重计数
+algo_tag_stats = {}
+for tag, pids in algo_to_papers.items():
+    item_ids = set()
+    for pid in pids:
+        item_ids.update(paper_to_items.get(pid, set()))
+    algo_tag_stats[tag] = {
+        "paper_count": len(pids),
+        "item_count":  len(item_ids),
+        "item_ids":    sorted(item_ids),
+    }
+
+# 写回 JSON（新增顶层字段）
+output["algo_tag_stats"] = algo_tag_stats
+with open(JSON_PATH, "w", encoding="utf-8") as f:
+    json.dump(output, f, ensure_ascii=False, indent=2)
+
+print(f"\n── algo_tag_stats（按 item_count 降序）──")
+for tag, stat in sorted(algo_tag_stats.items(), key=lambda x: -x[1]["item_count"]):
+    print(f"  {tag:<20} papers={stat['paper_count']:>3}  items={stat['item_count']:>3}")
