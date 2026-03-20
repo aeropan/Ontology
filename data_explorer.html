@@ -2663,21 +2663,36 @@
                     <!-- 星阙大模型 -->
                     <div class="algo-group-box algo-xingque" id="mdXingque">
                       <div class="algo-group-label">⭐ 星阙大模型</div>
-                      <div style="display:flex;flex-direction:column;gap:5px;">
-                        <div class="role-box r-ft" style="flex:none;padding:6px 10px;">
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+                        <div class="role-box r-ft" style="padding:6px 10px;">
                           <div class="role-icon">🎯</div>
                           <div class="role-name">微调</div>
                           <div class="role-count">训练标签 · 气象站实测 · SCADA</div>
                         </div>
-                        <div class="role-box r-pp" style="flex:none;padding:6px 10px;">
+                        <div class="role-box r-pp" style="padding:6px 10px;">
                           <div class="role-icon">🔧</div>
                           <div class="role-name">后处理</div>
                           <div class="role-count">SCADA · 功率输出 · 误差校正</div>
                         </div>
-                        <div class="role-box r-ch" style="flex:none;padding:6px 10px;">
+                        <div class="role-box r-ch" style="padding:6px 10px;">
                           <div class="role-icon">📡</div>
                           <div class="role-name">增加输入通道</div>
                           <div class="role-count">DEM · 温压湿 · BLH · 时间</div>
+                        </div>
+                        <div class="role-box r-fu" style="padding:6px 10px;">
+                          <div class="role-icon">🔀</div>
+                          <div class="role-name">特征融合</div>
+                          <div class="role-count">多源特征 · 与主干融合 · CNN设计</div>
+                        </div>
+                        <div class="role-box r-gn" style="padding:6px 10px;">
+                          <div class="role-icon">🕸️</div>
+                          <div class="role-name">图GNN</div>
+                          <div class="role-count">多风场站点 · 空间依赖建模</div>
+                        </div>
+                        <div class="role-box r-ci" style="padding:6px 10px;">
+                          <div class="role-icon">💉</div>
+                          <div class="role-name">条件注入</div>
+                          <div class="role-count">气象条件 · 特征嵌入</div>
                         </div>
                       </div>
                     </div>
