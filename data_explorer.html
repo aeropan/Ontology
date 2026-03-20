@@ -3477,6 +3477,17 @@
     // 兼容旧调用（renderAll 中保留名称，但实际调 drawDiagramLines）
     function renderModelDiagram() { setTimeout(drawDiagramLines, 30); }
 
+    // 容器尺寸变化时重绘连线（处理浏览器缩放、窗口拖拽等场景）
+    (function() {
+      const container = document.getElementById('modelDiagram');
+      if (!container || typeof ResizeObserver === 'undefined') return;
+      let raf = null;
+      new ResizeObserver(() => {
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(drawDiagramLines);
+      }).observe(container);
+    })();
+
     // ════════════════════════════════════════
     // RENDER ALL（初始化 + 刷新后调用）
     // ════════════════════════════════════════
