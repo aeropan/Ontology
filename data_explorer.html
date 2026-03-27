@@ -3384,19 +3384,17 @@
       const STANDARD_METHODS = ['微调','输入通道','特征融合','后处理校正','图GNN','条件注入'];
       const METHOD_CELL = { '微调':'m-ft', '输入通道':'m-ch', '特征融合':'m-fu', '后处理校正':'m-pp', '图GNN':'m-gn', '条件注入':'m-ci' };
 
-      // 显示有任何 method 信息（包括其他）的条目
-      const rows = ITEMS.filter(i => {
-        const hasMethods = i.method && i.method.length > 0;
-        const hasOther   = i.paper_req && i.paper_req.trim().length > 0 && (!i.method || i.method.length === 0);
-        return hasMethods || hasOther;
-      });
+      // 显示有任何 method 信息的条目
+      const rows = ITEMS.filter(i => i.methods && i.methods.length > 0);
 
       document.getElementById('matrixBody').innerHTML = rows.map(item => {
-      const cells = STANDARD_METHODS.map(m => {
-          const has = (item.method || []).includes(m);
+        const labels = getMethodLabels(item);
+        const cells = STANDARD_METHODS.map(m => {
+          const has = labels.includes(m);
           return `<td>${has ? `<div class="m-cell ${METHOD_CELL[m]}">✓</div>` : ''}</td>`;
         }).join('');
-        const hasOther = (!item.method || item.method.length === 0) && item.paper_req && item.paper_req.trim();
+        // 其他列：有 methods 但全部不属于标准方法时打 ✓
+        const hasOther = labels.length > 0 && !labels.some(m => STANDARD_METHODS.includes(m));
         const otherCell = `<td>${hasOther ? `<div class="m-cell m-ot">✓</div>` : ''}</td>`;
         const name = item.name.length > 18 ? item.name.slice(0,18)+'…' : item.name;
         return `<tr>
@@ -3757,18 +3755,22 @@
     }
 
     function getPaperCount(item) {
-      // 统计 paper_req 中 [X] 和 {X} 的总数
-      if (!item.paper_req) return 0;
-      return (item.paper_req.match(/[\[{]\d+[\]}]/g) || []).length;
+      // 汇总 methods[*].paper_ids 去重后的总数
+      const methods = item.methods || [];
+      const ids = new Set();
+      methods.forEach(m => (m.paper_ids || []).forEach(id => ids.add(id)));
+      return ids.size;
+    }
+
+    function getMethodLabels(item) {
+      return (item.methods || []).map(m => m.label).filter(Boolean);
     }
 
     function getMethodTagsHtml(item, styleMap) {
-      const tags = (item.method || []).map(m =>
+      const labels = getMethodLabels(item);
+      const tags = labels.map(m =>
         `<span class="method-tag" style="${styleMap[m] || ''}">${m}</span>`
       );
-      // 其他处理方法：有 paper_req 内容但无任何标准 method
-      const hasOther = (!item.method || item.method.length === 0) && item.paper_req && item.paper_req.trim();
-      if (hasOther) tags.push(`<span class="method-tag" style="background:rgba(100,116,139,0.2);color:#cbd5e1;border:1px solid rgba(100,116,139,0.4);">其他处理方法</span>`);
       return tags.join('');
     }
 
