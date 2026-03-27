@@ -3068,7 +3068,6 @@
                 <option value="met">气象与环境</option>
                 <option value="farm">风电场与机组状态</option>
                 <option value="geo">空间与地理地形</option>
-                <option value="feat">风速本体及时序特征</option>
               </select>
             </div>
           </div>
@@ -3299,8 +3298,6 @@
       met:  { name: '气象与环境',       color: 'var(--blue)',   dot: '#38bdf8', icon: '🌤️', desc: '驱动风场变化的核心气象要素，含实测、再分析与预报数据' },
       farm: { name: '风电场与机组状态', color: 'var(--green)',  dot: '#34d399', icon: '🏭', desc: '风机运行状态与干扰信号，用于标记异常、构建图结构与提供预测标签' },
       geo:  { name: '空间与地理地形',   color: 'var(--orange)', dot: '#fb923c', icon: '🗺️', desc: '静态地理信息，影响局地气流的地形、地表与障碍物特征' },
-      feat: { name: '风速本体及时序特征', color: 'var(--purple)', dot: '#a78bfa', icon: '📈', desc: '从原始数据派生的时序特征与上下文编码，直接决定预测目标' },
-      ext:  { name: '本体外扩展',       color: 'var(--rose)',   dot: '#f43f5e', icon: '🔗', desc: '超出本体范畴的辅助信息，含误差历史、集合预报与分型特征' },
     };
 
     const METHODS_STYLE = {
@@ -3724,11 +3721,16 @@
     // ONTOLOGY CARD SELECT
     // ════════════════════════════════════════
     let selectedCat = null;
+    let dataTableItems = [];   // 当前类别的完整数据项列表
+    let dataTablePage  = 1;    // 当前页（1-indexed）
+    const DATA_PAGE_SIZE = 10;
 
     function selectCat(cat, el) {
       if (!el) return;
       if (selectedCat === cat) {
         selectedCat = null;
+        dataTableItems = [];
+        dataTablePage  = 1;
         document.querySelectorAll('.onto-cat-card').forEach(c => c.classList.remove('selected'));
         document.getElementById('dataTableWrap').innerHTML = '<div style="padding:32px;text-align:center;color:var(--text3);font-size:12px;"><div style="font-size:28px;margin-bottom:8px;opacity:.4;">🔍</div>请点击上方本体类别卡片查看对应数据项</div>';
         document.getElementById('listDot').style.background = 'var(--text3)';
@@ -3737,15 +3739,21 @@
         return;
       }
       selectedCat = cat;
+      dataTablePage = 1;
       document.querySelectorAll('.onto-cat-card').forEach(c => c.classList.remove('selected'));
       el.classList.add('selected');
       const meta = CAT_META[cat];
       document.getElementById('listDot').style.background = meta.dot;
       document.getElementById('listCatName').textContent = meta.name;
-      const items = ITEMS.filter(i => itemMatchesCat(i, cat));
-      document.getElementById('listCountMeta').textContent = '共 ' + items.length + ' 个数据项';
-      renderDataTable(items);
+      dataTableItems = ITEMS.filter(i => itemMatchesCat(i, cat));
+      document.getElementById('listCountMeta').textContent = '共 ' + dataTableItems.length + ' 个数据项';
+      renderDataTable(dataTableItems, dataTablePage);
       setTimeout(() => document.getElementById('dataListSection').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    }
+
+    function gotoDataPage(page) {
+      dataTablePage = page;
+      renderDataTable(dataTableItems, dataTablePage);
     }
 
     function getPaperCount(item) {
@@ -3764,9 +3772,14 @@
       return tags.join('');
     }
 
-    function renderDataTable(items) {
+    function renderDataTable(items, page) {
       if (!items.length) { document.getElementById('dataTableWrap').innerHTML = '<div style="padding:32px;text-align:center;color:var(--text3);">该类别暂无数据项</div>'; return; }
-      const rows = items.map(item => {
+      page = page || 1;
+      const totalPages = Math.ceil(items.length / DATA_PAGE_SIZE);
+      const start = (page - 1) * DATA_PAGE_SIZE;
+      const pageItems = items.slice(start, start + DATA_PAGE_SIZE);
+
+      const rows = pageItems.map(item => {
         const ps = PRIO_STYLE[item.prio] || PRIO_STYLE.green;
         const diffDots = Array.from({ length: 4 }, (_, i) => `<div class="diff-dot ${i < item.diff ? 'filled' : 'empty'}"></div>`).join('');
         const methodTagsHtml = getMethodTagsHtml(item, METHODS_STYLE);
@@ -3785,6 +3798,29 @@
       </div></td>
     </tr>`;
       }).join('');
+
+      // 分页控件
+      let pagerHtml = '';
+      if (totalPages > 1) {
+        const btnStyle = (active) => active
+          ? 'padding:3px 10px;border-radius:4px;border:1px solid var(--blue);background:var(--blue-dim);color:var(--blue);cursor:default;font-size:12px;'
+          : 'padding:3px 10px;border-radius:4px;border:1px solid var(--border2);background:var(--panel);color:var(--text2);cursor:pointer;font-size:12px;';
+        const disabledStyle = 'padding:3px 10px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:default;font-size:12px;';
+        const prevBtn = page > 1
+          ? `<button style="${btnStyle(false)}" onclick="gotoDataPage(${page - 1})">‹ 上一页</button>`
+          : `<button style="${disabledStyle}" disabled>‹ 上一页</button>`;
+        const nextBtn = page < totalPages
+          ? `<button style="${btnStyle(false)}" onclick="gotoDataPage(${page + 1})">下一页 ›</button>`
+          : `<button style="${disabledStyle}" disabled>下一页 ›</button>`;
+        const pageNums = Array.from({ length: totalPages }, (_, i) => i + 1).map(p =>
+          `<button style="${btnStyle(p === page)}" ${p === page ? 'disabled' : `onclick="gotoDataPage(${p})"`}>${p}</button>`
+        ).join('');
+        pagerHtml = `<div style="display:flex;align-items:center;gap:6px;padding:12px 16px;justify-content:flex-end;border-top:1px solid var(--border2);">
+          <span style="font-size:11px;color:var(--text3);margin-right:4px;">第 ${start+1}–${Math.min(start+DATA_PAGE_SIZE,items.length)} 条，共 ${items.length} 条</span>
+          ${prevBtn}${pageNums}${nextBtn}
+        </div>`;
+      }
+
       document.getElementById('dataTableWrap').innerHTML = `<table class="data-table fade-up"><thead><tr>
         <th style="min-width:220px;max-width:260px">数据名称</th>
         <th style="min-width:90px">优先级</th>
@@ -3793,7 +3829,7 @@
         <th style="min-width:60px">文献参考数</th>
         <th style="min-width:100px">获取难度</th>
         <th style="min-width:160px">操作</th>
-      </tr></thead><tbody>${rows}</tbody></table>`;
+      </tr></thead><tbody>${rows}</tbody></table>${pagerHtml}`;
     }
 
     // ════════════════════════════════════════
