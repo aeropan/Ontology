@@ -11,8 +11,9 @@ import json, re, openpyxl
 from collections import defaultdict
 from pathlib import Path
 
-EXCEL_PATH = Path("/home/user/Ontology/data/data_explorer.xlsx")
-JSON_PATH  = Path("/home/user/Ontology/data/explorer_data.json")
+EXCEL_PATH     = Path("/home/user/Ontology/data/data_explorer.xlsx")
+EXT_EXCEL_PATH = Path("/home/user/Ontology/data/data_explorer_ext.xlsx")
+JSON_PATH      = Path("/home/user/Ontology/data/explorer_data.json")
 
 # ─────────────────────────────────────────
 # METHOD CONFIG RULES（来自 data_explorer.html）
@@ -74,6 +75,24 @@ def get_label(detail):
         if kw in detail:
             return tag
     return detail.rstrip("。").strip()
+
+# ─────────────────────────────────────────
+# METHOD_CONFIG_RULES_2（ext xlsx 数据源，era5_model 均赋空）
+# 使用精确匹配，仅列出需要规范化的变体
+# ─────────────────────────────────────────
+METHOD_CONFIG_RULES_2 = {
+    "循环神经网络":                       "循环神经网络及其变体",
+    "注意力与 Transformer":              "注意力与Transformer架构",
+    "分解 - 预测混合框架":               "分解-预测混合框架",
+    "自回归 / 滑动平均类":               "自回归/滑动平均类",
+    "集成方法基础基准与回归类":           "基础基准与回归类",
+    "（传统统计与时间序列模型）其他统计模型": "其他统计模型",
+    "(概率预测与不确定性量化)其他":       "（概率预测）其他",
+}
+
+def get_label_2(raw):
+    """精确匹配 METHOD_CONFIG_RULES_2，无匹配则返回原文（已是规范形式）"""
+    return METHOD_CONFIG_RULES_2.get(raw.strip(), raw.strip())
 
 # algo_tags 规范化映射（原始标签 → 统一标签）
 ALGO_TAG_NORMALIZE = {
@@ -264,12 +283,47 @@ print(f"Sheet3 解析完成：{len(papers_new)} 篇文献，"
       f"{sum(1 for v in paper_algo.values() if v)} 篇有算法分类")
 
 # ═══════════════════════════════════════════
+# EXT XLSX → 补充 method 条目（era5_model 赋空）
+# Sheet1 列映射（0-indexed）：
+#   [1] 编号       → item id
+#   [4] 算法分类   → detail（原始值）/ label（经 METHOD_CONFIG_RULES_2 规范化）
+#   [5] 对应论文与数据量需求 → paper_req
+# ═══════════════════════════════════════════
+ext_data = {}    # id → [{detail, paper_req}, ...]
+if EXT_EXCEL_PATH.exists():
+    wb_ext = openpyxl.load_workbook(EXT_EXCEL_PATH, read_only=True, data_only=True)
+    ws_ext = wb_ext["Sheet1"]
+    current_id_ext = None
+    ext_rows = []   # 临时列表
+
+    for row in ws_ext.iter_rows(min_row=2, values_only=True):
+        bid = row[1]
+        if bid:
+            current_id_ext = str(bid).strip()
+        if not current_id_ext:
+            continue
+        detail    = clean(row[4])
+        paper_req = clean(row[5]) if row[5] else ""
+        if detail:
+            ext_rows.append((current_id_ext, detail, paper_req))
+
+    for bid, detail, paper_req in ext_rows:
+        if bid not in ext_data:
+            ext_data[bid] = []
+        ext_data[bid].append({"detail": detail, "paper_req": paper_req})
+
+    print(f"Ext xlsx 解析完成：{len(ext_data)} 个 ID，"
+          f"{sum(len(v) for v in ext_data.values())} 条 method 行")
+else:
+    print("Ext xlsx 不存在，跳过")
+
+# ═══════════════════════════════════════════
 # 构建 items（只更新 Sheet1 中存在的条目）
 # ═══════════════════════════════════════════
 new_items = []
 
 for bid, s1 in sheet1_data.items():
-    # Sheet2 → methods 对象数组
+    # Sheet2 → methods 对象数组（era5_model = 星阙大模型）
     methods = []
     for row_data in sheet2_data.get(bid, []):
         detail    = row_data["detail"]
@@ -281,6 +335,19 @@ for bid, s1 in sheet1_data.items():
             "paper_req":  paper_req,
             "paper_ids":  paper_ids,
             "era5_model": "星阙大模型",
+        })
+
+    # Ext xlsx → 追加 method 条目（era5_model = ""）
+    for row_data in ext_data.get(bid, []):
+        detail    = row_data["detail"]
+        paper_req = row_data["paper_req"]
+        paper_ids = extract_paper_ids(paper_req)
+        methods.append({
+            "label":      get_label_2(detail),
+            "detail":     detail,
+            "paper_req":  paper_req,
+            "paper_ids":  paper_ids,
+            "era5_model": "",
         })
 
     item = {
