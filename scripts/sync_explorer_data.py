@@ -18,14 +18,25 @@ JSON_PATH  = Path("/home/user/Ontology/data/explorer_data.json")
 # METHOD CONFIG RULES（来自 data_explorer.html）
 # ─────────────────────────────────────────
 METHOD_CONFIG_RULES = {
-    "微调":       "微调",
-    "增加输入通道": "输入通道",
-    "特征融合":   "特征融合",
-    "与主干融合":  "特征融合",
-    "设计CNN":    "特征融合",
-    "后处理":     "后处理校正",
-    "图神经网络":  "图GNN",
-    "条件注入":   "条件注入",
+    # 原有规则
+    "微调":           "微调",
+    "增加输入通道":   "输入通道",
+    "特征融合":       "特征融合",
+    "与主干融合":     "特征融合",
+    "设计CNN":        "特征融合",
+    "后处理":         "后处理校正",
+    "图神经网络":     "图GNN",
+    "条件注入":       "条件注入",
+    # 补充未覆盖类型
+    "随机森林回归":       "随机森林回归",
+    "梯度提升算法":       "梯度提升算法",
+    "随机森林分类器":     "随机森林分类器",
+    "多元回归方法":       "多元回归方法",
+    "作为输入变量":       "作为输入变量",
+    "静态通道直接输入":   "作为静态通道",
+    "高分辨率静态通道":   "作为高分辨率静态通道",
+    "作为边界特征输入":   "作为边界特征输入",
+    "作为动态通道":       "作为动态通道",
 }
 
 # ─────────────────────────────────────────
@@ -57,14 +68,12 @@ def extract_paper_ids(text):
     """从 [n] 和 {n} 中提取所有论文编号（去重排序）"""
     return sorted(set(int(m) for m in re.findall(r'[\[{](\d+)', text)))
 
-def extract_methods(method_lines):
-    """根据 METHOD_CONFIG_RULES 从方法文本行提取去重标签列表"""
-    tags = set()
-    for line in method_lines:
-        for kw, tag in METHOD_CONFIG_RULES.items():
-            if kw in line:
-                tags.add(tag)
-    return sorted(tags)
+def get_label(detail):
+    """从 detail 文本匹配 METHOD_CONFIG_RULES，返回标准标签；无匹配则返回原文"""
+    for kw, tag in METHOD_CONFIG_RULES.items():
+        if kw in detail:
+            return tag
+    return detail.rstrip("。").strip()
 
 # algo_tags 规范化映射（原始标签 → 统一标签）
 ALGO_TAG_NORMALIZE = {
@@ -76,6 +85,7 @@ ALGO_TAG_NORMALIZE = {
     "（传统统计与时间序列模型）其他统计模型": "其他统计模型",
     "集成方法基础基准与回归类":          "基础基准与回归类",
     "(概率预测与不确定性量化)其他":      "（概率预测）其他",
+    "星阕大模型":                       "星阙大模型",
 }
 
 def split_algo_tags(val):
@@ -172,10 +182,11 @@ for row in ws1.iter_rows(min_row=2, values_only=True):
 print(f"Sheet1 解析完成：{len(sheet1_data)} 条")
 
 # ═══════════════════════════════════════════
-# SHEET 2 → method / paper_req / paper_ids
+# SHEET 2 → methods 对象数组（每行一条）
+# col[1]=编号, col[4]=数据使用(detail), col[5]=对应论文与数据量需求(paper_req)
 # ═══════════════════════════════════════════
 ws2 = wb["使用ERA5数据源对应的文献及条目"]
-sheet2_data = defaultdict(lambda: {"method_lines": [], "paper_reqs": []})
+sheet2_data = defaultdict(list)   # id → [{detail, paper_req}, ...]
 current_id = None
 
 for row in ws2.iter_rows(min_row=2, values_only=True):
@@ -185,13 +196,14 @@ for row in ws2.iter_rows(min_row=2, values_only=True):
     if not current_id:
         continue
 
-    e = clean(row[4])   # 数据使用
-    f = clean(row[5])   # 对应论文与数据量需求
+    detail    = clean(row[4])
+    paper_req = clean(row[5])
 
-    if e:
-        sheet2_data[current_id]["method_lines"].append(e)
-    if f:
-        sheet2_data[current_id]["paper_reqs"].append(f)
+    if detail:
+        sheet2_data[current_id].append({
+            "detail":    detail,
+            "paper_req": paper_req,
+        })
 
 print(f"Sheet2 解析完成：{len(sheet2_data)} 个 ID")
 
@@ -257,46 +269,42 @@ print(f"Sheet3 解析完成：{len(papers_new)} 篇文献，"
 new_items = []
 
 for bid, s1 in sheet1_data.items():
-    # Sheet2 字段
-    s2 = sheet2_data.get(bid, {"method_lines": [], "paper_reqs": []})
-    method_lines  = s2["method_lines"]
-    paper_reqs    = s2["paper_reqs"]
-    paper_req_str = " ".join(paper_reqs)
-    paper_ids     = extract_paper_ids(paper_req_str)
-    methods       = extract_methods(method_lines)
-
-    # paper_models：从 Sheet3 算法分类中提取
-    paper_models = {}
-    for pid in paper_ids:
-        tags = paper_algo.get(str(pid), [])
-        if tags:
-            paper_models[str(pid)] = tags
+    # Sheet2 → methods 对象数组
+    methods = []
+    for row_data in sheet2_data.get(bid, []):
+        detail    = row_data["detail"]
+        paper_req = row_data["paper_req"]
+        paper_ids = extract_paper_ids(paper_req)
+        methods.append({
+            "label":      get_label(detail),
+            "detail":     detail,
+            "paper_req":  paper_req,
+            "paper_ids":  paper_ids,
+            "era5_model": "星阙大模型",
+        })
 
     item = {
-        "id":           s1["id"],
-        "name":         s1["name"],
-        "cat":          s1["cat"],
-        "cat_label":    s1["cat_label"],
-        "onto":         s1["onto"],
-        "prio":         s1["prio"],
-        "fmt":          s1["fmt"],
-        "res":          s1["res"],
-        "avail":        s1["avail"],
-        "source":       s1["source"],
-        "cost":         s1["cost"],
-        "delay":        s1["delay"],
-        "history":      s1["history"],
-        "geo":          s1["geo"],
-        "necessity":    s1["necessity"],
-        "effect":       s1["effect"],
-        "summary":      s1["summary"],
-        "scale":        s1["scale"],
-        "diff":         s1["diff"],
-        "method":       methods,
-        "paper_req":    paper_req_str,
-        "paper_ids":    paper_ids,
-        "paper_models": paper_models,
-        "usage_flag":   usage_flag_map.get(bid, ""),
+        "id":         s1["id"],
+        "name":       s1["name"],
+        "cat":        s1["cat"],
+        "cat_label":  s1["cat_label"],
+        "onto":       s1["onto"],
+        "prio":       s1["prio"],
+        "fmt":        s1["fmt"],
+        "res":        s1["res"],
+        "avail":      s1["avail"],
+        "source":     s1["source"],
+        "cost":       s1["cost"],
+        "delay":      s1["delay"],
+        "history":    s1["history"],
+        "geo":        s1["geo"],
+        "necessity":  s1["necessity"],
+        "effect":     s1["effect"],
+        "summary":    s1["summary"],
+        "scale":      s1["scale"],
+        "diff":       s1["diff"],
+        "methods":    methods,
+        "usage_flag": usage_flag_map.get(bid, ""),
     }
     new_items.append(item)
 
@@ -322,21 +330,20 @@ print(f"\n✅ 同步完成！")
 print(f"   items  : {len(new_items)} 条")
 print(f"   papers : {len(papers_new)} 篇 (原 {len(existing['papers'])} 篇)")
 
-# 验证 paper_models / algo_tags 填充情况
-filled_items   = sum(1 for item in new_items if item["paper_models"])
-filled_papers  = sum(1 for p in papers_new if p["algo_tags"])
-print(f"   items  paper_models 非空: {filled_items}/{len(new_items)} 条")
-print(f"   papers algo_tags    非空: {filled_papers}/{len(papers_new)} 篇")
+# 验证 methods / algo_tags 填充情况
+filled_items  = sum(1 for item in new_items if item["methods"])
+filled_papers = sum(1 for p in papers_new if p["algo_tags"])
+print(f"   items  methods 非空: {filled_items}/{len(new_items)} 条")
+print(f"   papers algo_tags 非空: {filled_papers}/{len(papers_new)} 篇")
 
-# 打印 paper_models 样例
-print("\n── paper_models 样例（前3条非空）──")
+# 打印 methods 样例（前2条非空）
+print("\n── methods 样例（前2条非空）──")
 count = 0
 for item in new_items:
-    if item["paper_models"] and count < 3:
-        sample = {k: v for k, v in list(item["paper_models"].items())[:3]}
+    if item["methods"] and count < 2:
         print(f"  [{item['id']}] {item['name'][:20]}...")
-        for pid, tags in sample.items():
-            print(f"    paper_id={pid}: {tags}")
+        for m in item["methods"][:3]:
+            print(f"    label={m['label']}  paper_ids={m['paper_ids']}  era5_model={m['era5_model']}")
         count += 1
 
 # 统计新增papers
@@ -350,11 +357,12 @@ print(f"\n── 新增论文 ID ({len(added)} 篇): {added} ──")
 # 逻辑：algo_tag → paper_ids → item_ids（去重后计数）
 # ═══════════════════════════════════════════
 
-# 1. paper_id → set of item_ids
+# 1. paper_id → set of item_ids（从 methods 中汇总）
 paper_to_items = defaultdict(set)
 for item in new_items:
-    for pid in item["paper_ids"]:
-        paper_to_items[pid].add(item["id"])
+    for m in item["methods"]:
+        for pid in m["paper_ids"]:
+            paper_to_items[pid].add(item["id"])
 
 # 2. algo_tag → set of paper_ids
 algo_to_papers = defaultdict(set)
