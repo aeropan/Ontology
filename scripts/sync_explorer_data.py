@@ -11,7 +11,7 @@ import json, re, openpyxl
 from collections import defaultdict
 from pathlib import Path
 
-EXCEL_PATH = Path("/home/user/Ontology/data/【图谱组】ERA5和其他数据源组合调研3.18(新).xlsx")
+EXCEL_PATH = Path("/home/user/Ontology/data/data_explorer.xlsx")
 JSON_PATH  = Path("/home/user/Ontology/data/explorer_data.json")
 
 # ─────────────────────────────────────────
@@ -66,12 +66,24 @@ def extract_methods(method_lines):
                 tags.add(tag)
     return sorted(tags)
 
+# algo_tags 规范化映射（原始标签 → 统一标签）
+ALGO_TAG_NORMALIZE = {
+    "自回归 / 滑动平均类":              "自回归/滑动平均类",
+    "分解 - 预测混合框架":              "分解-预测混合框架",
+    "循环神经网络":                     "循环神经网络及其变体",
+    "注意力与 Transformer":            "注意力与Transformer架构",
+    "注意力与Transformer":             "注意力与Transformer架构",
+    "（传统统计与时间序列模型）其他统计模型": "其他统计模型",
+    "集成方法基础基准与回归类":          "基础基准与回归类",
+    "(概率预测与不确定性量化)其他":      "（概率预测）其他",
+}
+
 def split_algo_tags(val):
-    """算法分类列：处理多种分隔符（，、、,）"""
+    """算法分类列：处理多种分隔符（，、、,），并规范化标签名称"""
     if not val:
         return []
     tags = [t.strip() for t in re.split(r'[，、,]', str(val)) if t.strip()]
-    return tags
+    return [ALGO_TAG_NORMALIZE.get(t, t) for t in tags]
 
 
 # ─────────────────────────────────────────
@@ -80,7 +92,8 @@ def split_algo_tags(val):
 with open(JSON_PATH, encoding="utf-8") as f:
     existing = json.load(f)
 
-cat_map = {item["id"]: (item["cat"], item["cat_label"]) for item in existing["items"]}
+cat_map        = {item["id"]: (item["cat"], item["cat_label"]) for item in existing["items"]}
+usage_flag_map = {item["id"]: item.get("usage_flag", "") for item in existing["items"]}
 
 # ─────────────────────────────────────────
 # 打开 Excel
@@ -89,13 +102,28 @@ wb = openpyxl.load_workbook(EXCEL_PATH, read_only=True, data_only=True)
 
 # ═══════════════════════════════════════════
 # SHEET 1 → 每个 ID 的基础字段（首次出现优先）
+# 新列映射（0-indexed）：
+#   [0]  ID               → id
+#   [2]  数据名称          → name
+#   [7]  地理覆盖范围      → geo
+#   [8]  分辨率（时/空）   → res
+#   [9]  数据格式          → fmt
+#   [10] 核心字段          → effect
+#   [16] 用途              → necessity
+#   [18] 对应本体节点      → onto
+#   [19] 是否(开源/下载)   → avail
+#   [20] 下载链接          → source
+#   [22] 数据获取难度      → diff
+#   [23] 成本/费用         → cost
+#   [24] 历史数据年限      → history
+#   [25] 优先级            → prio
 # ═══════════════════════════════════════════
-ws1 = wb["ERA5和其他数据源组合调研(补充算法组的数据源信息)"]
+ws1 = wb["ERA5和其他数据源组合调研"]
 sheet1_data = {}      # id → dict of basic fields
 seen_ids_s1 = set()
 
 for row in ws1.iter_rows(min_row=2, values_only=True):
-    bid = row[1]
+    bid = row[0]
     if not bid:
         continue
     bid = str(bid).strip()
@@ -105,21 +133,21 @@ for row in ws1.iter_rows(min_row=2, values_only=True):
 
     sheet1_data[bid] = {
         "id":         bid,
-        "name":       clean(row[3]),
-        "onto":       clean(row[5]),
-        "res":        clean(row[6]),
-        "prio":       parse_prio(row[7]),
-        "fmt":        clean(row[8]),
-        "avail":      clean(row[9]),
-        "source":     clean(row[10]),
-        "diff":       parse_diff(row[16]),
-        "cost":       clean(row[18]),
-        "delay":      clean(row[19]),
-        "history":    clean(row[20]),
-        "geo":        clean(row[21]),
-        "necessity":  clean(row[22]),
-        "effect":     clean(row[23]),
-        "usage_flag": clean(row[2]),
+        "name":       clean(row[2]),
+        "onto":       clean(row[18]),
+        "res":        clean(row[8]),
+        "prio":       parse_prio(row[25]),
+        "fmt":        clean(row[9]),
+        "avail":      clean(row[19]),
+        "source":     clean(row[20]),
+        "diff":       parse_diff(row[22]),
+        "cost":       clean(row[23]),
+        "delay":      "",
+        "history":    clean(row[24]),
+        "geo":        clean(row[7]),
+        "necessity":  clean(row[16]),
+        "effect":     clean(row[10]),
+        "usage_flag": "",     # 新表无对应列，后续从现有 JSON 保留
     }
 
 print(f"Sheet1 解析完成：{len(sheet1_data)} 条")
@@ -127,7 +155,7 @@ print(f"Sheet1 解析完成：{len(sheet1_data)} 条")
 # ═══════════════════════════════════════════
 # SHEET 2 → method / paper_req / paper_ids
 # ═══════════════════════════════════════════
-ws2 = wb["数据源对应的文献以及数据使用方法和条目需求"]
+ws2 = wb["使用ERA5数据源对应的文献及条目"]
 sheet2_data = defaultdict(lambda: {"method_lines": [], "paper_reqs": []})
 current_id = None
 
@@ -250,7 +278,7 @@ for bid, s1 in sheet1_data.items():
         "paper_req":    paper_req_str,
         "paper_ids":    paper_ids,
         "paper_models": paper_models,
-        "usage_flag":   s1["usage_flag"],
+        "usage_flag":   usage_flag_map.get(bid, ""),
     }
     new_items.append(item)
 
