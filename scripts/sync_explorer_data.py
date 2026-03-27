@@ -11,21 +11,33 @@ import json, re, openpyxl
 from collections import defaultdict
 from pathlib import Path
 
-EXCEL_PATH = Path("/home/user/Ontology/data/【图谱组】ERA5和其他数据源组合调研3.18(新).xlsx")
-JSON_PATH  = Path("/home/user/Ontology/data/explorer_data.json")
+EXCEL_PATH     = Path("/home/user/Ontology/data/data_explorer.xlsx")
+EXT_EXCEL_PATH = Path("/home/user/Ontology/data/data_explorer_ext.xlsx")
+JSON_PATH      = Path("/home/user/Ontology/data/explorer_data.json")
 
 # ─────────────────────────────────────────
 # METHOD CONFIG RULES（来自 data_explorer.html）
 # ─────────────────────────────────────────
 METHOD_CONFIG_RULES = {
-    "微调":       "微调",
-    "增加输入通道": "输入通道",
-    "特征融合":   "特征融合",
-    "与主干融合":  "特征融合",
-    "设计CNN":    "特征融合",
-    "后处理":     "后处理校正",
-    "图神经网络":  "图GNN",
-    "条件注入":   "条件注入",
+    # 原有规则
+    "微调":           "微调",
+    "增加输入通道":   "输入通道",
+    "特征融合":       "特征融合",
+    "与主干融合":     "特征融合",
+    "设计CNN":        "特征融合",
+    "后处理":         "后处理校正",
+    "图神经网络":     "图GNN",
+    "条件注入":       "条件注入",
+    # 补充未覆盖类型
+    "随机森林回归":       "随机森林回归",
+    "梯度提升算法":       "梯度提升算法",
+    "随机森林分类器":     "随机森林分类器",
+    "多元回归方法":       "多元回归方法",
+    "作为输入变量":       "作为输入变量",
+    "静态通道直接输入":   "作为静态通道",
+    "高分辨率静态通道":   "作为高分辨率静态通道",
+    "作为边界特征输入":   "作为边界特征输入",
+    "作为动态通道":       "作为动态通道",
 }
 
 # ─────────────────────────────────────────
@@ -57,30 +69,72 @@ def extract_paper_ids(text):
     """从 [n] 和 {n} 中提取所有论文编号（去重排序）"""
     return sorted(set(int(m) for m in re.findall(r'[\[{](\d+)', text)))
 
-def extract_methods(method_lines):
-    """根据 METHOD_CONFIG_RULES 从方法文本行提取去重标签列表"""
-    tags = set()
-    for line in method_lines:
-        for kw, tag in METHOD_CONFIG_RULES.items():
-            if kw in line:
-                tags.add(tag)
-    return sorted(tags)
+def get_label(detail):
+    """从 detail 文本匹配 METHOD_CONFIG_RULES，返回标准标签；无匹配则返回原文"""
+    for kw, tag in METHOD_CONFIG_RULES.items():
+        if kw in detail:
+            return tag
+    return detail.rstrip("。").strip()
+
+# ─────────────────────────────────────────
+# METHOD_CONFIG_RULES_2（ext xlsx 数据源，era5_model 均赋空）
+# 使用精确匹配，仅列出需要规范化的变体
+# ─────────────────────────────────────────
+METHOD_CONFIG_RULES_2 = {
+    "循环神经网络":                       "循环神经网络及其变体",
+    "注意力与 Transformer":              "注意力与Transformer架构",
+    "分解 - 预测混合框架":               "分解-预测混合框架",
+    "自回归 / 滑动平均类":               "自回归/滑动平均类",
+    "集成方法基础基准与回归类":           "基础基准与回归类",
+    "（传统统计与时间序列模型）其他统计模型": "其他统计模型",
+    "(概率预测与不确定性量化)其他":       "（概率预测）其他",
+}
+
+def get_label_2(raw):
+    """精确匹配 METHOD_CONFIG_RULES_2，无匹配则返回原文（已是规范形式）"""
+    return METHOD_CONFIG_RULES_2.get(raw.strip(), raw.strip())
+
+# algo_tags 规范化映射（原始标签 → 统一标签）
+ALGO_TAG_NORMALIZE = {
+    "自回归 / 滑动平均类":              "自回归/滑动平均类",
+    "分解 - 预测混合框架":              "分解-预测混合框架",
+    "循环神经网络":                     "循环神经网络及其变体",
+    "注意力与 Transformer":            "注意力与Transformer架构",
+    "注意力与Transformer":             "注意力与Transformer架构",
+    "（传统统计与时间序列模型）其他统计模型": "其他统计模型",
+    "集成方法基础基准与回归类":          "基础基准与回归类",
+    "(概率预测与不确定性量化)其他":      "（概率预测）其他",
+    "星阕大模型":                       "星阙大模型",
+}
 
 def split_algo_tags(val):
-    """算法分类列：处理多种分隔符（，、、,）"""
+    """算法分类列：处理多种分隔符（，、、,），并规范化标签名称"""
     if not val:
         return []
     tags = [t.strip() for t in re.split(r'[，、,]', str(val)) if t.strip()]
-    return tags
+    return [ALGO_TAG_NORMALIZE.get(t, t) for t in tags]
 
+
+# cat 关键字 → 分类标签
+CAT_KEYWORDS = {
+    "气象与环境":       "met",
+    "空间与地理地形":   "geo",
+    "风场运行与机组状态": "farm",
+    "风速本体及时序特征": "feat",
+    "本体外扩展":       "ext",
+}
+
+def derive_cat(onto_text):
+    """从对应本体节点文本中匹配关键字，返回分类标签列表"""
+    return [tag for kw, tag in CAT_KEYWORDS.items() if kw in onto_text]
 
 # ─────────────────────────────────────────
-# 读取现有 JSON（保留 cat / cat_label 映射）
+# 读取现有 JSON（保留 usage_flag）
 # ─────────────────────────────────────────
 with open(JSON_PATH, encoding="utf-8") as f:
     existing = json.load(f)
 
-cat_map = {item["id"]: (item["cat"], item["cat_label"]) for item in existing["items"]}
+usage_flag_map = {item["id"]: item.get("usage_flag", "") for item in existing["items"]}
 
 # ─────────────────────────────────────────
 # 打开 Excel
@@ -89,13 +143,31 @@ wb = openpyxl.load_workbook(EXCEL_PATH, read_only=True, data_only=True)
 
 # ═══════════════════════════════════════════
 # SHEET 1 → 每个 ID 的基础字段（首次出现优先）
+# 列映射（0-indexed）：
+#   [0]  ID                    → id
+#   [1]  数据类型分类            → cat_label
+#   [2]  数据名称               → name
+#   [7]  地理覆盖范围            → geo
+#   [8]  分辨率（时/空）         → res
+#   [9]  数据格式               → fmt
+#   [10] 核心字段               → effect
+#   [12] 数据摘要               → summary
+#   [13] 数据集规模              → scale
+#   [16] 用途                   → necessity
+#   [18] 对应本体节点            → onto / cat（关键字派生）
+#   [19] 是否(开源/下载/有无数据) → avail
+#   [20] 下载链接               → source
+#   [22] 数据获取难度            → diff
+#   [23] 成本/费用              → cost
+#   [24] 历史数据年限            → history
+#   [25] 优先级                 → prio
 # ═══════════════════════════════════════════
-ws1 = wb["ERA5和其他数据源组合调研(补充算法组的数据源信息)"]
+ws1 = wb["ERA5和其他数据源组合调研"]
 sheet1_data = {}      # id → dict of basic fields
 seen_ids_s1 = set()
 
 for row in ws1.iter_rows(min_row=2, values_only=True):
-    bid = row[1]
+    bid = row[0]
     if not bid:
         continue
     bid = str(bid).strip()
@@ -103,32 +175,37 @@ for row in ws1.iter_rows(min_row=2, values_only=True):
         continue          # 忽略重复行
     seen_ids_s1.add(bid)
 
+    onto = clean(row[18])
     sheet1_data[bid] = {
         "id":         bid,
-        "name":       clean(row[3]),
-        "onto":       clean(row[5]),
-        "res":        clean(row[6]),
-        "prio":       parse_prio(row[7]),
-        "fmt":        clean(row[8]),
-        "avail":      clean(row[9]),
-        "source":     clean(row[10]),
-        "diff":       parse_diff(row[16]),
-        "cost":       clean(row[18]),
-        "delay":      clean(row[19]),
-        "history":    clean(row[20]),
-        "geo":        clean(row[21]),
-        "necessity":  clean(row[22]),
-        "effect":     clean(row[23]),
-        "usage_flag": clean(row[2]),
+        "name":       clean(row[2]),
+        "cat_label":  clean(row[1]),
+        "cat":        derive_cat(onto),
+        "onto":       onto,
+        "res":        clean(row[8]),
+        "prio":       parse_prio(row[25]),
+        "fmt":        clean(row[9]),
+        "avail":      clean(row[19]),
+        "source":     clean(row[20]),
+        "diff":       parse_diff(row[22]),
+        "cost":       clean(row[23]),
+        "delay":      "",
+        "history":    clean(row[24]),
+        "geo":        clean(row[7]),
+        "necessity":  clean(row[16]),
+        "effect":     clean(row[10]),
+        "summary":    clean(row[12]),
+        "scale":      clean(row[13]),
     }
 
 print(f"Sheet1 解析完成：{len(sheet1_data)} 条")
 
 # ═══════════════════════════════════════════
-# SHEET 2 → method / paper_req / paper_ids
+# SHEET 2 → methods 对象数组（每行一条）
+# col[1]=编号, col[4]=数据使用(detail), col[5]=对应论文与数据量需求(paper_req)
 # ═══════════════════════════════════════════
-ws2 = wb["数据源对应的文献以及数据使用方法和条目需求"]
-sheet2_data = defaultdict(lambda: {"method_lines": [], "paper_reqs": []})
+ws2 = wb["使用ERA5数据源对应的文献及条目"]
+sheet2_data = defaultdict(list)   # id → [{detail, paper_req}, ...]
 current_id = None
 
 for row in ws2.iter_rows(min_row=2, values_only=True):
@@ -138,13 +215,14 @@ for row in ws2.iter_rows(min_row=2, values_only=True):
     if not current_id:
         continue
 
-    e = clean(row[4])   # 数据使用
-    f = clean(row[5])   # 对应论文与数据量需求
+    detail    = clean(row[4])
+    paper_req = clean(row[5])
 
-    if e:
-        sheet2_data[current_id]["method_lines"].append(e)
-    if f:
-        sheet2_data[current_id]["paper_reqs"].append(f)
+    if detail:
+        sheet2_data[current_id].append({
+            "detail":    detail,
+            "paper_req": paper_req,
+        })
 
 print(f"Sheet2 解析完成：{len(sheet2_data)} 个 ID")
 
@@ -205,56 +283,99 @@ print(f"Sheet3 解析完成：{len(papers_new)} 篇文献，"
       f"{sum(1 for v in paper_algo.values() if v)} 篇有算法分类")
 
 # ═══════════════════════════════════════════
+# EXT XLSX → 补充 method 条目（era5_model 赋空）
+# Sheet1 列映射（0-indexed）：
+#   [1] 编号       → item id
+#   [4] 算法分类   → detail（原始值）/ label（经 METHOD_CONFIG_RULES_2 规范化）
+#   [5] 对应论文与数据量需求 → paper_req
+# ═══════════════════════════════════════════
+ext_data = {}    # id → [{detail, paper_req}, ...]
+if EXT_EXCEL_PATH.exists():
+    wb_ext = openpyxl.load_workbook(EXT_EXCEL_PATH, read_only=True, data_only=True)
+    ws_ext = wb_ext["Sheet1"]
+    current_id_ext = None
+    ext_rows = []   # 临时列表
+
+    for row in ws_ext.iter_rows(min_row=2, values_only=True):
+        bid = row[1]
+        if bid:
+            current_id_ext = str(bid).strip()
+        if not current_id_ext:
+            continue
+        detail    = clean(row[4])
+        paper_req = clean(row[5]) if row[5] else ""
+        if detail:
+            ext_rows.append((current_id_ext, detail, paper_req))
+
+    for bid, detail, paper_req in ext_rows:
+        if bid not in ext_data:
+            ext_data[bid] = []
+        ext_data[bid].append({"detail": detail, "paper_req": paper_req})
+
+    print(f"Ext xlsx 解析完成：{len(ext_data)} 个 ID，"
+          f"{sum(len(v) for v in ext_data.values())} 条 method 行")
+else:
+    print("Ext xlsx 不存在，跳过")
+
+# ═══════════════════════════════════════════
 # 构建 items（只更新 Sheet1 中存在的条目）
 # ═══════════════════════════════════════════
 new_items = []
 
 for bid, s1 in sheet1_data.items():
-    # cat / cat_label 保留现有 JSON 的手工标注值
-    cat, cat_label = cat_map.get(bid, ([], ""))
+    # Sheet2 → methods 对象数组（era5_model = 星阙大模型）
+    methods = []
+    for row_data in sheet2_data.get(bid, []):
+        detail    = row_data["detail"]
+        paper_req = row_data["paper_req"]
+        paper_ids = extract_paper_ids(paper_req)
+        methods.append({
+            "label":      get_label(detail),
+            "detail":     detail,
+            "paper_req":  paper_req,
+            "paper_ids":  paper_ids,
+            "era5_model": "星阙大模型",
+        })
 
-    # Sheet2 字段
-    s2 = sheet2_data.get(bid, {"method_lines": [], "paper_reqs": []})
-    method_lines  = s2["method_lines"]
-    paper_reqs    = s2["paper_reqs"]
-    paper_req_str = " ".join(paper_reqs)
-    paper_ids     = extract_paper_ids(paper_req_str)
-    methods       = extract_methods(method_lines)
-
-    # paper_models：从 Sheet3 算法分类中提取
-    paper_models = {}
-    for pid in paper_ids:
-        tags = paper_algo.get(str(pid), [])
-        if tags:
-            paper_models[str(pid)] = tags
+    # Ext xlsx → 追加 method 条目（era5_model = ""）
+    for row_data in ext_data.get(bid, []):
+        detail    = row_data["detail"]
+        paper_req = row_data["paper_req"]
+        paper_ids = extract_paper_ids(paper_req)
+        methods.append({
+            "label":      get_label_2(detail),
+            "detail":     detail,
+            "paper_req":  paper_req,
+            "paper_ids":  paper_ids,
+            "era5_model": "",
+        })
 
     item = {
-        "id":           s1["id"],
-        "name":         s1["name"],
-        "cat":          cat,
-        "cat_label":    cat_label,
-        "onto":         s1["onto"],
-        "prio":         s1["prio"],
-        "fmt":          s1["fmt"],
-        "res":          s1["res"],
-        "avail":        s1["avail"],
-        "source":       s1["source"],
-        "cost":         s1["cost"],
-        "delay":        s1["delay"],
-        "history":      s1["history"],
-        "geo":          s1["geo"],
-        "necessity":    s1["necessity"],
-        "effect":       s1["effect"],
-        "diff":         s1["diff"],
-        "method":       methods,
-        "paper_req":    paper_req_str,
-        "paper_ids":    paper_ids,
-        "paper_models": paper_models,
-        "usage_flag":   s1["usage_flag"],
+        "id":         s1["id"],
+        "name":       s1["name"],
+        "cat":        s1["cat"],
+        "cat_label":  s1["cat_label"],
+        "onto":       s1["onto"],
+        "prio":       s1["prio"],
+        "fmt":        s1["fmt"],
+        "res":        s1["res"],
+        "avail":      s1["avail"],
+        "source":     s1["source"],
+        "cost":       s1["cost"],
+        "delay":      s1["delay"],
+        "history":    s1["history"],
+        "geo":        s1["geo"],
+        "necessity":  s1["necessity"],
+        "effect":     s1["effect"],
+        "summary":    s1["summary"],
+        "scale":      s1["scale"],
+        "diff":       s1["diff"],
+        "methods":    methods,
+        "usage_flag": usage_flag_map.get(bid, ""),
     }
     new_items.append(item)
 
-# 保持与原 JSON 相同的排列顺序（按原有 items 顺序）
+# 保持与原 JSON 相同的排列顺序（新 ID 追加到末尾）
 original_order = [item["id"] for item in existing["items"]]
 order_map = {bid: i for i, bid in enumerate(original_order)}
 new_items.sort(key=lambda x: order_map.get(x["id"], 9999))
@@ -276,21 +397,20 @@ print(f"\n✅ 同步完成！")
 print(f"   items  : {len(new_items)} 条")
 print(f"   papers : {len(papers_new)} 篇 (原 {len(existing['papers'])} 篇)")
 
-# 验证 paper_models / algo_tags 填充情况
-filled_items   = sum(1 for item in new_items if item["paper_models"])
-filled_papers  = sum(1 for p in papers_new if p["algo_tags"])
-print(f"   items  paper_models 非空: {filled_items}/{len(new_items)} 条")
-print(f"   papers algo_tags    非空: {filled_papers}/{len(papers_new)} 篇")
+# 验证 methods / algo_tags 填充情况
+filled_items  = sum(1 for item in new_items if item["methods"])
+filled_papers = sum(1 for p in papers_new if p["algo_tags"])
+print(f"   items  methods 非空: {filled_items}/{len(new_items)} 条")
+print(f"   papers algo_tags 非空: {filled_papers}/{len(papers_new)} 篇")
 
-# 打印 paper_models 样例
-print("\n── paper_models 样例（前3条非空）──")
+# 打印 methods 样例（前2条非空）
+print("\n── methods 样例（前2条非空）──")
 count = 0
 for item in new_items:
-    if item["paper_models"] and count < 3:
-        sample = {k: v for k, v in list(item["paper_models"].items())[:3]}
+    if item["methods"] and count < 2:
         print(f"  [{item['id']}] {item['name'][:20]}...")
-        for pid, tags in sample.items():
-            print(f"    paper_id={pid}: {tags}")
+        for m in item["methods"][:3]:
+            print(f"    label={m['label']}  paper_ids={m['paper_ids']}  era5_model={m['era5_model']}")
         count += 1
 
 # 统计新增papers
@@ -304,11 +424,12 @@ print(f"\n── 新增论文 ID ({len(added)} 篇): {added} ──")
 # 逻辑：algo_tag → paper_ids → item_ids（去重后计数）
 # ═══════════════════════════════════════════
 
-# 1. paper_id → set of item_ids
+# 1. paper_id → set of item_ids（从 methods 中汇总）
 paper_to_items = defaultdict(set)
 for item in new_items:
-    for pid in item["paper_ids"]:
-        paper_to_items[pid].add(item["id"])
+    for m in item["methods"]:
+        for pid in m["paper_ids"]:
+            paper_to_items[pid].add(item["id"])
 
 # 2. algo_tag → set of paper_ids
 algo_to_papers = defaultdict(set)
