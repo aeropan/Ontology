@@ -86,13 +86,25 @@ def split_algo_tags(val):
     return [ALGO_TAG_NORMALIZE.get(t, t) for t in tags]
 
 
+# cat 关键字 → 分类标签
+CAT_KEYWORDS = {
+    "气象与环境":       "met",
+    "空间与地理地形":   "geo",
+    "风场运行与机组状态": "farm",
+    "风速本体及时序特征": "feat",
+    "本体外扩展":       "ext",
+}
+
+def derive_cat(onto_text):
+    """从对应本体节点文本中匹配关键字，返回分类标签列表"""
+    return [tag for kw, tag in CAT_KEYWORDS.items() if kw in onto_text]
+
 # ─────────────────────────────────────────
-# 读取现有 JSON（保留 cat / cat_label 映射）
+# 读取现有 JSON（保留 usage_flag）
 # ─────────────────────────────────────────
 with open(JSON_PATH, encoding="utf-8") as f:
     existing = json.load(f)
 
-cat_map        = {item["id"]: (item["cat"], item["cat_label"]) for item in existing["items"]}
 usage_flag_map = {item["id"]: item.get("usage_flag", "") for item in existing["items"]}
 
 # ─────────────────────────────────────────
@@ -102,21 +114,24 @@ wb = openpyxl.load_workbook(EXCEL_PATH, read_only=True, data_only=True)
 
 # ═══════════════════════════════════════════
 # SHEET 1 → 每个 ID 的基础字段（首次出现优先）
-# 新列映射（0-indexed）：
-#   [0]  ID               → id
-#   [2]  数据名称          → name
-#   [7]  地理覆盖范围      → geo
-#   [8]  分辨率（时/空）   → res
-#   [9]  数据格式          → fmt
-#   [10] 核心字段          → effect
-#   [16] 用途              → necessity
-#   [18] 对应本体节点      → onto
-#   [19] 是否(开源/下载)   → avail
-#   [20] 下载链接          → source
-#   [22] 数据获取难度      → diff
-#   [23] 成本/费用         → cost
-#   [24] 历史数据年限      → history
-#   [25] 优先级            → prio
+# 列映射（0-indexed）：
+#   [0]  ID                    → id
+#   [1]  数据类型分类            → cat_label
+#   [2]  数据名称               → name
+#   [7]  地理覆盖范围            → geo
+#   [8]  分辨率（时/空）         → res
+#   [9]  数据格式               → fmt
+#   [10] 核心字段               → effect
+#   [12] 数据摘要               → summary
+#   [13] 数据集规模              → scale
+#   [16] 用途                   → necessity
+#   [18] 对应本体节点            → onto / cat（关键字派生）
+#   [19] 是否(开源/下载/有无数据) → avail
+#   [20] 下载链接               → source
+#   [22] 数据获取难度            → diff
+#   [23] 成本/费用              → cost
+#   [24] 历史数据年限            → history
+#   [25] 优先级                 → prio
 # ═══════════════════════════════════════════
 ws1 = wb["ERA5和其他数据源组合调研"]
 sheet1_data = {}      # id → dict of basic fields
@@ -131,10 +146,13 @@ for row in ws1.iter_rows(min_row=2, values_only=True):
         continue          # 忽略重复行
     seen_ids_s1.add(bid)
 
+    onto = clean(row[18])
     sheet1_data[bid] = {
         "id":         bid,
         "name":       clean(row[2]),
-        "onto":       clean(row[18]),
+        "cat_label":  clean(row[1]),
+        "cat":        derive_cat(onto),
+        "onto":       onto,
         "res":        clean(row[8]),
         "prio":       parse_prio(row[25]),
         "fmt":        clean(row[9]),
@@ -147,7 +165,8 @@ for row in ws1.iter_rows(min_row=2, values_only=True):
         "geo":        clean(row[7]),
         "necessity":  clean(row[16]),
         "effect":     clean(row[10]),
-        "usage_flag": "",     # 新表无对应列，后续从现有 JSON 保留
+        "summary":    clean(row[12]),
+        "scale":      clean(row[13]),
     }
 
 print(f"Sheet1 解析完成：{len(sheet1_data)} 条")
@@ -238,9 +257,6 @@ print(f"Sheet3 解析完成：{len(papers_new)} 篇文献，"
 new_items = []
 
 for bid, s1 in sheet1_data.items():
-    # cat / cat_label 保留现有 JSON 的手工标注值
-    cat, cat_label = cat_map.get(bid, ([], ""))
-
     # Sheet2 字段
     s2 = sheet2_data.get(bid, {"method_lines": [], "paper_reqs": []})
     method_lines  = s2["method_lines"]
@@ -259,8 +275,8 @@ for bid, s1 in sheet1_data.items():
     item = {
         "id":           s1["id"],
         "name":         s1["name"],
-        "cat":          cat,
-        "cat_label":    cat_label,
+        "cat":          s1["cat"],
+        "cat_label":    s1["cat_label"],
         "onto":         s1["onto"],
         "prio":         s1["prio"],
         "fmt":          s1["fmt"],
@@ -273,6 +289,8 @@ for bid, s1 in sheet1_data.items():
         "geo":          s1["geo"],
         "necessity":    s1["necessity"],
         "effect":       s1["effect"],
+        "summary":      s1["summary"],
+        "scale":        s1["scale"],
         "diff":         s1["diff"],
         "method":       methods,
         "paper_req":    paper_req_str,
@@ -282,7 +300,7 @@ for bid, s1 in sheet1_data.items():
     }
     new_items.append(item)
 
-# 保持与原 JSON 相同的排列顺序（按原有 items 顺序）
+# 保持与原 JSON 相同的排列顺序（新 ID 追加到末尾）
 original_order = [item["id"] for item in existing["items"]]
 order_map = {bid: i for i, bid in enumerate(original_order)}
 new_items.sort(key=lambda x: order_map.get(x["id"], 9999))
