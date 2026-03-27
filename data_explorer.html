@@ -3301,12 +3301,59 @@
     };
 
     const METHODS_STYLE = {
-      '微调':    'background:var(--green-dim);color:var(--green);border-color:rgba(52,211,153,0.3)',
-      '输入通道': 'background:var(--blue-dim);color:var(--blue);border-color:rgba(56,189,248,0.3)',
-      '特征融合': 'background:var(--orange-dim);color:var(--orange);border-color:rgba(251,146,60,0.3)',
+      // ── 原有标准方法 ──────────────────────────────────────────
+      '微调':       'background:var(--green-dim);color:var(--green);border-color:rgba(52,211,153,0.3)',
+      '输入通道':   'background:var(--blue-dim);color:var(--blue);border-color:rgba(56,189,248,0.3)',
+      '特征融合':   'background:var(--orange-dim);color:var(--orange);border-color:rgba(251,146,60,0.3)',
       '后处理校正': 'background:rgba(251,191,36,0.1);color:#fbbf24;border-color:rgba(251,191,36,0.3)',
-      '图GNN':   'background:var(--purple-dim);color:var(--purple);border-color:rgba(167,139,250,0.3)',
-      '条件注入': 'background:rgba(248,113,113,0.1);color:#f43f5e;border-color:rgba(248,113,113,0.3)',
+      '图GNN':      'background:var(--purple-dim);color:var(--purple);border-color:rgba(167,139,250,0.3)',
+      '条件注入':   'background:rgba(248,113,113,0.1);color:#f43f5e;border-color:rgba(248,113,113,0.3)',
+      // ── 通道变体（天蓝）──────────────────────────────────────
+      '作为输入变量':         'background:rgba(14,165,233,0.1);color:#0ea5e9;border-color:rgba(14,165,233,0.3)',
+      '作为动态通道':         'background:rgba(14,165,233,0.1);color:#0ea5e9;border-color:rgba(14,165,233,0.3)',
+      '作为静态通道':         'background:rgba(14,165,233,0.1);color:#0ea5e9;border-color:rgba(14,165,233,0.3)',
+      '作为高分辨率静态通道': 'background:rgba(14,165,233,0.1);color:#0ea5e9;border-color:rgba(14,165,233,0.3)',
+      '作为边界特征输入':     'background:rgba(14,165,233,0.1);color:#0ea5e9;border-color:rgba(14,165,233,0.3)',
+      // ── 深度学习 – 序列/循环（靛蓝）─────────────────────────
+      '循环神经网络及其变体': 'background:rgba(99,102,241,0.1);color:#818cf8;border-color:rgba(99,102,241,0.3)',
+      // ── 深度学习 – 注意力/Transformer（紫罗兰）──────────────
+      '注意力与Transformer架构': 'background:rgba(139,92,246,0.12);color:#c084fc;border-color:rgba(139,92,246,0.35)',
+      // ── 深度学习 – 卷积/前馈/生成（蓝紫）───────────────────
+      '卷积神经网络':     'background:rgba(59,130,246,0.1);color:#60a5fa;border-color:rgba(59,130,246,0.3)',
+      '前馈神经网络':     'background:rgba(59,130,246,0.1);color:#60a5fa;border-color:rgba(59,130,246,0.3)',
+      '自编码器与生成模型': 'background:rgba(59,130,246,0.1);color:#60a5fa;border-color:rgba(59,130,246,0.3)',
+      '其他专门网络':     'background:rgba(59,130,246,0.1);color:#60a5fa;border-color:rgba(59,130,246,0.3)',
+      // ── 时空/图网络（青绿）──────────────────────────────────
+      '时空模型':   'background:rgba(20,184,166,0.1);color:#2dd4bf;border-color:rgba(20,184,166,0.3)',
+      '图神经网络': 'background:rgba(20,184,166,0.1);color:#2dd4bf;border-color:rgba(20,184,166,0.3)',
+      // ── 树/集成方法（琥珀）──────────────────────────────────
+      '随机森林回归':     'background:rgba(245,158,11,0.1);color:#fbbf24;border-color:rgba(245,158,11,0.3)',
+      '随机森林分类器':   'background:rgba(245,158,11,0.1);color:#fbbf24;border-color:rgba(245,158,11,0.3)',
+      '梯度提升算法':     'background:rgba(245,158,11,0.1);color:#fbbf24;border-color:rgba(245,158,11,0.3)',
+      '树模型与集成学习': 'background:rgba(245,158,11,0.1);color:#fbbf24;border-color:rgba(245,158,11,0.3)',
+      '集成方法':         'background:rgba(245,158,11,0.1);color:#fbbf24;border-color:rgba(245,158,11,0.3)',
+      '基础基准与回归类': 'background:rgba(245,158,11,0.1);color:#fbbf24;border-color:rgba(245,158,11,0.3)',
+      // ── 传统统计时序（石板蓝）──────────────────────────────
+      '自回归/滑动平均类':   'background:rgba(100,116,139,0.12);color:#94a3b8;border-color:rgba(100,116,139,0.3)',
+      '指数平滑类':         'background:rgba(100,116,139,0.12);color:#94a3b8;border-color:rgba(100,116,139,0.3)',
+      '分解-预测混合框架':   'background:rgba(100,116,139,0.12);color:#94a3b8;border-color:rgba(100,116,139,0.3)',
+      '多元回归方法':       'background:rgba(100,116,139,0.12);color:#94a3b8;border-color:rgba(100,116,139,0.3)',
+      '支持向量机类':       'background:rgba(100,116,139,0.12);color:#94a3b8;border-color:rgba(100,116,139,0.3)',
+      '最近邻':             'background:rgba(100,116,139,0.12);color:#94a3b8;border-color:rgba(100,116,139,0.3)',
+      '其他统计模型':       'background:rgba(100,116,139,0.12);color:#94a3b8;border-color:rgba(100,116,139,0.3)',
+      // ── 概率/不确定性（粉红）────────────────────────────────
+      '分位数回归':     'background:rgba(236,72,153,0.1);color:#f472b6;border-color:rgba(236,72,153,0.3)',
+      '贝叶斯方法':     'background:rgba(236,72,153,0.1);color:#f472b6;border-color:rgba(236,72,153,0.3)',
+      '（概率预测）其他': 'background:rgba(236,72,153,0.1);color:#f472b6;border-color:rgba(236,72,153,0.3)',
+      // ── 物理/数值方法（青）──────────────────────────────────
+      '数值天气预报':       'background:rgba(6,182,212,0.1);color:#22d3ee;border-color:rgba(6,182,212,0.3)',
+      '物理降尺度与后处理': 'background:rgba(6,182,212,0.1);color:#22d3ee;border-color:rgba(6,182,212,0.3)',
+      '计算流体动力学':     'background:rgba(6,182,212,0.1);color:#22d3ee;border-color:rgba(6,182,212,0.3)',
+      // ── 其他专项（玫红）────────────────────────────────────
+      '强化学习':       'background:rgba(244,63,94,0.08);color:#fb7185;border-color:rgba(244,63,94,0.28)',
+      '优化算法增强':   'background:rgba(244,63,94,0.08);color:#fb7185;border-color:rgba(244,63,94,0.28)',
+      '模糊系统':       'background:rgba(244,63,94,0.08);color:#fb7185;border-color:rgba(244,63,94,0.28)',
+      '规则系统与灰色理论': 'background:rgba(244,63,94,0.08);color:#fb7185;border-color:rgba(244,63,94,0.28)',
     };
 
     const PRIO_STYLE = {
@@ -3763,7 +3810,7 @@
     }
 
     function getMethodLabels(item) {
-      return (item.methods || []).map(m => m.label).filter(Boolean);
+      return (item.methods || []).map(m => m.label).filter(l => l && l !== '无');
     }
 
     function getMethodTagsHtml(item, styleMap) {
