@@ -2291,7 +2291,6 @@
     .prov-data-item { display:flex; align-items:center; gap:5px; padding:3px 6px; border-radius:5px; cursor:pointer; transition:all .15s; margin-bottom:1px; border:1px solid transparent; }
     .prov-data-item:hover { background:var(--panel2); }
     .prov-data-item.selected { background:rgba(167,139,250,0.12); border-color:rgba(167,139,250,0.4); }
-    .prov-data-item.related { background:rgba(56,189,248,0.06); border-color:rgba(56,189,248,0.3); }
     .prov-data-item.dimmed { opacity:0.22; pointer-events:none; }
     .prov-data-name { font-size:11px; color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
@@ -4298,12 +4297,16 @@
           const isPrimary   = provSelPrimary   === item.id;
           const isSecondary = provSelSecondary  === item.id;
           const isRelated   = hasPrimary && !!provRelatedMap[item.id];
-          // 状态判断：无选中→全部正常；有 primary→只有 primary/related/secondary 可点
-          const isDimmed  = hasPrimary && !isPrimary && !isRelated && !isSecondary;
+          const hasBoth     = !!(provSelPrimary && provSelSecondary);
+          // 灰度规则：
+          //   有 primary 无 secondary → 非 primary 且非 related 的灰度
+          //   两条都选中 → 除 primary/secondary 以外全部灰度
+          const isDimmed = hasBoth
+            ? !isPrimary && !isSecondary
+            : hasPrimary && !isPrimary && !isRelated;
           const cls = [
             'prov-data-item',
             isPrimary || isSecondary ? ' selected' : '',
-            isRelated && !isSecondary ? ' related' : '',
             isDimmed ? ' dimmed' : '',
           ].join('');
           // 选中框角标
