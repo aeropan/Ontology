@@ -2341,12 +2341,21 @@
 
     /* 标书弹窗 */
     .tender-modal-mask { position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:1000; display:flex; align-items:center; justify-content:center; }
-    .tender-modal { background:var(--panel); border:1px solid var(--border2); border-radius:12px; width:520px; max-width:92vw; max-height:80vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.4); }
-    .tender-modal-head { padding:16px 20px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
-    .tender-modal-title { font-size:14px; font-weight:600; color:var(--text); }
-    .tender-modal-close { width:26px; height:26px; border-radius:6px; border:1px solid var(--border2); background:transparent; color:var(--text3); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; transition:all .15s; }
+    .tender-modal { background:var(--panel); border:1px solid var(--border2); border-radius:12px; width:800px; max-width:94vw; height:72vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.4); }
+    .tender-modal-head { padding:14px 18px 10px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .tender-modal-title { font-size:13px; font-weight:600; color:var(--text); }
+    .tender-modal-close { width:26px; height:26px; border-radius:6px; border:1px solid var(--border2); background:transparent; color:var(--text3); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; transition:all .15s; flex-shrink:0; }
     .tender-modal-close:hover { background:var(--panel2); color:var(--text); }
-    .tender-modal-body { overflow-y:auto; padding:16px 20px; flex:1; }
+    .tender-modal-content { display:flex; flex:1; min-height:0; }
+    /* 左侧目录 */
+    .tender-sidebar { width:220px; flex-shrink:0; border-right:1px solid var(--border); overflow-y:auto; padding:8px; }
+    .tender-sidebar-item { padding:8px 10px; border-radius:6px; cursor:pointer; margin-bottom:3px; border:1px solid transparent; transition:all .15s; }
+    .tender-sidebar-item:hover { background:var(--panel2); }
+    .tender-sidebar-item.active { background:rgba(245,158,11,.08); border-color:rgba(245,158,11,.3); }
+    .tender-sidebar-id { font-size:10px; font-family:var(--mono); color:#f59e0b; font-weight:600; margin-bottom:3px; }
+    .tender-sidebar-name { font-size:11px; color:var(--text2); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    /* 右侧详情 */
+    .tender-detail { flex:1; overflow-y:auto; padding:16px 20px; }
     .tender-field { margin-bottom:12px; }
     .tender-field-label { font-size:10px; color:var(--text3); font-family:var(--mono); letter-spacing:.05em; margin-bottom:3px; }
     .tender-field-value { font-size:12.5px; color:var(--text2); line-height:1.6; }
@@ -2865,7 +2874,6 @@
               <div style="display:flex;gap:0;border-top:1px solid var(--border);width:100%;margin-top:4px;">
                 <div class="insight-tab active" id="itab-biz" onclick="switchInsightTab('biz')" style="padding:6px 14px;font-size:11px;color:var(--purple);cursor:pointer;border-bottom:2px solid var(--purple);font-weight:500;">业务洞察</div>
                 <div class="insight-tab" id="itab-acad" onclick="switchInsightTab('acad')" style="padding:6px 14px;font-size:11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;">学术洞察</div>
-                <div class="insight-tab" id="itab-busi" onclick="switchInsightTab('busi')" style="padding:6px 14px;font-size:11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;">商业洞察</div>
               </div>
             </div>
             <div style="flex:1;overflow-y:auto;padding:10px 14px;min-height:0;" id="provRefBody">
@@ -4478,6 +4486,11 @@
           <div style="font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px;letter-spacing:.03em;">${label}</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.7;">${val}</div>
         </div>` : '';
+      // 有关联标书时显示"商业洞察"按钮
+      const hasTenders = getTendersByRow(m.badge).length > 0;
+      const bizBtn = hasTenders
+        ? `<button onclick="openTenderModal('${m.badge}')" style="margin-top:8px;padding:3px 10px;border-radius:5px;border:1px solid rgba(245,158,11,.4);background:rgba(245,158,11,.08);color:#f59e0b;font-size:10px;cursor:pointer;font-family:var(--sans);">商业洞察 →</button>`
+        : '';
       return `<div class="prov-ref-item" style="border-left:3px solid ${accentColor};margin-bottom:10px;padding:10px 12px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           <span style="font-size:10px;font-family:var(--mono);color:${accentColor};font-weight:700;background:${accentColor}1a;padding:2px 7px;border-radius:4px;">${m.badge}</span>
@@ -4489,6 +4502,7 @@
         <div style="margin-top:4px;padding:8px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border);">
           <div style="font-size:11px;color:var(--text2);line-height:1.7;">${m.effect}</div>
           <div style="font-size:11px;color:${accentColor};font-weight:600;margin-top:4px;">场景：${m.scene}</div>
+          ${bizBtn}
         </div>
       </div>`;
     }
@@ -4515,7 +4529,7 @@
     // ── 切换洞察标签页 ──────────────────────────────
     function switchInsightTab(tab) {
       insightActiveTab = tab;
-      ['biz','acad','busi'].forEach(t => {
+      ['biz','acad'].forEach(t => {
         const el = document.getElementById('itab-' + t);
         if (!el) return;
         const isActive = t === tab;
@@ -4552,14 +4566,12 @@
         return;
       }
 
-      // 商业洞察
-      body.innerHTML = renderInsightBusi();
     }
 
-    // ── 商业洞察：标书数据（预设示例，规则匹配后续补充）──────────────
+    // ── 标书数据（预设示例，按 rowId 分组；规则匹配后续补充）──────────────
     const TENDER_DATA = [
       {
-        id: 'T-2024-001',
+        id: 'T-2024-001', rowId: 'M1-1',
         name: '某省级电网2024年度风电功率预测系统采购项目',
         client: '华东某省电力调度控制中心',
         scale: '覆盖全省 12 个风电场，装机容量合计 3.2GW',
@@ -4573,7 +4585,7 @@
         contact: '采购办公室 · 招标文件编号 HDDJ-2024-FC-001'
       },
       {
-        id: 'T-2024-002',
+        id: 'T-2024-002', rowId: 'M1-2',
         name: '某海上风电场气象数据服务及预测模型部署项目',
         client: '南方某海上风电运营有限公司',
         scale: '单体风电场 500MW，离岸距离约 80km',
@@ -4587,7 +4599,7 @@
         contact: '项目管理部 · 招标文件编号 NFHF-2024-MET-007'
       },
       {
-        id: 'T-2023-018',
+        id: 'T-2023-018', rowId: 'M1-2',
         name: '西北某风电集群智能功率预测平台建设',
         client: '西北某新能源集团股份有限公司',
         scale: '覆盖 8 个风电场，总装机 2.0GW，含复杂山地地形',
@@ -4601,7 +4613,7 @@
         contact: '物资采购部 · 招标文件编号 XBNY-2023-AI-018'
       },
       {
-        id: 'T-2025-003',
+        id: 'T-2025-003', rowId: 'M1-3',
         name: '某省风电消纳辅助决策与多源数据融合平台',
         client: '华北某省发展改革委新能源处',
         scale: '省级统筹，涉及全省 35 个并网风电场',
@@ -4622,63 +4634,61 @@
       '流标':   { bg: 'rgba(156,163,175,.12)', color: 'var(--text3)' }
     };
 
-    function renderInsightBusi() {
-      if (!provSelPrimary) {
-        return '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">💼</div><div>请选择左侧数据项查看商业洞察</div></div>';
-      }
-      return `<div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);">相关标书 · ${TENDER_DATA.length} 条（规则匹配待完善）</div>` +
-        TENDER_DATA.map(t => {
-          const st = TENDER_STATUS_STYLE[t.status] || TENDER_STATUS_STYLE['流标'];
-          const tags = t.tech_keywords.map(k =>
-            `<span style="display:inline-block;padding:1px 7px;border-radius:8px;background:rgba(139,92,246,.1);color:var(--purple);font-size:10px;margin:2px 2px 0 0;">${k}</span>`
-          ).join('');
-          return `<div class="prov-ref-item" style="border-left:3px solid #f59e0b;margin-bottom:10px;padding:10px 12px;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
-              <div>
-                <span style="font-size:10px;font-family:var(--mono);color:#f59e0b;font-weight:700;background:rgba(245,158,11,.1);padding:2px 7px;border-radius:4px;">${t.id}</span>
-                <div style="font-size:12px;font-weight:600;color:var(--text);margin-top:5px;line-height:1.4;">${t.name}</div>
-              </div>
-              <span class="tender-status-badge" style="flex-shrink:0;background:${st.bg};color:${st.color};">${t.status}</span>
-            </div>
-            <div style="display:flex;gap:16px;margin-bottom:8px;">
-              <div style="font-size:11px;color:var(--text2);"><span style="color:var(--text3);">金额：</span>${t.amount}</div>
-              <div style="font-size:11px;color:var(--text2);"><span style="color:var(--text3);">评标：</span>${t.eval_method}</div>
-            </div>
-            <div style="margin-bottom:8px;">${tags}</div>
-            <button class="prov-ref-btn" style="background:rgba(245,158,11,.1);color:#f59e0b;border-color:rgba(245,158,11,.3);" onclick="openTenderModal('${t.id}')">查看标书 →</button>
-          </div>`;
-        }).join('');
+    // 根据 rowId 过滤标书（规则待补充时全量返回对应 rowId 的条目）
+    function getTendersByRow(rowId) {
+      return TENDER_DATA.filter(t => t.rowId === rowId);
     }
 
-    function openTenderModal(id) {
+    // 打开弹窗：传入 rowId，左侧目录列出该 row 的所有标书，默认选中第一条
+    function openTenderModal(rowId) {
+      const list = getTendersByRow(rowId);
+      if (!list.length) return;
+      renderTenderSidebar(list, list[0].id);
+      renderTenderDetail(list[0].id);
+      document.getElementById('tenderModal').style.display = 'flex';
+    }
+
+    function renderTenderSidebar(list, activeId) {
+      document.getElementById('tenderSidebar').innerHTML = list.map(t => {
+        const st = TENDER_STATUS_STYLE[t.status] || TENDER_STATUS_STYLE['流标'];
+        return `<div class="tender-sidebar-item${t.id === activeId ? ' active' : ''}" onclick="renderTenderDetail('${t.id}');setTenderSidebarActive('${t.id}')">
+          <div class="tender-sidebar-id">${t.id}</div>
+          <div class="tender-sidebar-name">${t.name}</div>
+          <span class="tender-status-badge" style="font-size:10px;padding:1px 7px;margin-top:4px;display:inline-block;background:${st.bg};color:${st.color};">${t.status}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function setTenderSidebarActive(id) {
+      document.querySelectorAll('.tender-sidebar-item').forEach(el => {
+        el.classList.toggle('active', el.querySelector('.tender-sidebar-id').textContent === id);
+      });
+    }
+
+    function renderTenderDetail(id) {
       const t = TENDER_DATA.find(x => x.id === id);
       if (!t) return;
       const st = TENDER_STATUS_STYLE[t.status] || TENDER_STATUS_STYLE['流标'];
       const fields = [
-        ['标书编号',   t.id],
-        ['标书名称',   t.name],
-        ['招标单位',   t.client],
-        ['项目规模',   t.scale],
+        ['标书编号',     t.id],
+        ['标书名称',     t.name],
+        ['招标单位',     t.client],
+        ['项目规模',     t.scale],
         ['技术要求关键词', t.tech_keywords.join('、')],
-        ['截止日期',   t.deadline],
-        ['标书状态',   t.status, 'status'],
-        ['标书金额',   t.amount],
-        ['评标方式',   t.eval_method],
-        ['中标单位',   t.winner],
+        ['截止日期',     t.deadline],
+        ['标书状态',     t.status, 'status'],
+        ['标书金额',     t.amount],
+        ['评标方式',     t.eval_method],
+        ['中标单位',     t.winner],
         ['技术要求摘要', t.requirement],
-        ['联系/编号',  t.contact],
+        ['联系/编号',    t.contact],
       ];
-      document.getElementById('tenderModalTitle').textContent = t.name;
       document.getElementById('tenderModalBody').innerHTML = fields.map(([label, val, type]) => {
         const valHtml = type === 'status'
           ? `<span class="tender-status-badge" style="background:${st.bg};color:${st.color};">${val}</span>`
           : `<div class="tender-field-value">${val}</div>`;
-        return `<div class="tender-field">
-          <div class="tender-field-label">${label}</div>
-          ${valHtml}
-        </div>`;
+        return `<div class="tender-field"><div class="tender-field-label">${label}</div>${valHtml}</div>`;
       }).join('');
-      document.getElementById('tenderModal').style.display = 'flex';
     }
 
     function closeTenderModal() {
@@ -5014,10 +5024,13 @@
   <div id="tenderModal" class="tender-modal-mask" style="display:none;" onclick="if(event.target===this)closeTenderModal()">
     <div class="tender-modal">
       <div class="tender-modal-head">
-        <div class="tender-modal-title" id="tenderModalTitle">标书详情</div>
+        <div class="tender-modal-title" id="tenderModalTitle">商业洞察 · 标书详情</div>
         <button class="tender-modal-close" onclick="closeTenderModal()">✕</button>
       </div>
-      <div class="tender-modal-body" id="tenderModalBody"></div>
+      <div class="tender-modal-content">
+        <div class="tender-sidebar" id="tenderSidebar"></div>
+        <div class="tender-detail" id="tenderModalBody"></div>
+      </div>
     </div>
   </div>
 </body>
