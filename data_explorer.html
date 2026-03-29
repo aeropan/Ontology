@@ -2597,33 +2597,12 @@
             <div class="matrix-wrap">
               <div class="matrix-header">
                 <div class="matrix-header-title">使用方式矩阵（核心数据项）</div>
-                <div class="matrix-legend">
-                  <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>微调</div>
-                  <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>通道</div>
-                  <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>融合</div>
-                  <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>后处理</div>
-                  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>图GNN</div>
-                  <div class="legend-item"><div class="legend-dot" style="background:#f43f5e"></div>注入</div>
-                  <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div>其他</div>
-                </div>
+                <div style="font-size:10px;color:var(--text3);">← 横向滚动查看全部方法列</div>
               </div>
               <div class="matrix-scroll">
-                <table class="matrix-table">
-                  <thead>
-                    <tr>
-                      <th class="row-head">数据项</th>
-                      <th>微调</th>
-                      <th>输入通道</th>
-                      <th>特征融合</th>
-                      <th>后处理</th>
-                      <th>图GNN</th>
-                      <th>条件注入</th>
-                      <th>其他</th>
-                    </tr>
-                  </thead>
-                  <tbody id="matrixBody">
-                    <!-- 动态渲染，见 renderMatrix() -->
-                  </tbody>
+                <table class="matrix-table" id="matrixTable">
+                  <thead id="matrixHead"></thead>
+                  <tbody id="matrixBody"></tbody>
                 </table>
               </div>
             </div>
@@ -3424,29 +3403,37 @@
     }
 
     // ════════════════════════════════════════
-    // RENDER: MATRIX（使用方式矩阵，含"其他"列）
+    // RENDER: MATRIX（使用方式矩阵，全量方法列）
     // ════════════════════════════════════════
     function renderMatrix() {
-      // 筛选：在 sheet2 中有 method 或有 usage 内容的条目
-      const STANDARD_METHODS = ['微调','输入通道','特征融合','后处理校正','图GNN','条件注入'];
-      const METHOD_CELL = { '微调':'m-ft', '输入通道':'m-ch', '特征融合':'m-fu', '后处理校正':'m-pp', '图GNN':'m-gn', '条件注入':'m-ci' };
+      // 从数据中收集所有出现过的方法标签（去重、去"无"、保顺序）
+      const seen = new Set();
+      const ALL_METHODS = [];
+      ITEMS.forEach(item => {
+        getMethodLabels(item).forEach(l => {
+          if (!seen.has(l)) { seen.add(l); ALL_METHODS.push(l); }
+        });
+      });
 
-      // 显示有任何 method 信息的条目
+      // 动态渲染表头
+      document.getElementById('matrixHead').innerHTML = `<tr>
+        <th class="row-head">数据项</th>
+        ${ALL_METHODS.map(m => `<th>${m}</th>`).join('')}
+      </tr>`;
+
+      // 只渲染有 methods 的行
       const rows = ITEMS.filter(i => i.methods && i.methods.length > 0);
-
       document.getElementById('matrixBody').innerHTML = rows.map(item => {
         const labels = getMethodLabels(item);
-        const cells = STANDARD_METHODS.map(m => {
+        const cells = ALL_METHODS.map(m => {
           const has = labels.includes(m);
-          return `<td>${has ? `<div class="m-cell ${METHOD_CELL[m]}">✓</div>` : ''}</td>`;
+          const style = has ? (METHODS_STYLE[m] || '') : '';
+          return `<td>${has ? `<div class="m-cell" style="font-size:11px;padding:2px 6px;border-radius:4px;border:1px solid transparent;${style}">✓</div>` : ''}</td>`;
         }).join('');
-        // 其他列：有 methods 但全部不属于标准方法时打 ✓
-        const hasOther = labels.length > 0 && !labels.some(m => STANDARD_METHODS.includes(m));
-        const otherCell = `<td>${hasOther ? `<div class="m-cell m-ot">✓</div>` : ''}</td>`;
         const name = item.name.length > 18 ? item.name.slice(0,18)+'…' : item.name;
         return `<tr>
           <td class="row-head" title="${item.name}">${name}</td>
-          ${cells}${otherCell}
+          ${cells}
         </tr>`;
       }).join('');
     }
