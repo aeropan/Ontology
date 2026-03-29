@@ -4683,6 +4683,9 @@
     function litClickPaper(id) {
       litSelId = String(id);
       renderLitList();
+      // 滚动左侧列表到选中项
+      const selEl = document.querySelector('#litListBody .lit-list-item.selected');
+      if (selEl) selEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       renderLitDetail(id);
       renderLitDataList(id);
     }
