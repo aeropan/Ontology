@@ -2551,7 +2551,7 @@
               <button class="back-btn" onclick="showPage('list')">← 返回列表</button>
               <button class="btn-primary" onclick="openAddData()" style="padding:7px 14px;font-size:12px;">+ 新增数据</button>
               <button class="btn-refresh" onclick="showPage('provenance')" style="border-color:rgba(167,139,250,0.4);color:var(--purple);" title="数据与文献溯源">
-                <span>📜</span><span>数据与文献溯源</span>
+                <span>🔬</span><span>深度洞察</span>
               </button>
               <button class="btn-refresh" id="refreshBtn" onclick="triggerRefresh()" title="从Excel刷新数据">
                 <span class="rf-icon">↻</span><span>刷新数据</span>
@@ -2791,7 +2791,7 @@
   <div class="page" id="page-provenance" style="display:none;flex-direction:column;height:calc(100vh - 52px);overflow:hidden;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;padding-top:4px;">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div class="page-title">📜 数据与文献<span>溯源</span></div>
+        <div class="page-title">🔬 深度<span>洞察</span></div>
         <button class="cancel-sel-btn" id="cancelSelBtn" onclick="provCancelAll()">✕ 取消选择</button>
       </div>
       <button class="back-btn" onclick="showPage('detail')">← 返回概览</button>
@@ -2821,14 +2821,22 @@
 
         <!-- 右：算法+文献，垂直排列 -->
         <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
-          <!-- 右上：算法模块，固定高度 -->
-          <div class="prov-panel" style="flex-shrink:0;height:210px;overflow:hidden;">
+          <!-- 右上：算法模块，自适应高度 -->
+          <div class="prov-panel" style="flex-shrink:0;overflow:hidden;">
             <div class="prov-panel-head">
               <div class="prov-panel-title">⚙️ 算法模块</div>
-              <div style="font-size:10px;color:var(--text3);">点击算法或数据查看关联关系</div>
+              <div style="font-size:10px;color:var(--text3);">点击标签筛选关联数据</div>
             </div>
-            <div style="flex:1;overflow-y:auto;padding:8px 10px;height:calc(210px - 38px);">
-              <div class="prov-method-grid" id="provMethodGrid"></div>
+            <!-- 搜索栏 + 星阙筛选 -->
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 10px 0;">
+              <div class="prov-search" style="flex:1;">
+                <span style="color:var(--text3);font-size:13px;">🔍</span>
+                <input type="text" placeholder="搜索算法…" disabled>
+              </div>
+              <button id="provEra5Btn" onclick="provToggleEra5()" style="flex-shrink:0;padding:3px 10px;border-radius:5px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;">星阙大模型</button>
+            </div>
+            <div style="overflow-y:auto;padding:8px 10px;max-height:160px;">
+              <div id="provMethodGrid" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
             </div>
           </div>
           <!-- 右下：文献结果，占剩余高度 -->
@@ -3241,7 +3249,7 @@
       if (id === 'detail') setTimeout(drawDiagramLines, 50);
       if (window.parent !== window) {
         const crumbs = id === 'list' ? ['行业分析']
-          : id === 'provenance' ? ['行业分析', '风力发电功率预测', '数据与文献溯源']
+          : id === 'provenance' ? ['行业分析', '风力发电功率预测', '深度洞察']
           : ['行业分析', '风力发电功率预测'];
         window.parent.postMessage({ type: 'NAV', crumbs: crumbs }, '*');
       }
@@ -4176,32 +4184,43 @@
     // ════════════════════════════════════════
     // PROVENANCE PAGE
     // ════════════════════════════════════════
-    const PROV_METHODS = [
-      { key:'微调',     label:'星阙大模型微调',     icon:'🎯', color:'#34d399', bg:'rgba(52,211,153,0.1)',  border:'rgba(52,211,153,0.3)'  },
-      { key:'输入通道', label:'增加星阙大模型输入通道', icon:'📡', color:'#38bdf8', bg:'rgba(56,189,248,0.1)',  border:'rgba(56,189,248,0.3)'  },
-      { key:'特征融合', label:'星阙大模型特征融合', icon:'🔀', color:'#fb923c', bg:'rgba(251,146,60,0.1)',  border:'rgba(251,146,60,0.3)'  },
-      { key:'后处理校正',label:'星阙大模型后处理校正',icon:'🔧',color:'#fbbf24',bg:'rgba(251,191,36,0.1)', border:'rgba(251,191,36,0.3)'  },
-      { key:'图GNN',    label:'星阙大模型图GNN',    icon:'🕸️', color:'#a78bfa', bg:'rgba(167,139,250,0.1)', border:'rgba(167,139,250,0.3)' },
-      { key:'条件注入', label:'星阙大模型条件注入', icon:'💉', color:'#f43f5e', bg:'rgba(248,113,113,0.1)', border:'rgba(248,113,113,0.3)' },
-      { key:'__other__',label:'其他方法', icon:'📎', color:'#94a3b8', bg:'rgba(100,116,139,0.1)', border:'rgba(100,116,139,0.3)' },
-    ];
+    // 从数据中按出现顺序收集所有方法标签，并标注是否属于星阙大模型
+    const PROV_METHODS = (() => {
+      const seen = new Set();
+      const list = [];
+      ITEMS.forEach(item => {
+        (item.methods || []).forEach(m => {
+          if (m.label && m.label !== '无' && !seen.has(m.label)) {
+            seen.add(m.label);
+            list.push({ key: m.label, isEra5: m.era5_model === '星阙大模型' });
+          }
+        });
+      });
+      return list;
+    })();
 
-    // 判断某条数据是否属于"其他"（有 paper_req 但无标准 method）
-    function itemHasOther(item) {
-      return (!item.method || item.method.length === 0) && item.paper_req && item.paper_req.trim();
-    }
-
-    // 获取某条数据的有效 method 集合（含 __other__）
+    // 获取某条数据的有效 method label 集合
     function getItemMethods(item) {
-      const ms = [...(item.method || [])];
-      if (itemHasOther(item)) ms.push('__other__');
-      return ms;
+      return getMethodLabels(item);
     }
 
     // 获取某个 method 下所有数据
     function getMethodItems(methodKey) {
-      if (methodKey === '__other__') return ITEMS.filter(itemHasOther);
-      return ITEMS.filter(i => (i.method || []).includes(methodKey));
+      return ITEMS.filter(i => getMethodLabels(i).includes(methodKey));
+    }
+
+    // 星阙筛选状态
+    let provEra5Filter = false;
+
+    function provToggleEra5() {
+      provEra5Filter = !provEra5Filter;
+      const btn = document.getElementById('provEra5Btn');
+      if (btn) {
+        btn.style.background    = provEra5Filter ? 'rgba(56,189,248,0.15)' : 'transparent';
+        btn.style.color         = provEra5Filter ? 'var(--blue)' : 'var(--text2)';
+        btn.style.borderColor   = provEra5Filter ? 'rgba(56,189,248,0.5)' : 'var(--border2)';
+      }
+      renderProvMethodGrid();
     }
 
     // 状态
@@ -4236,9 +4255,8 @@
           const cats = getCats(item);
           const firstCat = CAT_META[cats[0]] || { dot:'#7a92ad', name: cats[0]||'' };
           const ps = PRIO_STYLE[item.prio] || PRIO_STYLE.green;
-          const isDimmed = provSelMethod && !getMethodItems(provSelMethod).find(i => i.id === item.id);
           const isSelected = provSelData === item.id;
-          return `<div class="prov-data-item${isSelected ? ' selected' : ''}${isDimmed ? ' dimmed' : ''}"
+          return `<div class="prov-data-item${isSelected ? ' selected' : ''}"
             onclick="provClickData('${escId(item.id)}')" id="pdi-${escId(item.id)}">
             <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:${firstCat.dot}18;color:${firstCat.dot};border:1px solid ${firstCat.dot}33;white-space:nowrap;flex-shrink:0;">${cats.map(c=>CAT_META[c]?CAT_META[c].name.slice(0,3):c).join('+')}</span>
             <span class="prov-data-name" title="${item.name}">${item.name}</span>
@@ -4256,19 +4274,17 @@
       }).join('');
     }
 
-    // ── 算法模块渲染 ──────────────────────────────
+    // ── 算法模块渲染（小标签样式）──────────────────
     function renderProvMethodGrid() {
-      document.getElementById('provMethodGrid').innerHTML = PROV_METHODS.map(m => {
-        const count = getMethodItems(m.key).length;
-        const isDimmed = provSelData && !getItemMethods(ITEMS.find(i=>i.id===provSelData)||{}).includes(m.key);
+      const visible = provEra5Filter ? PROV_METHODS.filter(m => m.isEra5) : PROV_METHODS;
+      document.getElementById('provMethodGrid').innerHTML = visible.map(m => {
         const isSelected = provSelMethod === m.key;
-        return `<div class="prov-method-card${isSelected?' selected':''}${isDimmed?' dimmed':''}"
-          style="color:${m.color};background:${m.bg};border-color:${m.border};"
-          onclick="provClickMethod('${m.key}')" id="pmc-${m.key}">
-          <div class="prov-method-icon">${m.icon}</div>
-          <div class="prov-method-name">${m.label}</div>
-          <div class="prov-method-count">${count} 条数据</div>
-        </div>`;
+        const baseStyle = METHODS_STYLE[m.key] || 'background:rgba(100,116,139,0.12);color:#94a3b8;border-color:rgba(100,116,139,0.3)';
+        const selectedExtra = isSelected ? 'box-shadow:0 0 0 2px currentColor;' : '';
+        return `<span class="method-tag" style="${baseStyle};cursor:pointer;${selectedExtra}"
+          onclick="provClickMethod('${m.key.replace(/'/g,"\\'")}')">
+          ${m.key}${m.isEra5 ? '<span style="font-size:9px;opacity:.7;margin-left:3px;">★</span>' : ''}
+        </span>`;
       }).join('');
     }
 
@@ -4331,18 +4347,7 @@
 
     // ── 交互：点击数据 ──────────────────────────────
     function provClickData(id) {
-      if (provSelData === id) {
-        // 再次点击取消数据选中
-        provSelData = null;
-        // 若没有 method 选中则全部恢复，若有 method 选中则保留 method 高亮
-      } else {
-        provSelData = id;
-        // 如果当前选中 method 与该数据无关，取消 method 选中
-        if (provSelMethod) {
-          const item = ITEMS.find(i => i.id === id);
-          if (!getItemMethods(item||{}).includes(provSelMethod)) provSelMethod = null;
-        }
-      }
+      provSelData = (provSelData === id) ? null : id;
       provUpdateCancelBtn();
       renderProvDataGroups();
       renderProvMethodGrid();
@@ -4351,17 +4356,7 @@
 
     // ── 交互：点击算法 ──────────────────────────────
     function provClickMethod(key) {
-      if (provSelMethod === key) {
-        // 再次点击取消算法选中
-        provSelMethod = null;
-      } else {
-        provSelMethod = key;
-        // 如果当前选中数据与该算法无关，取消数据选中
-        if (provSelData) {
-          const item = ITEMS.find(i => i.id === provSelData);
-          if (!getItemMethods(item||{}).includes(key)) provSelData = null;
-        }
-      }
+      provSelMethod = (provSelMethod === key) ? null : key;
       provUpdateCancelBtn();
       renderProvDataGroups();
       renderProvMethodGrid();
@@ -4371,6 +4366,9 @@
     function provCancelAll() {
       provSelData = null;
       provSelMethod = null;
+      provEra5Filter = false;
+      const btn = document.getElementById('provEra5Btn');
+      if (btn) { btn.style.background = 'transparent'; btn.style.color = 'var(--text2)'; btn.style.borderColor = 'var(--border2)'; }
       provUpdateCancelBtn();
       renderProvDataGroups();
       renderProvMethodGrid();
