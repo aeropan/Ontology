@@ -4534,14 +4534,64 @@
         body.innerHTML = renderInsightBiz();
         return;
       }
+      if (insightActiveTab === 'acad') {
+        body.innerHTML = renderInsightAcad();
+        return;
+      }
 
-      // 学术洞察 / 商业洞察：占位内容
-      const placeholders = {
-        acad: { icon: '📚', text: '学术洞察内容待填充' },
-        busi: { icon: '💼', text: '商业洞察内容待填充' }
-      };
-      const ph = placeholders[insightActiveTab];
-      body.innerHTML = `<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">${ph.icon}</div><div>${ph.text}</div></div>`;
+      // 商业洞察：占位内容
+      body.innerHTML = `<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">💼</div><div>商业洞察内容待填充</div></div>`;
+    }
+
+    // ── 学术洞察：从选中数据的 methods[*].paper_ids 收集并展示论文 ──
+    function renderInsightAcad() {
+      if (!provSelPrimary) {
+        return '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">📚</div><div>请选择左侧数据项查看学术洞察</div></div>';
+      }
+
+      // 初始化 PAPERS_MAP（数字 id → paper 对象）
+      if (!window.PAPERS_MAP) {
+        window.PAPERS_MAP = {};
+        (PAPERS || []).forEach(p => { window.PAPERS_MAP[String(p.paper_id)] = p; });
+      }
+
+      // 收集选中数据的所有 paper_ids（去重）
+      const selectedIds = [provSelPrimary, provSelSecondary].filter(Boolean);
+      const paperIdSet = new Set();
+      selectedIds.forEach(dataId => {
+        const item = ITEMS.find(i => i.id === dataId);
+        if (!item) return;
+        (item.methods || []).forEach(m => {
+          (m.paper_ids || []).forEach(pid => paperIdSet.add(pid));
+        });
+      });
+
+      if (!paperIdSet.size) {
+        return '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">📭</div><div>该数据暂无关联论文</div></div>';
+      }
+
+      const papers = [...paperIdSet].map(pid => window.PAPERS_MAP[String(pid)]).filter(Boolean);
+
+      return `<div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);">关联论文 · ${papers.length} 篇</div>` +
+        papers.map(p => {
+          const perfVal = p.performance && p.performance.trim() ? p.performance : null;
+          const bizVal  = p.business_map && p.business_map.trim() ? p.business_map : null;
+          return `<div class="prov-ref-item" style="border-left:3px solid #06b6d4;margin-bottom:10px;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <span style="font-size:10px;font-family:var(--mono);color:#06b6d4;font-weight:700;background:rgba(6,182,212,.1);padding:2px 7px;border-radius:4px;">#${p.paper_id}</span>
+              <span style="font-size:12px;font-weight:600;color:var(--text);line-height:1.4;">${p.title || '标题未收录'}</span>
+            </div>
+            ${perfVal ? `<div style="margin-bottom:6px;">
+              <div style="font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px;">性能提升幅度</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.6;">${perfVal}</div>
+            </div>` : ''}
+            ${bizVal ? `<div style="margin-bottom:8px;">
+              <div style="font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px;">业务映射</div>
+              <div style="font-size:12px;color:var(--text2);line-height:1.6;">${bizVal}</div>
+            </div>` : ''}
+            <button class="prov-ref-btn" style="margin-top:2px;" onclick="litViewDetail(${p.paper_id})">查看文献 →</button>
+          </div>`;
+        }).join('');
     }
 
     // ── 交互：点击数据 ──────────────────────────────
