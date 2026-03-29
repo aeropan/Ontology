@@ -4877,48 +4877,49 @@
     function renderLitDataList(paperId) {
       const body = document.getElementById('litDataBody');
       const countEl = document.getElementById('litDataCount');
-      const idStr = String(paperId);
+      const pidNum = Number(paperId);
 
-      // 找出在 paper_ids 里包含该文献 ID 的所有数据
-      const related = ITEMS.filter(item => (item.paper_ids||[]).map(String).includes(idStr));
-      countEl.textContent = related.length + ' 条';
-      if (!related.length) {
+      // 反向查询：扫描所有数据的 methods[*].paper_ids，收集引用该论文的 {item, matchedMethods[]}
+      const resultMap = {};  // item.id → { item, methods: [{label,detail}] }
+      ITEMS.forEach(item => {
+        (item.methods || []).forEach(m => {
+          if (!m.paper_ids) return;
+          if (m.paper_ids.includes(pidNum)) {
+            if (!resultMap[item.id]) resultMap[item.id] = { item, methods: [] };
+            resultMap[item.id].methods.push({ label: m.label, detail: m.detail });
+          }
+        });
+      });
+
+      const results = Object.values(resultMap).sort((a, b) => a.item.id.localeCompare(b.item.id));
+      countEl.textContent = results.length + ' 条';
+
+      if (!results.length) {
         body.innerHTML = '<div class="prov-ref-empty"><div style="font-size:24px;opacity:.3;">📦</div><div>该文献暂无关联数据</div></div>';
         return;
       }
 
-      // 构建 paper_req 里对应该文献的原文描述
-      // 从数据的 paper_req 里找包含 [paperId] 或 {paperId} 的部分
-      body.innerHTML = related.map(item => {
-        const cats = getCats(item);
-        const firstCat = CAT_META[cats[0]] || { dot:'#7a92ad', name:'' };
-        const ps = PRIO_STYLE[item.prio] || PRIO_STYLE.green;
-        const catBadge = `<span style="padding:1px 6px;border-radius:3px;font-size:10px;background:${firstCat.dot}18;color:${firstCat.dot};border:1px solid ${firstCat.dot}33;">${cats.map(c=>CAT_META[c]?CAT_META[c].name:c).join('+')}</span>`;
-        const clBadge = `<span style="padding:1px 6px;border-radius:3px;font-size:10px;background:var(--panel2);color:var(--text2);border:1px solid var(--border2);">${item.cat_label||'—'}</span>`;
-        const prioBadge = `<span class="necessity-tag" style="${ps.badge};font-size:9px;padding:1px 5px;">${ps.label}</span>`;
+      body.innerHTML = results.map(({ item, methods }) => {
+        const methodLines = methods.map(m => {
+          const style = METHODS_STYLE[m.label] || 'background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3)';
+          return `<div class="lit-usage-line">
+            <span class="method-tag" style="${style};flex-shrink:0;">${m.label}</span>
+            <span style="font-size:11px;color:var(--text2);">${m.detail || ''}</span>
+          </div>`;
+        }).join('');
 
-        // 使用说明：method 徽章 + Sheet2 E列原文（去掉前缀"微调: "等）
-        const METHOD_KW_MAP = {
-          '微调':'微调','增加输入通道':'输入通道','特征融合':'特征融合',
-          '与主干融合':'特征融合','设计CNN':'特征融合','后处理':'后处理校正',
-          '图神经网络':'图GNN','条件注入':'条件注入'
-        };
-        const usageLines = (item.method||[]).map(m => {
-          const style = METHODS_STYLE[m] || '';
-          // 在 method_lines 里找包含该 method 对应关键词的原文
-          const kw = Object.entries(METHOD_KW_MAP).find(([k,v]) => v === m)?.[0] || m;
-          const rawLine = (item.method_lines||[]).find(l => l.includes(kw)) || '';
-          const desc = rawLine.replace(/^[^:：]+[:：]\s*/, '');
-          return `<div class="lit-usage-line"><span class="method-tag" style="${style};flex-shrink:0;">${m}</span><span>${desc || ''}</span></div>`;
-        });
-        if (itemHasOther(item)) {
-          usageLines.push(`<div class="lit-usage-line"><span class="method-tag" style="background:rgba(100,116,139,0.2);color:#cbd5e1;border:1px solid rgba(100,116,139,0.4);flex-shrink:0;">其他处理方法</span><span>${item.paper_req||''}</span></div>`);
-        }
+        const ontoText = item.onto ? `<div style="font-size:10px;color:var(--text3);margin-top:3px;line-height:1.5;">${item.onto}</div>` : '';
 
         return `<div class="lit-data-row">
-          <div class="lit-data-name">${item.name}</div>
-          <div class="lit-data-meta">${catBadge}${clBadge}${prioBadge}</div>
-          ${usageLines.length ? `<div style="border-top:1px solid var(--border);margin:5px 0 4px;"></div>${usageLines.join('')}` : ''}
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+            <span style="font-size:10px;font-family:var(--mono);color:var(--text3);">${item.id}</span>
+            <span style="font-size:11px;font-weight:600;color:var(--text);">${item.name}</span>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:3px;">
+            <span style="padding:1px 6px;border-radius:3px;font-size:10px;background:var(--panel2);color:var(--text2);border:1px solid var(--border2);">${item.cat_label || '—'}</span>
+          </div>
+          ${ontoText}
+          ${methodLines ? `<div style="border-top:1px solid var(--border);margin:6px 0 4px;"></div>${methodLines}` : ''}
         </div>`;
       }).join('');
     }
