@@ -2616,10 +2616,10 @@
                 <div class="page-title">行业<span>洞察</span></div>
                 <div class="page-badge pulse">● 风力发电功率预测</div>
                 <div style="padding:3px 10px;background:var(--green-dim);border:1px solid rgba(52,211,153,0.25);border-radius:5px;font-size:11px;color:var(--green);font-family:var(--mono);" id="itemCount">56 数据项</div>
+                <button onclick="showPage('provenance')" style="padding:3px 11px;border-radius:6px;border:none;background:linear-gradient(135deg,rgba(139,92,246,0.9),rgba(99,102,241,0.9));color:#fff;font-size:10px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;box-shadow:0 2px 8px rgba(139,92,246,0.4);letter-spacing:.02em;">🔬 深度洞察</button>
               </div>
               <div style="margin-top:4px;">
                 <div class="page-subtitle">风力发电功率预测本体 · 基于本体结构的数据支撑全景分析</div>
-                <button onclick="showPage('provenance')" style="margin-top:6px;padding:3px 11px;border-radius:6px;border:none;background:linear-gradient(135deg,rgba(139,92,246,0.9),rgba(99,102,241,0.9));color:#fff;font-size:10px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;box-shadow:0 2px 8px rgba(139,92,246,0.4);letter-spacing:.02em;">🔬 深度洞察</button>
               </div>
             </div>
           </div>
@@ -5027,26 +5027,31 @@
     }
 
     function scrollDetailToTop() {
-      // 找实际滚动容器（body 或 documentElement）
-      const scroller = document.body.scrollTop > 0 ? document.body : document.documentElement;
-      scroller.scrollTo({ top: 0, behavior: 'smooth' });
-      // 兜底：window.scrollTo
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.body.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 圆点点击跳转：用 scrollIntoView 最可靠，自动匹配任意滚动容器
+    // 计算元素相对于 body 的绝对 offsetTop
+    function getOffsetTopFromBody(el) {
+      let top = 0;
+      while (el && el !== document.body) {
+        top += el.offsetTop;
+        el = el.offsetParent;
+      }
+      return top;
+    }
+
+    // 圆点点击跳转
     document.querySelectorAll('.nav-dot').forEach(dot => {
       dot.addEventListener('click', () => {
         const target = document.getElementById(dot.dataset.sec);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!target) return;
+        const top = getOffsetTopFromBody(target) - 20;
+        document.body.scrollTo({ top, behavior: 'smooth' });
       });
     });
 
-    // 滚动监听：同时监听 body / documentElement / window 以覆盖各种容器
-    ['body', 'documentElement'].forEach(k => {
-      document[k]?.addEventListener('scroll', updateNavDotActive);
-    });
-    window.addEventListener('scroll', updateNavDotActive);
+    // 滚动监听（捕获阶段覆盖任意子容器）
+    document.addEventListener('scroll', updateNavDotActive, true);
 
     // +N 方法溢出浮窗
     function showOverflowTip(e, el) {
