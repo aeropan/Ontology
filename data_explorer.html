@@ -2264,6 +2264,8 @@
     .prov-tab:last-child { border-right:none; }
     .prov-tab.active { background:rgba(167,139,250,0.12); color:var(--purple); font-weight:500; }
     .prov-tab:hover:not(.active) { background:var(--panel2); color:var(--text); }
+    .insight-tab:hover { color:var(--text); }
+    .insight-tab.active { color:var(--purple) !important; border-bottom-color:var(--purple) !important; font-weight:500; }
 
     .prov-layout { display:flex; gap:12px; height:calc(100vh - 190px); min-height:0; overflow:hidden; }
     .prov-left { width:280px; flex-shrink:0; display:flex; flex-direction:column; min-height:0; height:100%; }
@@ -2841,11 +2843,19 @@
           </div>
           <!-- 右下：洞察解构，占剩余高度 -->
           <div class="prov-panel" style="flex:1;min-height:0;overflow:hidden;">
-            <div class="prov-panel-head">
-              <div class="prov-panel-title">🔬 洞察解构</div>
-              <div style="font-size:10px;color:var(--text3);font-family:var(--mono);" id="provRefCount"></div>
+            <div class="prov-panel-head" style="flex-direction:column;align-items:flex-start;gap:8px;padding-bottom:0;">
+              <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+                <div class="prov-panel-title">🔬 洞察解构</div>
+                <div style="font-size:10px;color:var(--text3);font-family:var(--mono);" id="provRefCount"></div>
+              </div>
+              <!-- 子 tab -->
+              <div style="display:flex;gap:0;border-top:1px solid var(--border);width:100%;margin-top:4px;">
+                <div class="insight-tab active" id="itab-biz" onclick="switchInsightTab('biz')" style="padding:6px 14px;font-size:11px;color:var(--purple);cursor:pointer;border-bottom:2px solid var(--purple);font-weight:500;">业务洞察</div>
+                <div class="insight-tab" id="itab-acad" onclick="switchInsightTab('acad')" style="padding:6px 14px;font-size:11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;">学术洞察</div>
+                <div class="insight-tab" id="itab-busi" onclick="switchInsightTab('busi')" style="padding:6px 14px;font-size:11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;">商业洞察</div>
+              </div>
             </div>
-            <div style="flex:1;overflow-y:auto;padding:8px 10px;min-height:0;" id="provRefBody">
+            <div style="flex:1;overflow-y:auto;padding:10px 14px;min-height:0;" id="provRefBody">
               <div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">🔬</div><div>请选择左侧数据项查看洞察解构</div></div>
             </div>
           </div>
@@ -4229,6 +4239,7 @@
     let provSelPrimary   = null;  // 第一条选中的数据 id
     let provSelSecondary = null;  // 第二条选中的数据 id（关联数据）
     let provRelatedMap   = {};    // { dataId: Set<label> } 引用了 primary 的数据及 label
+    let insightActiveTab = 'biz'; // 当前激活的洞察标签页
 
     // 从 paper_req 字符串中提取所有数据 ID（如 AIA-1057、KG-12、DS-013）
     function extractDataIds(paperReq) {
@@ -4372,46 +4383,151 @@
       return result;
     }
 
+    // ── 业务洞察 M1/M2 内容定义 ──────────────────────────────
+    // M1: 有 ERA5 的三条洞察（按条件 3 > 2 > 1 展示）
+    const INSIGHT_M1 = [
+      {
+        cond: 1,
+        title: '多源数据微调',
+        desc: '将ERA5再分析数据作为预训练基础，通过少量本地观测数据进行微调，快速适配特定风场的气候特征，显著降低新建风场的数据采集成本。',
+        tags: ['微调', '迁移学习', '低资源适配'],
+        badge: 'M1-1'
+      },
+      {
+        cond: 2,
+        title: '特征通道扩充',
+        desc: '将ERA5提供的空间地理、风电场运行或气象衍生字段作为附加输入通道注入预测模型，补充近地面观测盲区，提升复杂地形下的预测精度。',
+        tags: ['输入通道', '特征融合', '多源融合'],
+        badge: 'M1-2'
+      },
+      {
+        cond: 3,
+        title: '后处理校正',
+        desc: '基于ERA5时序特征与预测评估数据，对模型输出进行系统性偏差校正与不确定性量化，改善极端天气条件下的预测稳定性。',
+        tags: ['后处理校正', '偏差修正', '不确定性量化'],
+        badge: 'M1-3'
+      }
+    ];
+
+    // M2: 无 ERA5 时的通用洞察
+    const INSIGHT_M2 = [
+      {
+        title: '多源异构融合预测',
+        desc: '整合非ERA5类多源异构数据（雷达、卫星、地面站、数值预报等），构建特征对齐与融合框架，在ERA5缺失或不适用场景下实现高精度风速预测。',
+        tags: ['多源融合', '异构数据', '特征对齐'],
+        badge: 'M2-1'
+      }
+    ];
+
+    // 判断选中的1~2条数据是否满足业务洞察条件，返回需要展示的 M1 行索引列表或 'M2'
+    function getInsightBizConditions() {
+      const selectedIds = [provSelPrimary, provSelSecondary].filter(Boolean);
+      if (!selectedIds.length) return null;
+
+      const catLabels = new Set();
+      selectedIds.forEach(id => {
+        const item = ITEMS.find(i => i.id === id);
+        if (item && item.cat_label) catLabels.add(item.cat_label);
+      });
+
+      const hasEra5 = catLabels.has('ERA5数据');
+      if (!hasEra5) return { type: 'M2' };
+
+      // 检查条件 3、2（1为兜底）
+      const cond3Labels = ['时序特征数据', '预测评估数据'];
+      const cond2Labels = ['空间地理地形数据', '风电场特定数据', '气象衍生特征数据'];
+      const hasCond3 = cond3Labels.some(l => catLabels.has(l));
+      const hasCond2 = cond2Labels.some(l => catLabels.has(l));
+
+      const rows = [];
+      // 按 3 > 2 > 1 顺序全量展示命中项
+      if (hasCond3) rows.push(3);
+      if (hasCond2) rows.push(2);
+      if (!hasCond3 && !hasCond2) rows.push(1); // 兜底条件1
+      return { type: 'M1', rows };
+    }
+
+    function renderInsightBiz() {
+      const conds = getInsightBizConditions();
+      if (!conds) {
+        return '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">🔬</div><div>请选择左侧数据项查看业务洞察</div></div>';
+      }
+
+      const tagStyle = (tag) => `<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(139,92,246,.12);color:var(--purple);font-size:10px;font-weight:500;">${tag}</span>`;
+
+      if (conds.type === 'M2') {
+        const m = INSIGHT_M2[0];
+        return `<div style="margin-bottom:6px;padding:2px 0 6px;">
+          <div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);">非ERA5场景 · ${m.badge}</div>
+        </div>
+        <div class="prov-ref-item" style="border-left:3px solid var(--purple);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-size:12px;font-weight:600;color:var(--text);">${m.title}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px;">${m.desc}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">${m.tags.map(tagStyle).join('')}</div>
+        </div>`;
+      }
+
+      // M1
+      const items = conds.rows.map(c => INSIGHT_M1.find(r => r.cond === c)).filter(Boolean);
+      const condColors = { 3: 'var(--purple)', 2: '#06b6d4', 1: '#10b981' };
+      return `<div style="margin-bottom:6px;padding:2px 0 6px;">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);">ERA5融合场景 · 命中 ${items.length} 条</div>
+      </div>` +
+      items.map(m => `<div class="prov-ref-item" style="border-left:3px solid ${condColors[m.cond]};margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:10px;font-family:var(--mono);color:${condColors[m.cond]};font-weight:600;">${m.badge}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--text);">${m.title}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px;">${m.desc}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">${m.tags.map(tagStyle).join('')}</div>
+      </div>`).join('');
+    }
+
+    // ── 切换洞察标签页 ──────────────────────────────
+    function switchInsightTab(tab) {
+      insightActiveTab = tab;
+      ['biz','acad','busi'].forEach(t => {
+        const el = document.getElementById('itab-' + t);
+        if (!el) return;
+        const isActive = t === tab;
+        el.classList.toggle('active', isActive);
+        el.style.color = isActive ? 'var(--purple)' : 'var(--text3)';
+        el.style.borderBottomColor = isActive ? 'var(--purple)' : 'transparent';
+        el.style.fontWeight = isActive ? '500' : 'normal';
+      });
+      renderProvRefs();
+    }
+
     function renderProvRefs() {
       const body = document.getElementById('provRefBody');
       const countEl = document.getElementById('provRefCount');
-      if (!provSelData) {
-        body.innerHTML = '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">🔬</div><div>请选择左侧数据项查看洞察解构</div></div>';
-        countEl.textContent = '';
+      if (!body) return;
+
+      const hasSelection = !!provSelPrimary;
+
+      // 更新标题角标
+      if (countEl) {
+        if (!hasSelection) { countEl.textContent = ''; }
+        else {
+          const cnt = provSelSecondary ? 2 : 1;
+          countEl.textContent = cnt + ' 条已选';
+        }
+      }
+
+      if (insightActiveTab === 'biz') {
+        body.innerHTML = renderInsightBiz();
         return;
       }
-      const item = ITEMS.find(i => i.id === provSelData);
-      if (!item || !item.paper_req || !item.paper_req.trim()) {
-        body.innerHTML = '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">📭</div><div>该数据暂无文献记录</div></div>';
-        countEl.textContent = '';
-        return;
-      }
-      if (!window.PAPERS_MAP) {
-        window.PAPERS_MAP = {};
-        (PAPERS||[]).forEach(p => { window.PAPERS_MAP[String(p.paper_id)] = p; });
-      }
-      // 解析每个 ID 对应的内容
-      const reqMap = parsePaperReqById(item.paper_req);
-      const ids = Object.keys(reqMap);
-      if (!ids.length) {
-        body.innerHTML = '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">📭</div><div>暂无文献索引</div></div>';
-        countEl.textContent = '';
-        return;
-      }
-      countEl.textContent = ids.length + ' 篇';
-      body.innerHTML = ids.map(id => {
-        const p = window.PAPERS_MAP[id];
-        const title = p ? p.title : '标题未收录';
-        const content = reqMap[id];
-        return `<div class="prov-ref-item">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span class="prov-ref-id" style="flex-shrink:0;">[${id}]</span>
-            <span class="prov-ref-title" style="margin-bottom:0;">${title}</span>
-          </div>
-          ${content ? `<div class="prov-ref-raw" style="color:#e2e8f0;">${content}</div>` : ''}
-          <button class="prov-ref-btn" onclick="litViewDetail('${id}')">查看文献详情 →</button>
-        </div>`;
-      }).join('');
+
+      // 学术洞察 / 商业洞察：占位内容
+      const placeholders = {
+        acad: { icon: '📚', text: '学术洞察内容待填充' },
+        busi: { icon: '💼', text: '商业洞察内容待填充' }
+      };
+      const ph = placeholders[insightActiveTab];
+      body.innerHTML = `<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">${ph.icon}</div><div>${ph.text}</div></div>`;
     }
 
     // ── 交互：点击数据 ──────────────────────────────
