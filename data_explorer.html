@@ -1329,14 +1329,13 @@
       background: rgba(100,116,139,0.15); color: #94a3b8;
       border: 1px solid rgba(100,116,139,0.3);
     }
-    .method-overflow-tip {
-      display: none; position: absolute; bottom: calc(100% + 6px); left: 0;
+    #method-overflow-floater {
+      position: fixed; z-index: 9999; display: none;
       background: var(--panel); border: 1px solid var(--border2);
-      border-radius: 8px; padding: 8px; z-index: 100;
-      white-space: nowrap; box-shadow: 0 4px 16px rgba(0,0,0,.4);
-      display: none; flex-wrap: wrap; gap: 4px; min-width: 160px; max-width: 280px;
+      border-radius: 8px; padding: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      flex-wrap: wrap; gap: 4px; max-width: 300px; pointer-events: none;
     }
-    .method-overflow-badge:hover .method-overflow-tip { display: flex; }
 
     .diff-dots {
       display: flex;
@@ -2378,7 +2377,7 @@
 
     /* 右侧圆点导航 */
     #page-nav {
-      position: fixed; right: 18px; top: 50%; transform: translateY(-50%);
+      position: fixed; right: 10px; top: 50%; transform: translateY(-50%);
       display: none; flex-direction: column; gap: 14px; z-index: 200; align-items: center;
     }
     #page-nav.visible { display: flex; }
@@ -2394,7 +2393,7 @@
     .nav-dot .nav-tooltip {
       position: absolute; right: calc(100% + 10px); top: 50%; transform: translateY(-50%);
       background: var(--panel); border: 1px solid var(--border2); border-radius: 6px;
-      padding: 4px 10px; font-size: 11px; color: var(--text2); white-space: nowrap;
+      padding: 3px 8px; font-size: 10px; color: var(--text2); white-space: nowrap;
       pointer-events: none; opacity: 0; transition: opacity .15s;
       box-shadow: 0 2px 10px rgba(0,0,0,.3);
     }
@@ -2616,9 +2615,11 @@
                 <div class="page-title">行业<span>洞察</span></div>
                 <div class="page-badge pulse">● 风力发电功率预测</div>
                 <div style="padding:3px 10px;background:var(--green-dim);border:1px solid rgba(52,211,153,0.25);border-radius:5px;font-size:11px;color:var(--green);font-family:var(--mono);" id="itemCount">56 数据项</div>
-                <button onclick="showPage('provenance')" style="padding:4px 12px;border-radius:6px;border:none;background:linear-gradient(135deg,rgba(139,92,246,0.9),rgba(99,102,241,0.9));color:#fff;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;box-shadow:0 2px 8px rgba(139,92,246,0.4);letter-spacing:.02em;">🔬 深度洞察</button>
               </div>
-              <div class="page-subtitle" style="margin-top:4px;">风力发电功率预测本体 · 基于本体结构的数据支撑全景分析</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+                <div class="page-subtitle">风力发电功率预测本体 · 基于本体结构的数据支撑全景分析</div>
+                <button onclick="showPage('provenance')" style="padding:3px 11px;border-radius:6px;border:none;background:linear-gradient(135deg,rgba(139,92,246,0.9),rgba(99,102,241,0.9));color:#fff;font-size:10px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;box-shadow:0 2px 8px rgba(139,92,246,0.4);letter-spacing:.02em;flex-shrink:0;">🔬 深度洞察</button>
+              </div>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end;">
@@ -3909,8 +3910,8 @@
         `<span class="method-tag" style="${styleMap[m] || ''}">${m}</span>`
       ).join('');
       if (overflow.length > 0) {
-        const tooltip = overflow.map(m => `<span class="method-tag" style="${styleMap[m]||'background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3)'}">${m}</span>`).join('');
-        html += `<span class="method-overflow-badge" style="position:relative;display:inline-flex;align-items:center;">+${overflow.length}<span class="method-overflow-tip">${tooltip}</span></span>`;
+        const tipHtml = overflow.map(m => `<span class="method-tag" style="${styleMap[m]||'background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3)'}">${m}</span>`).join('');
+        html += `<span class="method-overflow-badge" data-overflow-tip="${encodeURIComponent(tipHtml)}" onmouseenter="showOverflowTip(event,this)" onmouseleave="hideOverflowTip()">+${overflow.length}</span>`;
       }
       return html;
     }
@@ -5013,14 +5014,12 @@
     }
 
     function updateNavDotActive() {
-      const container = document.getElementById('page-detail');
-      if (!container) return;
-      const scrollTop = container.scrollTop;
+      const scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
       const secs = ['sec-01','sec-02','sec-03','sec-04'];
       let activeIdx = 0;
       secs.forEach((id, i) => {
         const el = document.getElementById(id);
-        if (el && el.offsetTop - container.offsetTop <= scrollTop + 120) activeIdx = i;
+        if (el && el.getBoundingClientRect().top <= 140) activeIdx = i;
       });
       document.querySelectorAll('.nav-dot').forEach((dot, i) => {
         dot.classList.toggle('active', i === activeIdx);
@@ -5028,25 +5027,46 @@
     }
 
     function scrollDetailToTop() {
-      const container = document.getElementById('page-detail');
-      if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+      document.body.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // 圆点点击跳转
     document.querySelectorAll('.nav-dot').forEach(dot => {
       dot.addEventListener('click', () => {
-        const secId = dot.dataset.sec;
-        const container = document.getElementById('page-detail');
-        const target = document.getElementById(secId);
-        if (container && target) {
-          const offset = target.offsetTop - container.offsetTop - 16;
-          container.scrollTo({ top: offset, behavior: 'smooth' });
+        const target = document.getElementById(dot.dataset.sec);
+        if (target) {
+          const top = target.getBoundingClientRect().top + document.body.scrollTop - 20;
+          document.body.scrollTo({ top, behavior: 'smooth' });
         }
       });
     });
 
-    // 滚动监听
-    document.getElementById('page-detail')?.addEventListener('scroll', updateNavDotActive);
+    // 滚动监听（body 是实际滚动容器）
+    document.body.addEventListener('scroll', updateNavDotActive);
+
+    // +N 方法溢出浮窗
+    function showOverflowTip(e, el) {
+      const floater = document.getElementById('method-overflow-floater');
+      if (!floater) return;
+      floater.innerHTML = decodeURIComponent(el.dataset.overflowTip || '');
+      floater.style.display = 'flex';
+      const rect = el.getBoundingClientRect();
+      floater.style.top = (rect.top - floater.offsetHeight - 6) + 'px';
+      floater.style.left = rect.left + 'px';
+      // 防止超出右边界
+      requestAnimationFrame(() => {
+        const fw = floater.offsetWidth;
+        const vw = window.innerWidth;
+        if (rect.left + fw > vw - 8) floater.style.left = (vw - fw - 8) + 'px';
+        // 防止超出上边界
+        const fh = floater.offsetHeight;
+        if (rect.top - fh - 6 < 8) floater.style.top = (rect.bottom + 6) + 'px';
+      });
+    }
+    function hideOverflowTip() {
+      const floater = document.getElementById('method-overflow-floater');
+      if (floater) floater.style.display = 'none';
+    }
 
     // ════════════════════════════════════════
     // 初始化
@@ -5136,6 +5156,9 @@
       renderExcelTable();
     }
   </script>
+  <!-- 处理方法溢出浮窗 -->
+  <div id="method-overflow-floater"></div>
+
   <!-- 右侧圆点导航 -->
   <nav id="page-nav">
     <div class="nav-dot" data-sec="sec-01"><span class="nav-tooltip">01 · 本体节点结构</span></div>
