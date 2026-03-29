@@ -4388,34 +4388,46 @@
     const INSIGHT_M1 = [
       {
         cond: 1,
+        badge: 'M1-1',
         title: '多源数据微调',
-        desc: '将ERA5再分析数据作为预训练基础，通过少量本地观测数据进行微调，快速适配特定风场的气候特征，显著降低新建风场的数据采集成本。',
-        tags: ['微调', '迁移学习', '低资源适配'],
-        badge: 'M1-1'
+        idea: '在"星阙"的预训练权重基础上，使用目标区域更高分辨率或更丰富的数据进行有监督微调。',
+        data: '地面气象站实测数据、雷达反射率、卫星云图、激光雷达测风数据。',
+        algo: '在模型末端增加适配层，使用组合数据对模型进行端到端训练。',
+        effect: '效果：显著提升目标区域的定点预测精度，解决ERA5分辨率不足带来的偏差。',
+        scene: '特定风电场、机场的精细化预测。'
       },
       {
         cond: 2,
+        badge: 'M1-2',
         title: '特征通道扩充',
-        desc: '将ERA5提供的空间地理、风电场运行或气象衍生字段作为附加输入通道注入预测模型，补充近地面观测盲区，提升复杂地形下的预测精度。',
-        tags: ['输入通道', '特征融合', '多源融合'],
-        badge: 'M1-2'
+        idea: '将多源数据作为额外的输入通道，与ERA5数据一同输入模型，扩展模型的信息感知维度。',
+        data: '数字高程模型（DEM）、土地利用类型、海表温度（SST）。',
+        algo: '修改模型输入层，将静态/动态特征与ERA5数据在通道维度拼接，模型整体架构不变。',
+        effect: '效果：提升模型对地形、下垫面等局地因子的建模能力，改善复杂地形下的预测。',
+        scene: '山区、沿海、远海、城市等非均一下垫面区域。'
       },
       {
         cond: 3,
+        badge: 'M1-3',
         title: '后处理校正',
-        desc: '基于ERA5时序特征与预测评估数据，对模型输出进行系统性偏差校正与不确定性量化，改善极端天气条件下的预测稳定性。',
-        tags: ['后处理校正', '偏差修正', '不确定性量化'],
-        badge: 'M1-3'
+        idea: '利用"星阙"的预测结果作为输入，再通过一个轻量级模型对系统误差进行校正。',
+        data: '历史预测误差序列、实时观测数据。',
+        algo: '使用线性回归、随机森林或简单的神经网络，建立模型预测值到真实观测值的映射。',
+        effect: '效果：低成本地消除模型的系统性偏差，快速提升业务指标。',
+        scene: '业务化运行系统的实时滚动优化。'
       }
     ];
 
     // M2: 无 ERA5 时的通用洞察
     const INSIGHT_M2 = [
       {
+        badge: 'M2-1',
         title: '多源异构融合预测',
-        desc: '整合非ERA5类多源异构数据（雷达、卫星、地面站、数值预报等），构建特征对齐与融合框架，在ERA5缺失或不适用场景下实现高精度风速预测。',
-        tags: ['多源融合', '异构数据', '特征对齐'],
-        badge: 'M2-1'
+        idea: '混合使用NWP输出、卫星遥感、地面站、雷达数据。',
+        data: '——',
+        algo: '图神经网络（GNN）建模站点空间关系；多模态融合网络（早期/晚期融合）；时空注意力网络。',
+        effect: '效果：能同时利用模式的全局性和观测的精准性，实现区域高精度短临预报。',
+        scene: '省级或区域电网的短期风电功率预测、城市风场分析。'
       }
     ];
 
@@ -4447,42 +4459,44 @@
       return { type: 'M1', rows };
     }
 
+    function renderInsightCard(m, accentColor) {
+      const field = (label, val) => val && val !== '——' ? `
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px;letter-spacing:.03em;">${label}</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.7;">${val}</div>
+        </div>` : '';
+      return `<div class="prov-ref-item" style="border-left:3px solid ${accentColor};margin-bottom:10px;padding:10px 12px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <span style="font-size:10px;font-family:var(--mono);color:${accentColor};font-weight:700;background:${accentColor}1a;padding:2px 7px;border-radius:4px;">${m.badge}</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text);">${m.title}</span>
+        </div>
+        ${field('核心思路', m.idea)}
+        ${field('典型数据源结合', m.data)}
+        ${field('算法/技术实现', m.algo)}
+        <div style="margin-top:4px;padding:8px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--text2);line-height:1.7;">${m.effect}</div>
+          <div style="font-size:11px;color:${accentColor};font-weight:600;margin-top:4px;">场景：${m.scene}</div>
+        </div>
+      </div>`;
+    }
+
     function renderInsightBiz() {
       const conds = getInsightBizConditions();
       if (!conds) {
         return '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">🔬</div><div>请选择左侧数据项查看业务洞察</div></div>';
       }
 
-      const tagStyle = (tag) => `<span style="display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(139,92,246,.12);color:var(--purple);font-size:10px;font-weight:500;">${tag}</span>`;
-
       if (conds.type === 'M2') {
         const m = INSIGHT_M2[0];
-        return `<div style="margin-bottom:6px;padding:2px 0 6px;">
-          <div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);">非ERA5场景 · ${m.badge}</div>
-        </div>
-        <div class="prov-ref-item" style="border-left:3px solid var(--purple);">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="font-size:12px;font-weight:600;color:var(--text);">${m.title}</span>
-          </div>
-          <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px;">${m.desc}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px;">${m.tags.map(tagStyle).join('')}</div>
-        </div>`;
+        return `<div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);">非ERA5场景</div>` +
+          renderInsightCard(m, 'var(--purple)');
       }
 
       // M1
-      const items = conds.rows.map(c => INSIGHT_M1.find(r => r.cond === c)).filter(Boolean);
       const condColors = { 3: 'var(--purple)', 2: '#06b6d4', 1: '#10b981' };
-      return `<div style="margin-bottom:6px;padding:2px 0 6px;">
-        <div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);">ERA5融合场景 · 命中 ${items.length} 条</div>
-      </div>` +
-      items.map(m => `<div class="prov-ref-item" style="border-left:3px solid ${condColors[m.cond]};margin-bottom:10px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="font-size:10px;font-family:var(--mono);color:${condColors[m.cond]};font-weight:600;">${m.badge}</span>
-          <span style="font-size:12px;font-weight:600;color:var(--text);">${m.title}</span>
-        </div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px;">${m.desc}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px;">${m.tags.map(tagStyle).join('')}</div>
-      </div>`).join('');
+      const items = conds.rows.map(c => INSIGHT_M1.find(r => r.cond === c)).filter(Boolean);
+      return `<div style="font-size:10px;color:var(--text3);margin-bottom:8px;font-family:var(--mono);">ERA5融合场景 · 命中 ${items.length} 条</div>` +
+        items.map(m => renderInsightCard(m, condColors[m.cond])).join('');
     }
 
     // ── 切换洞察标签页 ──────────────────────────────
