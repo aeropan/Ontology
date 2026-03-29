@@ -2822,7 +2822,7 @@
         <!-- 右：算法+文献，垂直排列 -->
         <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
           <!-- 右上：算法模块，自适应高度 -->
-          <div class="prov-panel" style="flex-shrink:0;overflow:hidden;">
+          <div class="prov-panel" style="flex-shrink:0;overflow:hidden;height:auto;">
             <div class="prov-panel-head">
               <div class="prov-panel-title">⚙️ 算法模块</div>
               <div style="font-size:10px;color:var(--text3);">点击标签筛选关联数据</div>
@@ -4319,8 +4319,8 @@
     function renderProvRefs() {
       const body = document.getElementById('provRefBody');
       const countEl = document.getElementById('provRefCount');
-      if (!provSelData || !provSelMethod) {
-        body.innerHTML = '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">📄</div><div>请先选择数据项和算法</div></div>';
+      if (!provSelData) {
+        body.innerHTML = '<div class="prov-ref-empty"><div style="font-size:28px;opacity:.3;">🔬</div><div>请选择左侧数据项查看洞察解构</div></div>';
         countEl.textContent = '';
         return;
       }
