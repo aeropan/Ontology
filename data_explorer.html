@@ -2290,7 +2290,8 @@
 
     .prov-data-item { display:flex; align-items:center; gap:5px; padding:3px 6px; border-radius:5px; cursor:pointer; transition:all .15s; margin-bottom:1px; border:1px solid transparent; }
     .prov-data-item:hover { background:var(--panel2); }
-    .prov-data-item.selected { background:rgba(167,139,250,0.12); border-color:rgba(167,139,250,0.3); }
+    .prov-data-item.selected { background:rgba(167,139,250,0.12); border-color:rgba(167,139,250,0.4); }
+    .prov-data-item.related { background:rgba(56,189,248,0.06); border-color:rgba(56,189,248,0.3); }
     .prov-data-item.dimmed { opacity:0.22; pointer-events:none; }
     .prov-data-name { font-size:11px; color:var(--text); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
@@ -3234,6 +3235,8 @@
     // PAGE ROUTING
     // ════════════════════════════════════════
     function showPage(id) {
+      // 离开深度洞察页时重置选中状态
+      if (id !== 'provenance') provCancelAll();
       document.querySelectorAll('.page').forEach(p => {
         p.classList.remove('active');
         p.style.display = 'none';
@@ -4224,10 +4227,40 @@
     }
 
     // 状态
-    let provSelData = null;   // 当前选中的数据 id
-    let provSelMethod = null; // 当前选中的 method key
+    let provSelPrimary   = null;  // 第一条选中的数据 id
+    let provSelSecondary = null;  // 第二条选中的数据 id（关联数据）
+    let provRelatedMap   = {};    // { dataId: Set<label> } 引用了 primary 的数据及 label
+
+    // 从 paper_req 字符串中提取所有数据 ID（如 AIA-1057、KG-12、DS-013）
+    function extractDataIds(paperReq) {
+      if (!paperReq) return [];
+      const ids = [];
+      // 匹配 大写字母+连字符+数字 的模式，遇到空格/逗号/括号截断
+      for (const m of paperReq.matchAll(/([A-Z]+-\d+)/g)) ids.push(m[1]);
+      return ids;
+    }
+
+    // 遍历所有数据，找出 paper_req 中引用了 primaryId 的条目，返回 {dataId: Set<label>}
+    function buildRelatedMap(primaryId) {
+      const map = {};
+      ITEMS.forEach(item => {
+        if (item.id === primaryId) return;
+        (item.methods || []).forEach(m => {
+          if (!m.paper_req || !m.label || m.label === '无') return;
+          if (extractDataIds(m.paper_req).includes(primaryId)) {
+            if (!map[item.id]) map[item.id] = new Set();
+            map[item.id].add(m.label);
+          }
+        });
+      });
+      return map;
+    }
+
+    // 兼容旧引用（provSelData 已废弃，取 primary）
+    Object.defineProperty(window, 'provSelData', { get: () => provSelPrimary });
 
     function switchProvTab(tab) {
+      provCancelAll(); // 切换 tab 时重置选中状态
       document.getElementById('ptab-flow').classList.toggle('active', tab === 'flow');
       document.getElementById('ptab-lit').classList.toggle('active', tab === 'lit');
       document.getElementById('prov-flow').style.display = tab === 'flow' ? 'flex' : 'none';
@@ -4256,17 +4289,35 @@
         return a.localeCompare(b, 'zh');
       });
       document.getElementById('provDataCount').textContent = ITEMS.length + ' 条';
+      const hasPrimary = !!provSelPrimary;
       document.getElementById('provDataGroups').innerHTML = sortedEntries.map(([label, items]) => {
         const rows = items.map(item => {
           const cats = getCats(item);
           const firstCat = CAT_META[cats[0]] || { dot:'#7a92ad', name: cats[0]||'' };
           const ps = PRIO_STYLE[item.prio] || PRIO_STYLE.green;
-          const isSelected = provSelData === item.id;
-          return `<div class="prov-data-item${isSelected ? ' selected' : ''}"
+          const isPrimary   = provSelPrimary   === item.id;
+          const isSecondary = provSelSecondary  === item.id;
+          const isRelated   = hasPrimary && !!provRelatedMap[item.id];
+          // 状态判断：无选中→全部正常；有 primary→只有 primary/related/secondary 可点
+          const isDimmed  = hasPrimary && !isPrimary && !isRelated && !isSecondary;
+          const cls = [
+            'prov-data-item',
+            isPrimary || isSecondary ? ' selected' : '',
+            isRelated && !isSecondary ? ' related' : '',
+            isDimmed ? ' dimmed' : '',
+          ].join('');
+          // 选中框角标
+          const badge = isPrimary
+            ? `<span style="font-size:9px;color:var(--purple);flex-shrink:0;">①</span>`
+            : isSecondary
+              ? `<span style="font-size:9px;color:var(--blue);flex-shrink:0;">②</span>`
+              : '';
+          return `<div class="${cls}"
             onclick="provClickData('${escId(item.id)}')" id="pdi-${escId(item.id)}">
             <span style="font-size:10px;padding:1px 6px;border-radius:3px;background:${firstCat.dot}18;color:${firstCat.dot};border:1px solid ${firstCat.dot}33;white-space:nowrap;flex-shrink:0;">${cats.map(c=>CAT_META[c]?CAT_META[c].name.slice(0,3):c).join('+')}</span>
             <span class="prov-data-name" title="${item.name}">${item.name}</span>
             <span class="necessity-tag" style="${ps.badge};font-size:9px;padding:1px 5px;flex-shrink:0;">${ps.label.replace(/[🔴🟡🟢] /,'')}</span>
+            ${badge}
           </div>`;
         }).join('');
         return `<div class="prov-group">
@@ -4283,19 +4334,21 @@
     // ── 算法模块渲染（小标签样式）──────────────────
     function renderProvMethodGrid() {
       const visible = provEra5Filter ? PROV_METHODS.filter(m => m.isEra5) : PROV_METHODS;
-      // 当前选中数据项的方法集合（用于高亮）
-      const selItem = provSelData ? ITEMS.find(i => i.id === provSelData) : null;
-      const selLabels = selItem ? new Set(getMethodLabels(selItem)) : null;
+      // 高亮集合：两条数据都选中时取连接 label；只选了 primary 时取其自身 label
+      let highlightLabels = null;
+      if (provSelPrimary && provSelSecondary) {
+        highlightLabels = provRelatedMap[provSelSecondary] || new Set();
+      } else if (provSelPrimary) {
+        const selItem = ITEMS.find(i => i.id === provSelPrimary);
+        highlightLabels = selItem ? new Set(getMethodLabels(selItem)) : null;
+      }
       document.getElementById('provMethodGrid').innerHTML = visible.map(m => {
-        const isSelected = provSelMethod === m.key;
-        const isHighlighted = selLabels && selLabels.has(m.key);
-        const isDimmed = selLabels && !selLabels.has(m.key);
+        const isHighlighted = highlightLabels && highlightLabels.has(m.key);
+        const isDimmed = highlightLabels && !highlightLabels.has(m.key);
         const baseStyle = METHODS_STYLE[m.key] || 'background:rgba(100,116,139,0.12);color:#94a3b8;border-color:rgba(100,116,139,0.3)';
-        const selectedExtra = isSelected ? 'box-shadow:0 0 0 2px currentColor;font-weight:700;' : '';
-        const highlightExtra = isHighlighted && !isSelected ? 'box-shadow:0 0 0 1.5px currentColor;opacity:1;' : '';
-        const dimExtra = isDimmed ? 'opacity:0.22;' : '';
-        return `<span class="method-tag" style="${baseStyle};cursor:pointer;${selectedExtra}${highlightExtra}${dimExtra}"
-          onclick="provClickMethod('${m.key.replace(/'/g,"\\'")}')">
+        const highlightExtra = isHighlighted ? 'box-shadow:0 0 0 2px currentColor;font-weight:700;' : '';
+        const dimExtra = isDimmed ? 'opacity:0.2;' : '';
+        return `<span class="method-tag" style="${baseStyle};cursor:default;${highlightExtra}${dimExtra}">
           ${m.key}${m.isEra5 ? '<span style="font-size:9px;opacity:.7;margin-left:3px;">★</span>' : ''}
         </span>`;
       }).join('');
@@ -4360,16 +4413,24 @@
 
     // ── 交互：点击数据 ──────────────────────────────
     function provClickData(id) {
-      provSelData = (provSelData === id) ? null : id;
-      provUpdateCancelBtn();
-      renderProvDataGroups();
-      renderProvMethodGrid();
-      renderProvRefs();
-    }
-
-    // ── 交互：点击算法 ──────────────────────────────
-    function provClickMethod(key) {
-      provSelMethod = (provSelMethod === key) ? null : key;
+      if (!provSelPrimary) {
+        // 第一次点击：设为 primary，构建关联表
+        provSelPrimary = id;
+        provRelatedMap = buildRelatedMap(id);
+        provSelSecondary = null;
+      } else if (id === provSelPrimary) {
+        // 再次点击 primary → 全部取消
+        provSelPrimary   = null;
+        provSelSecondary = null;
+        provRelatedMap   = {};
+      } else if (id === provSelSecondary) {
+        // 再次点击 secondary → 取消 secondary
+        provSelSecondary = null;
+      } else if (provRelatedMap[id]) {
+        // 点击关联数据 → 设为 secondary
+        provSelSecondary = id;
+      }
+      // dimmed 项不响应（pointer-events:none 已在 CSS 处理）
       provUpdateCancelBtn();
       renderProvDataGroups();
       renderProvMethodGrid();
@@ -4377,11 +4438,12 @@
     }
 
     function provCancelAll() {
-      provSelData = null;
-      provSelMethod = null;
-      provEra5Filter = false;
-      const btn = document.getElementById('provEra5Btn');
-      if (btn) { btn.style.background = 'transparent'; btn.style.color = 'var(--text2)'; btn.style.borderColor = 'var(--border2)'; }
+      provSelPrimary   = null;
+      provSelSecondary = null;
+      provRelatedMap   = {};
+      provEra5Filter   = false;
+      const era5Btn = document.getElementById('provEra5Btn');
+      if (era5Btn) { era5Btn.style.background = 'transparent'; era5Btn.style.color = 'var(--text2)'; era5Btn.style.borderColor = 'var(--border2)'; }
       provUpdateCancelBtn();
       renderProvDataGroups();
       renderProvMethodGrid();
@@ -4390,7 +4452,7 @@
 
     function provUpdateCancelBtn() {
       const btn = document.getElementById('cancelSelBtn');
-      if (btn) btn.className = 'cancel-sel-btn' + (provSelData || provSelMethod ? ' visible' : '');
+      if (btn) btn.className = 'cancel-sel-btn' + (provSelPrimary ? ' visible' : '');
     }
 
     // ════════════════════════════════════════
