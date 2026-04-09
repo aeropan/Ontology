@@ -72,7 +72,7 @@ body {
   font-size: 11px; font-weight: 500;
   background: var(--green-dim); color: var(--green);
 }
-.header-actions { display: flex; gap: 10px; align-items: center; }
+.header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .btn-ghost {
   padding: 7px 14px;
   background: var(--surface);
@@ -83,7 +83,7 @@ body {
   transition: all 0.15s;
   display: flex; align-items: center; gap: 6px;
 }
-.btn-ghost:hover { color: var(--text1); }
+.btn-ghost:hover { color: var(--text1); border-color: var(--blue); }
 .btn-primary-sm {
   padding: 7px 14px;
   background: var(--blue); border: none;
@@ -95,13 +95,18 @@ body {
 }
 .btn-primary-sm:hover { opacity: 0.85; }
 
-/* ── 结论图面板 ── */
+/* ── 结论图面板（缩小版） ── */
 .conclusion-panel {
   background: #0a0f1e;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 24px;
+}
+.conclusion-panel svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 /* ── 主体布局 ── */
@@ -195,54 +200,283 @@ body {
 .dist-bar-fill { height: 100%; border-radius: 99px; }
 .dist-cnt { width: 30px; text-align: right; color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
-/* ── 文献弹窗 ── */
+/* ══════════════════════════════════
+   通用弹窗底层
+══════════════════════════════════ */
 .modal-mask {
   display: none; position: fixed; inset: 0;
-  background: rgba(8,12,24,0.75);
-  backdrop-filter: blur(4px);
+  background: rgba(8,12,24,0.78);
+  backdrop-filter: blur(5px);
   z-index: 200; align-items: center; justify-content: center;
 }
 .modal-mask.show { display: flex; }
-.modal {
+
+/* ══════════════════════════════════
+   文献详情弹窗
+══════════════════════════════════ */
+.paper-modal {
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: 16px;
-  width: 560px; max-width: 90vw; max-height: 75vh;
+  width: 680px; max-width: 92vw; max-height: 80vh;
   display: flex; flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
 }
-.modal-header {
+.paper-modal-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 24px 16px;
+  padding: 18px 24px 14px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  gap: 12px;
 }
-.modal-title { font-size: 14px; font-weight: 600; }
+.paper-modal-title {
+  font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.paper-modal-subtitle {
+  font-size: 11px; color: var(--text3); font-weight: 400; margin-top: 2px;
+}
 .modal-close {
   width: 28px; height: 28px; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; cursor: pointer; color: var(--text3);
+  font-size: 16px; cursor: pointer; color: var(--text3);
   transition: all 0.15s; background: none; border: none; font-family: inherit;
-  line-height: 1;
+  flex-shrink: 0;
 }
 .modal-close:hover { background: var(--surface3); color: var(--text1); }
-.modal-body { padding: 16px 24px 24px; overflow-y: auto; flex: 1; }
-.modal-placeholder {
-  text-align: center; padding: 40px 0;
-  color: var(--text3); font-size: 12px; line-height: 2;
+
+/* 弹窗搜索栏 */
+.paper-modal-search {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
-.modal-paper-item {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 10px 0; border-bottom: 1px solid var(--border);
+.search-input {
+  width: 100%;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px 7px 32px;
+  font-size: 12px;
+  color: var(--text1);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 16 16' fill='none' stroke='%23475569' stroke-width='1.5'%3E%3Ccircle cx='6.5' cy='6.5' r='4.5'/%3E%3Cpath d='M10 10l3 3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+}
+.search-input::placeholder { color: var(--text3); }
+.search-input:focus { border-color: var(--blue); }
+
+/* 弹窗主体 */
+.paper-modal-body {
+  overflow-y: auto; flex: 1;
+  padding: 0;
+}
+
+/* 文献条目 */
+.paper-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+  cursor: default;
+}
+.paper-item:last-child { border-bottom: none; }
+.paper-item:hover { background: var(--surface3); }
+
+.paper-item-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.paper-num {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--blue-dim); border: 1px solid rgba(59,130,246,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--blue);
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+.paper-year-badge {
+  font-size: 10px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.paper-item-body { flex: 1; min-width: 0; }
+.paper-item-title {
+  font-size: 13px; font-weight: 500; color: var(--text1);
+  line-height: 1.5; margin-bottom: 5px;
+}
+.paper-item-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  font-size: 11px; color: var(--text3); margin-bottom: 8px;
+}
+.paper-item-meta .sep { color: var(--border2); }
+.paper-item-abstract {
+  font-size: 11px; color: var(--text2); line-height: 1.7;
+  background: var(--surface);
+  border-left: 2px solid var(--border2);
+  padding: 8px 10px;
+  border-radius: 0 4px 4px 0;
+  margin-bottom: 8px;
+}
+.paper-item-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.paper-item-actions {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.action-link {
+  font-size: 11px; color: var(--blue);
+  background: none; border: none; font-family: inherit;
+  padding: 0; cursor: pointer; display: flex; align-items: center; gap: 3px;
+}
+.action-link:hover { text-decoration: underline; }
+.action-link.secondary { color: var(--text3); }
+.action-link.secondary:hover { color: var(--text2); text-decoration: underline; }
+
+/* 弹窗底栏 */
+.paper-modal-footer {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--text3);
+}
+.footer-note { display: flex; align-items: center; gap: 6px; }
+.footer-note svg { opacity: 0.5; }
+
+/* ══════════════════════════════════
+   文献上传弹窗
+══════════════════════════════════ */
+.upload-modal {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  width: 560px; max-width: 92vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column;
+  max-height: 85vh;
+}
+.upload-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.upload-modal-title { font-size: 14px; font-weight: 600; }
+.upload-modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+
+/* 标签切换 */
+.tab-bar {
+  display: flex; gap: 0;
+  background: var(--surface3);
+  border-radius: 8px;
+  padding: 3px;
+  margin-bottom: 18px;
+}
+.tab-btn {
+  flex: 1; padding: 7px 0;
+  font-size: 12px; font-family: inherit;
+  border: none; border-radius: 6px;
+  cursor: pointer; transition: all 0.15s;
+  background: transparent; color: var(--text3);
+}
+.tab-btn.active { background: var(--surface2); color: var(--text1); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+/* 上传区 */
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: 10px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 16px;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--blue);
+  background: var(--blue-dim);
+}
+.upload-zone-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.5; }
+.upload-zone-title { font-size: 13px; color: var(--text1); margin-bottom: 4px; }
+.upload-zone-hint { font-size: 11px; color: var(--text3); line-height: 1.7; }
+.upload-zone-hint strong { color: var(--blue); }
+
+/* 已选文件列表 */
+.file-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.file-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
   font-size: 12px;
 }
-.modal-paper-item:last-child { border-bottom: none; }
-.paper-id {
-  flex-shrink: 0; padding: 2px 8px; border-radius: 4px;
-  background: var(--blue-dim); color: var(--blue);
-  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+.file-icon { color: var(--blue); flex-shrink: 0; }
+.file-name { flex: 1; color: var(--text1); }
+.file-size { color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+.file-remove {
+  width: 20px; height: 20px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; cursor: pointer; color: var(--text3);
+  background: none; border: none; font-family: inherit;
+  transition: all 0.12s; flex-shrink: 0;
 }
-.paper-info { color: var(--text2); line-height: 1.6; }
-.modal-note { margin-top: 16px; padding: 10px 12px; background: var(--surface3); border-radius: 8px; font-size: 11px; color: var(--text3); }
+.file-remove:hover { background: var(--rose-dim); color: var(--rose); }
+
+/* 文献库选择面板 */
+.lib-search {
+  margin-bottom: 12px;
+}
+.lib-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+.lib-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+  background: var(--surface3);
+}
+.lib-item:hover { border-color: var(--blue); }
+.lib-item.selected { border-color: var(--blue); background: var(--blue-dim); }
+.lib-checkbox {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1.5px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+  transition: all 0.12s;
+}
+.lib-item.selected .lib-checkbox {
+  background: var(--blue); border-color: var(--blue);
+}
+.lib-item-body { flex: 1; }
+.lib-item-title { font-size: 12px; color: var(--text1); margin-bottom: 3px; line-height: 1.4; }
+.lib-item-meta { font-size: 10px; color: var(--text3); }
+
+/* 弹窗底部 */
+.upload-modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.footer-selected { font-size: 11px; color: var(--text3); }
+.footer-selected strong { color: var(--text1); }
+.footer-actions { display: flex; gap: 10px; }
+.btn-cancel {
+  padding: 7px 16px;
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 8px; font-size: 12px; font-family: inherit;
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+}
+.btn-cancel:hover { color: var(--text1); }
+.btn-confirm {
+  padding: 7px 16px;
+  background: var(--blue); border: none;
+  border-radius: 8px; font-size: 12px; font-family: inherit;
+  color: #fff; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-confirm:hover { opacity: 0.85; }
 </style>
 </head>
 <body>
@@ -269,9 +503,13 @@ body {
     </div>
   </div>
   <div class="header-actions">
-    <button class="btn-ghost">
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10v4h4l8-8-4-4-8 8z"/></svg>
-      重新配置
+    <button class="btn-ghost" onclick="openUploadModal('local')">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M4 6l4-4 4 4"/><path d="M2 12h12v2H2z"/></svg>
+      添加文献
+    </button>
+    <button class="btn-ghost" onclick="openUploadModal('library')">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v10H2z"/><path d="M5 3v10M9 6h4M9 9h4"/></svg>
+      从文献库中添加
     </button>
     <button class="btn-primary-sm">
       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h12M8 2v8M4 6l4 4 4-4"/></svg>
@@ -281,99 +519,93 @@ body {
 </div>
 
 <!-- ══════════════════════════════════════════════════
-     结论图（A3 样式 + A2 内容）
+     结论图（缩小版，参考A2内容）
 ══════════════════════════════════════════════════ -->
 <div class="conclusion-panel">
-  <svg viewBox="0 0 920 430" width="100%" style="display:block;font-family:'Noto Sans SC',sans-serif;">
+  <svg viewBox="0 0 960 280" xmlns="http://www.w3.org/2000/svg" style="font-family:'Noto Sans SC',sans-serif;">
 
-    <!-- 标题 -->
-    <text x="460" y="30" text-anchor="middle" fill="#e2e8f0" font-size="15" font-weight="700" letter-spacing="2">★  洞察结论图</text>
+    <!-- 背景分隔线 -->
+    <line x1="8" y1="36" x2="952" y2="36" stroke="#1a2540" stroke-width="1"/>
+    <!-- 列头背景 -->
+    <rect x="0" y="0" width="960" height="36" fill="rgba(15,23,41,0.6)"/>
 
     <!-- 列标题 -->
-    <text x="92"  y="60" text-anchor="middle" fill="#475569" font-size="11" letter-spacing="2">数 据 来 源</text>
-    <text x="390" y="60" text-anchor="middle" fill="#475569" font-size="11" letter-spacing="2">核 心 算 法</text>
-    <text x="765" y="60" text-anchor="middle" fill="#475569" font-size="11" letter-spacing="2">效 果 与 场 景</text>
+    <text x="22" y="22" fill="#475569" font-size="9.5" letter-spacing="1.5" font-weight="500">方 案 类 别</text>
+    <text x="160" y="22" fill="#475569" font-size="9.5" letter-spacing="1.5" font-weight="500">核 心 数 据 源</text>
+    <text x="430" y="22" fill="#475569" font-size="9.5" letter-spacing="1.5" font-weight="500">核 心 算 法</text>
+    <text x="700" y="22" fill="#475569" font-size="9.5" letter-spacing="1.5" font-weight="500">效 果 与 适 用 场 景</text>
 
-    <!-- 分隔线 -->
-    <line x1="10" y1="70" x2="910" y2="70" stroke="#1a2540" stroke-width="1"/>
+    <!-- 列分隔竖线 -->
+    <line x1="148" y1="36" x2="148" y2="280" stroke="#1a2540" stroke-width="1"/>
+    <line x1="418" y1="36" x2="418" y2="280" stroke="#1a2540" stroke-width="1"/>
+    <line x1="688" y1="36" x2="688" y2="280" stroke="#1a2540" stroke-width="1"/>
 
-    <!-- ── 行左侧色条 ── -->
-    <rect x="0" y="89"  width="4" height="52" rx="2" fill="#f59e0b" opacity="0.9"/>
-    <rect x="0" y="174" width="4" height="52" rx="2" fill="#10b981" opacity="0.9"/>
-    <rect x="0" y="259" width="4" height="52" rx="2" fill="#3b82f6" opacity="0.9"/>
-    <rect x="0" y="344" width="4" height="52" rx="2" fill="#8b5cf6" opacity="0.9"/>
+    <!-- ════ ROW 1: 数值天气预报 NWP / amber ════ -->
+    <rect x="0" y="36" width="960" height="61" fill="rgba(245,158,11,0.04)"/>
+    <rect x="0" y="36" width="3" height="61" fill="#f59e0b" rx="0"/>
+    <!-- 方案类别 -->
+    <text x="14" y="55" fill="#f59e0b" font-size="10" font-weight="600">1. 数值天气</text>
+    <text x="14" y="68" fill="#f59e0b" font-size="10" font-weight="600">预报 (NWP)</text>
+    <text x="14" y="81" fill="#f59e0b" font-size="10" font-weight="600">驱动</text>
+    <!-- 核心数据源 -->
+    <text x="158" y="54" fill="#94a3b8" font-size="9.5">GFS、ECMWF、CMA-GFS、</text>
+    <text x="158" y="67" fill="#94a3b8" font-size="9.5">WRF（自行降尺度）输出。</text>
+    <!-- 核心算法 -->
+    <text x="428" y="54" fill="#94a3b8" font-size="9.5">物理动力框架为主，结合统计</text>
+    <text x="428" y="67" fill="#94a3b8" font-size="9.5">后处理（MOS）。</text>
+    <!-- 效果与场景 -->
+    <text x="698" y="52" fill="#94a3b8" font-size="9.5">效果：时空连续，物理意义明确，</text>
+    <text x="698" y="65" fill="#94a3b8" font-size="9.5">中长期（72h+）预测优势明显，</text>
+    <text x="698" y="78" fill="#94a3b8" font-size="9.5">短期可能存在滞后。</text>
+    <text x="698" y="91" fill="#f59e0b" font-size="9" opacity="0.9">场景：区域天气预报、日以上功率预测</text>
 
-    <!-- ════════════════════════
-         ROW 1 · 气象/NWP · #f59e0b · y_c=115
-    ════════════════════════ -->
-    <!-- 左：数据来源 -->
-    <rect x="10" y="89" width="165" height="52" rx="8" fill="rgba(245,158,11,0.07)" stroke="#f59e0b" stroke-width="1.5"/>
-    <text x="92" y="108" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">气象 / NWP 驱动</text>
-    <text x="92" y="124" text-anchor="middle" fill="#f59e0b" font-size="10" opacity="0.85">ERA5 · GFS · CMA · WRF</text>
-    <!-- 中：核心算法 -->
-    <rect x="235" y="89" width="310" height="52" rx="8" fill="rgba(245,158,11,0.07)" stroke="#f59e0b" stroke-width="1.5"/>
-    <text x="390" y="108" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">统计 + 物理 / MOS</text>
-    <text x="390" y="124" text-anchor="middle" fill="#f59e0b" font-size="10" opacity="0.85">ARIMA · MOS · 数值天气后处理校正</text>
-    <!-- 右：效果 -->
-    <rect x="620" y="89" width="290" height="52" rx="8" fill="rgba(245,158,11,0.07)" stroke="#f59e0b" stroke-width="1.5"/>
-    <text x="765" y="108" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">72h+ 中长期预报</text>
-    <text x="765" y="124" text-anchor="middle" fill="#f59e0b" font-size="10" opacity="0.85">大区域覆盖 · 偏差需校正</text>
-    <!-- 连接线 -->
-    <path d="M 175,115 C 205,115 205,115 231,115" stroke="#f59e0b" stroke-width="1.5" fill="none" opacity="0.65"/>
-    <polygon points="231,111 235,115 231,119" fill="#f59e0b" opacity="0.65"/>
-    <path d="M 545,115 C 582,115 582,115 616,115" stroke="#f59e0b" stroke-width="1.5" fill="none" opacity="0.65"/>
-    <polygon points="616,111 620,115 616,119" fill="#f59e0b" opacity="0.65"/>
+    <!-- ════ ROW 2: 纯观测数据驱动 / green ════ -->
+    <rect x="0" y="97" width="960" height="61" fill="rgba(16,185,129,0.04)"/>
+    <rect x="0" y="97" width="3" height="61" fill="#10b981" rx="0"/>
+    <text x="14" y="116" fill="#10b981" font-size="10" font-weight="600">2. 纯观测数据</text>
+    <text x="14" y="129" fill="#10b981" font-size="10" font-weight="600">驱动</text>
+    <text x="158" y="113" fill="#94a3b8" font-size="9.5">地面气象站网络、测风塔</text>
+    <text x="158" y="126" fill="#94a3b8" font-size="9.5">时序数据、声雷达/激光雷达</text>
+    <text x="158" y="139" fill="#94a3b8" font-size="9.5">剖面数据。</text>
+    <text x="428" y="113" fill="#94a3b8" font-size="9.5">时间序列模型（ARIMA、</text>
+    <text x="428" y="126" fill="#94a3b8" font-size="9.5">Prophet）、机器学习（XGBoost、</text>
+    <text x="428" y="139" fill="#94a3b8" font-size="9.5">LightGBM）、深度学习（LSTM、TCN）。</text>
+    <text x="698" y="112" fill="#94a3b8" font-size="9.5">效果：对单点或局部区域超短期</text>
+    <text x="698" y="125" fill="#94a3b8" font-size="9.5">（0-6h）预测精度高，无法预测</text>
+    <text x="698" y="138" fill="#94a3b8" font-size="9.5">未观测点的风场。</text>
+    <text x="698" y="151" fill="#10b981" font-size="9" opacity="0.9">场景：单个风电机实时功率预测、机场跑道风速预警</text>
 
-    <!-- ════════════════════════
-         ROW 2 · 现地观测 · #10b981 · y_c=200
-    ════════════════════════ -->
-    <rect x="10" y="174" width="165" height="52" rx="8" fill="rgba(16,185,129,0.07)" stroke="#10b981" stroke-width="1.5"/>
-    <text x="92" y="193" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">现地观测 驱动</text>
-    <text x="92" y="209" text-anchor="middle" fill="#10b981" font-size="10" opacity="0.85">气象站 · 测风仪 · 气象雷达</text>
-    <rect x="235" y="174" width="310" height="52" rx="8" fill="rgba(16,185,129,0.07)" stroke="#10b981" stroke-width="1.5"/>
-    <text x="390" y="193" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">时序预测 &amp; 机器学习</text>
-    <text x="390" y="209" text-anchor="middle" fill="#10b981" font-size="10" opacity="0.85">ARIMA · XGBoost · LSTM · TCN</text>
-    <rect x="620" y="174" width="290" height="52" rx="8" fill="rgba(16,185,129,0.07)" stroke="#10b981" stroke-width="1.5"/>
-    <text x="765" y="193" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">0-6h 局部精准预测</text>
-    <text x="765" y="209" text-anchor="middle" fill="#10b981" font-size="10" opacity="0.85">短期 · 受观测密度影响</text>
-    <path d="M 175,200 C 205,200 205,200 231,200" stroke="#10b981" stroke-width="1.5" fill="none" opacity="0.65"/>
-    <polygon points="231,196 235,200 231,204" fill="#10b981" opacity="0.65"/>
-    <path d="M 545,200 C 582,200 582,200 616,200" stroke="#10b981" stroke-width="1.5" fill="none" opacity="0.65"/>
-    <polygon points="616,196 620,200 616,204" fill="#10b981" opacity="0.65"/>
+    <!-- ════ ROW 3: 多源异构融合预测 / blue ════ -->
+    <rect x="0" y="158" width="960" height="61" fill="rgba(59,130,246,0.04)"/>
+    <rect x="0" y="158" width="3" height="61" fill="#3b82f6" rx="0"/>
+    <text x="14" y="177" fill="#3b82f6" font-size="10" font-weight="600">3. 多源异构</text>
+    <text x="14" y="190" fill="#3b82f6" font-size="10" font-weight="600">融合预测</text>
+    <text x="158" y="174" fill="#94a3b8" font-size="9.5">混合使用 NWP 输出、</text>
+    <text x="158" y="187" fill="#94a3b8" font-size="9.5">卫星遥感、地面站、</text>
+    <text x="158" y="200" fill="#94a3b8" font-size="9.5">雷达数据。</text>
+    <text x="428" y="174" fill="#94a3b8" font-size="9.5">图神经网络（GNN）建模站点空间</text>
+    <text x="428" y="187" fill="#94a3b8" font-size="9.5">关系；多模态融合（早期/晚期融合）；</text>
+    <text x="428" y="200" fill="#94a3b8" font-size="9.5">时空注意力网络。</text>
+    <text x="698" y="173" fill="#94a3b8" font-size="9.5">效果：能同时利用模式的全局性</text>
+    <text x="698" y="186" fill="#94a3b8" font-size="9.5">和观测的精准性，实现区域高精</text>
+    <text x="698" y="199" fill="#94a3b8" font-size="9.5">度短临预报。</text>
+    <text x="698" y="212" fill="#3b82f6" font-size="9" opacity="0.9">场景：省级或区域电网的短期风电功率预测、城市风场分析</text>
 
-    <!-- ════════════════════════
-         ROW 3 · 多源融合 · #3b82f6 · y_c=285
-    ════════════════════════ -->
-    <rect x="10" y="259" width="165" height="52" rx="8" fill="rgba(59,130,246,0.07)" stroke="#3b82f6" stroke-width="1.5"/>
-    <text x="92" y="278" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">多源数据 融合</text>
-    <text x="92" y="294" text-anchor="middle" fill="#3b82f6" font-size="10" opacity="0.85">ERA5 · 遥感 · 地形 · 激光雷达</text>
-    <rect x="235" y="259" width="310" height="52" rx="8" fill="rgba(59,130,246,0.07)" stroke="#3b82f6" stroke-width="1.5"/>
-    <text x="390" y="278" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">深度学习 + 注意力融合</text>
-    <text x="390" y="294" text-anchor="middle" fill="#3b82f6" font-size="10" opacity="0.85">Attention · 时空对齐 · 多表征融合</text>
-    <rect x="620" y="259" width="290" height="52" rx="8" fill="rgba(59,130,246,0.07)" stroke="#3b82f6" stroke-width="1.5"/>
-    <text x="765" y="278" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">风电场级多尺度预测</text>
-    <text x="765" y="294" text-anchor="middle" fill="#3b82f6" font-size="10" opacity="0.85">精度显著提升</text>
-    <path d="M 175,285 C 205,285 205,285 231,285" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.65"/>
-    <polygon points="231,281 235,285 231,289" fill="#3b82f6" opacity="0.65"/>
-    <path d="M 545,285 C 582,285 582,285 616,285" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.65"/>
-    <polygon points="616,281 620,285 616,289" fill="#3b82f6" opacity="0.65"/>
-
-    <!-- ════════════════════════
-         ROW 4 · 新兴AI · #8b5cf6 · y_c=370
-    ════════════════════════ -->
-    <rect x="10" y="344" width="165" height="52" rx="8" fill="rgba(139,92,246,0.07)" stroke="#8b5cf6" stroke-width="1.5"/>
-    <text x="92" y="363" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">新兴数据 + AI</text>
-    <text x="92" y="379" text-anchor="middle" fill="#8b5cf6" font-size="10" opacity="0.85">卫星SAR · IoT 物联网</text>
-    <rect x="235" y="344" width="310" height="52" rx="8" fill="rgba(139,92,246,0.07)" stroke="#8b5cf6" stroke-width="1.5"/>
-    <text x="390" y="363" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">迁移学习 / PINN</text>
-    <text x="390" y="379" text-anchor="middle" fill="#8b5cf6" font-size="10" opacity="0.85">小样本学习 · 物理信息神经网络</text>
-    <rect x="620" y="344" width="290" height="52" rx="8" fill="rgba(139,92,246,0.07)" stroke="#8b5cf6" stroke-width="1.5"/>
-    <text x="765" y="363" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">新观测手段拓展</text>
-    <text x="765" y="379" text-anchor="middle" fill="#8b5cf6" font-size="10" opacity="0.85">小样本场景 · 高潜力应用</text>
-    <path d="M 175,370 C 205,370 205,370 231,370" stroke="#8b5cf6" stroke-width="1.5" fill="none" opacity="0.65"/>
-    <polygon points="231,366 235,370 231,374" fill="#8b5cf6" opacity="0.65"/>
-    <path d="M 545,370 C 582,370 582,370 616,370" stroke="#8b5cf6" stroke-width="1.5" fill="none" opacity="0.65"/>
-    <polygon points="616,366 620,370 616,374" fill="#8b5cf6" opacity="0.65"/>
+    <!-- ════ ROW 4: 新兴数据与AI结合 / purple ════ -->
+    <rect x="0" y="219" width="960" height="61" fill="rgba(139,92,246,0.04)"/>
+    <rect x="0" y="219" width="3" height="61" fill="#8b5cf6" rx="0"/>
+    <text x="14" y="238" fill="#8b5cf6" font-size="10" font-weight="600">4. 新兴数据</text>
+    <text x="14" y="251" fill="#8b5cf6" font-size="10" font-weight="600">与AI结合</text>
+    <text x="158" y="235" fill="#94a3b8" font-size="9.5">商业卫星（如 Spire 的</text>
+    <text x="158" y="248" fill="#94a3b8" font-size="9.5">GNSS-RO 数据）、社交媒体</text>
+    <text x="158" y="261" fill="#94a3b8" font-size="9.5">天气报告、物联网（IoT）传感器。</text>
+    <text x="428" y="235" fill="#94a3b8" font-size="9.5">联邦学习（解决数据隐私）、</text>
+    <text x="428" y="248" fill="#94a3b8" font-size="9.5">小样本学习、物理信息神经</text>
+    <text x="428" y="261" fill="#94a3b8" font-size="9.5">网络（PINN）。</text>
+    <text x="698" y="235" fill="#94a3b8" font-size="9.5">效果：开拓新的数据维度，在特定</text>
+    <text x="698" y="248" fill="#94a3b8" font-size="9.5">场景（如数据稀疏地区）有潜力，</text>
+    <text x="698" y="261" fill="#94a3b8" font-size="9.5">但成熟度和稳定性待验证。</text>
+    <text x="698" y="274" fill="#8b5cf6" font-size="9" opacity="0.9">场景：数据稀缺地区的补充预测、研究前沿探索</text>
 
   </svg>
 </div>
@@ -409,7 +641,7 @@ body {
           </div>
           <div class="insight-footer">
             <span class="paper-count">支持文献：<strong>2</strong> 篇</span>
-            <button class="paper-link" onclick="openPaperModal('输入通道扩展',[115,'AIA-1056'])">查看文献列表 →</button>
+            <button class="paper-link" onclick="openPaperModal('输入通道扩展', papers_A)">查看文献列表 →</button>
           </div>
         </div>
 
@@ -426,7 +658,7 @@ body {
           </div>
           <div class="insight-footer">
             <span class="paper-count">支持文献：<strong>2</strong> 篇</span>
-            <button class="paper-link" onclick="openPaperModal('微调预训练权重',[87,102])">查看文献列表 →</button>
+            <button class="paper-link" onclick="openPaperModal('微调预训练权重', papers_B)">查看文献列表 →</button>
           </div>
         </div>
 
@@ -443,7 +675,7 @@ body {
           </div>
           <div class="insight-footer">
             <span class="paper-count">支持文献：<strong>1</strong> 篇</span>
-            <button class="paper-link" onclick="openPaperModal('随机森林回归',[43])">查看文献列表 →</button>
+            <button class="paper-link" onclick="openPaperModal('随机森林回归', papers_C)">查看文献列表 →</button>
           </div>
         </div>
 
@@ -451,7 +683,7 @@ body {
           <div class="insight-top">
             <div class="insight-name">高分辨率静态通道</div>
             <div class="insight-tags">
-              <span class="tag-sm tag-blue">作为高分辨率静态通道</span>
+              <span class="tag-sm tag-blue">高分辨率静态通道</span>
             </div>
           </div>
           <div class="insight-usage">
@@ -459,7 +691,7 @@ body {
           </div>
           <div class="insight-footer">
             <span class="paper-count">支持文献：<strong>2</strong> 篇</span>
-            <button class="paper-link" onclick="openPaperModal('高分辨率静态通道',[61,78])">查看文献列表 →</button>
+            <button class="paper-link" onclick="openPaperModal('高分辨率静态通道', papers_D)">查看文献列表 →</button>
           </div>
         </div>
 
@@ -476,7 +708,7 @@ body {
           </div>
           <div class="insight-footer">
             <span class="paper-count">支持文献：<strong>2</strong> 篇</span>
-            <button class="paper-link" onclick="openPaperModal('图神经网络空间建模',[119,131])">查看文献列表 →</button>
+            <button class="paper-link" onclick="openPaperModal('图神经网络空间建模', papers_E)">查看文献列表 →</button>
           </div>
         </div>
 
@@ -515,36 +747,298 @@ body {
 
 </div><!-- /detail-layout -->
 
-<!-- ── 文献列表弹窗（内容待设计） ── -->
-<div class="modal-mask" id="modal-mask" onclick="handleMaskClick(event)">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modal-title">支持文献列表</div>
-      <button class="modal-close" onclick="closeModal()">×</button>
+<!-- ══════════════════════════════════════════════════
+     文献详情弹窗
+══════════════════════════════════════════════════ -->
+<div class="modal-mask" id="paper-modal-mask" onclick="handlePaperMaskClick(event)">
+  <div class="paper-modal">
+    <div class="paper-modal-header">
+      <div>
+        <div class="paper-modal-title" id="paper-modal-title">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+          支持文献列表
+        </div>
+        <div class="paper-modal-subtitle" id="paper-modal-subtitle">共 0 篇文献</div>
+      </div>
+      <button class="modal-close" onclick="closePaperModal()">×</button>
     </div>
-    <div class="modal-body" id="modal-body">
-      <div class="modal-placeholder">弹窗布局待设计</div>
+    <div class="paper-modal-search">
+      <input class="search-input" placeholder="搜索文献标题、作者…" oninput="filterPapers(this.value)" />
+    </div>
+    <div class="paper-modal-body" id="paper-modal-body"></div>
+    <div class="paper-modal-footer">
+      <div class="footer-note">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5.5v.5"/></svg>
+        点击「查看原文」可跳转 PDF 高亮定位（后续版本开放）
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     文献上传弹窗
+══════════════════════════════════════════════════ -->
+<div class="modal-mask" id="upload-modal-mask" onclick="handleUploadMaskClick(event)">
+  <div class="upload-modal">
+    <div class="upload-modal-header">
+      <div class="upload-modal-title" id="upload-modal-title">添加文献</div>
+      <button class="modal-close" onclick="closeUploadModal()">×</button>
+    </div>
+    <div class="upload-modal-body">
+
+      <!-- 标签切换 -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-local" onclick="switchTab('local')">本地上传</button>
+        <button class="tab-btn" id="tab-library" onclick="switchTab('library')">从文献库中添加</button>
+      </div>
+
+      <!-- 本地上传面板 -->
+      <div id="panel-local">
+        <div class="upload-zone" id="upload-zone"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="handleDrop(event)"
+             onclick="document.getElementById('file-input').click()">
+          <div class="upload-zone-icon">📄</div>
+          <div class="upload-zone-title">拖拽文件到此处，或点击选择文件</div>
+          <div class="upload-zone-hint">
+            支持 <strong>PDF / Word</strong> 格式&emsp;单文件 ≤ 50 MB&emsp;单次 ≤ 20 个
+          </div>
+        </div>
+        <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx" style="display:none" onchange="handleFileSelect(event)"/>
+        <div class="file-list" id="file-list"></div>
+      </div>
+
+      <!-- 文献库面板 -->
+      <div id="panel-library" style="display:none">
+        <div class="lib-search">
+          <input class="search-input" placeholder="搜索文献库…" oninput="filterLib(this.value)" />
+        </div>
+        <div class="lib-list" id="lib-list">
+          <!-- 示例数据 -->
+        </div>
+      </div>
+
+    </div>
+    <div class="upload-modal-footer">
+      <div class="footer-selected" id="upload-footer-note">未选择文件</div>
+      <div class="footer-actions">
+        <button class="btn-cancel" onclick="closeUploadModal()">取消</button>
+        <button class="btn-confirm" onclick="confirmUpload()">确认添加</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
+/* ═══════════════════════════════════════
+   文献数据（模拟）
+═══════════════════════════════════════ */
+const papers_A = [
+  { id: 115, year: 2023, title: 'ERA5-based offshore wind speed downscaling using dual-channel Transformer architecture', authors: 'Zhang Y, Li H, Wang Q', journal: 'Renewable Energy', abstract: '本文提出一种双通道 Transformer 框架，将 ERA5 100m 风速与 10m 风速作为独立输入通道进行融合，在近海风电场场景下将 RMSE 降低 18.3%。' },
+  { id: 'AIA-1056', year: 2024, title: 'Multi-level wind feature fusion for coastal power forecasting', authors: 'Chen X, Zhao R', journal: 'Applied Energy', abstract: '针对近海复杂气象条件，构建多层级风速特征融合模型，融合 ERA5 再分析场与卫星遥感风速，在三个近海风电场验证了方法的泛化能力。' },
+];
+const papers_B = [
+  { id: 87, year: 2023, title: 'LoRA fine-tuning of climate foundation models for wind farm adaptation', authors: 'Liu Z, Sun M', journal: 'Nature Energy', abstract: '将低秩适应（LoRA）方法引入气候大模型微调流程，仅需少量本地数据即可将预训练模型迁移至目标风电场，在冷启动场景下表现优异。' },
+  { id: 102, year: 2024, title: 'Transfer learning strategies for wind power prediction with limited observations', authors: 'Wang F, Huang J, Gao T', journal: 'IEEE Transactions on Sustainable Energy', abstract: '系统比较多种迁移学习策略在风电功率预测中的效果，重点分析了预训练权重保留与任务适配之间的权衡关系。' },
+];
+const papers_C = [
+  { id: 43, year: 2022, title: 'Random forest regression for surface wind speed estimation using ERA5 pressure-level fields', authors: 'Kim S, Park J', journal: 'Atmospheric Research', abstract: '以 ERA5 多高度层气压、温度、风速分量为特征，系统评估了随机森林回归器在不同地形条件下的风速预测能力，RMSE 较线性基准降低 23%。' },
+];
+const papers_D = [
+  { id: 61, year: 2022, title: 'DEM-guided wind speed downscaling via physics-informed convolutional networks', authors: 'Nakamura T, Ito K', journal: 'Wind Energy', abstract: '将 90m DEM 地形数据作为高分辨率静态通道嵌入卷积降尺度网络，通过注意力机制引导模型关注地形引发的风速变化，山地风电场验证精度提升显著。' },
+  { id: 78, year: 2023, title: 'Terrain-aware statistical downscaling of ERA5 for complex orography', authors: 'Müller A, Fischer R', journal: 'Geoscientific Model Development', abstract: '针对复杂地形区域的统计降尺度方法，利用高程、坡度、坡向作为静态辅助变量，显著改善了 ERA5 在山地地区的系统性偏差。' },
+];
+const papers_E = [
+  { id: 119, year: 2023, title: 'Spatial-graph wind farm power forecasting with ERA5 background fields', authors: 'Zhou L, Tian B, Xu C', journal: 'Applied Energy', abstract: '以风机坐标构建 k-NN 空间图，GNN 捕获机组间尾流拓扑关系，融合 ERA5 大尺度背景场后，风电场级功率预测 MAE 降低 15.7%。' },
+  { id: 131, year: 2024, title: 'Dynamic graph neural networks for wind turbine interaction modeling', authors: 'Yang M, Cheng H', journal: 'Renewable and Sustainable Energy Reviews', abstract: '提出动态图结构学习方法，使 GNN 根据风向实时调整尾流影响权重，在多风向场景下优于固定图结构基准。' },
+];
+
+let currentPapers = [];
+let currentFilteredPapers = [];
+
+/* ═══════════════════════════════════════
+   文献弹窗
+═══════════════════════════════════════ */
 function openPaperModal(insightName, papers) {
-  document.getElementById('modal-title').textContent = '支持文献 · ' + insightName;
-  const body = document.getElementById('modal-body');
-  body.innerHTML = papers.map(p =>
-    `<div class="modal-paper-item">
-      <span class="paper-id">${p}</span>
-      <div class="paper-info">论文标题待补充</div>
-    </div>`
-  ).join('') + '<div class="modal-note">弹窗详细布局待设计，当前仅展示文献 ID 占位</div>';
-  document.getElementById('modal-mask').classList.add('show');
+  currentPapers = papers;
+  currentFilteredPapers = [...papers];
+  document.getElementById('paper-modal-title').innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+    支持文献 · ${insightName}`;
+  document.getElementById('paper-modal-subtitle').textContent = `共 ${papers.length} 篇文献`;
+  renderPapers(papers);
+  document.getElementById('paper-modal-mask').classList.add('show');
 }
-function closeModal() {
-  document.getElementById('modal-mask').classList.remove('show');
+
+function renderPapers(papers) {
+  const body = document.getElementById('paper-modal-body');
+  if (!papers.length) {
+    body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:12px;">未找到匹配文献</div>';
+    return;
+  }
+  body.innerHTML = papers.map((p, i) => `
+    <div class="paper-item" data-idx="${i}">
+      <div class="paper-item-left">
+        <div class="paper-num">${String(p.id).length <= 3 ? p.id : i+1}</div>
+        <div class="paper-year-badge">${p.year}</div>
+      </div>
+      <div class="paper-item-body">
+        <div class="paper-item-title">${p.title}</div>
+        <div class="paper-item-meta">
+          <span>${p.authors}</span>
+          <span class="sep">·</span>
+          <span>${p.journal}</span>
+          <span class="sep">·</span>
+          <span>${p.year}</span>
+        </div>
+        <div class="paper-item-abstract">${p.abstract}</div>
+        <div class="paper-item-actions">
+          <button class="action-link" onclick="alert('PDF 高亮跳转功能即将上线')">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/></svg>
+            查看原文
+          </button>
+          <button class="action-link secondary" onclick="alert('已复制引用格式')">引用</button>
+          <button class="action-link secondary" style="margin-left:auto;color:var(--blue)">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h12M8 2v8M4 6l4 4 4-4"/></svg>
+            下载
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
 }
-function handleMaskClick(e) {
-  if (e.target === document.getElementById('modal-mask')) closeModal();
+
+function filterPapers(kw) {
+  const k = kw.toLowerCase();
+  const filtered = currentPapers.filter(p =>
+    p.title.toLowerCase().includes(k) ||
+    p.authors.toLowerCase().includes(k) ||
+    p.journal.toLowerCase().includes(k)
+  );
+  document.getElementById('paper-modal-subtitle').textContent = `共 ${currentPapers.length} 篇 · 显示 ${filtered.length} 篇`;
+  renderPapers(filtered);
+}
+
+function closePaperModal() {
+  document.getElementById('paper-modal-mask').classList.remove('show');
+}
+function handlePaperMaskClick(e) {
+  if (e.target === document.getElementById('paper-modal-mask')) closePaperModal();
+}
+
+/* ═══════════════════════════════════════
+   上传弹窗
+═══════════════════════════════════════ */
+let selectedFiles = [];
+let selectedLibIds = new Set();
+
+const libData = [
+  { id: 1, title: 'Wind speed prediction using deep learning: A comprehensive review', meta: 'Zhang et al. · 2023 · Renewable Energy' },
+  { id: 2, title: 'ERA5 reanalysis data applications in wind energy assessment', meta: 'Liu et al. · 2022 · Applied Energy' },
+  { id: 3, title: 'SCADA-based fault detection for offshore wind turbines', meta: 'Wang et al. · 2023 · IEEE Trans. Energy Conversion' },
+  { id: 4, title: 'Terrain effects on wind resource assessment using CFD modeling', meta: 'Kim et al. · 2021 · Wind Energy' },
+  { id: 5, title: 'Ensemble methods for short-term wind power forecasting', meta: 'Chen et al. · 2024 · Energy Conversion and Management' },
+];
+
+function openUploadModal(tab) {
+  selectedFiles = [];
+  selectedLibIds = new Set();
+  renderFileList();
+  renderLibList(libData);
+  switchTab(tab);
+  document.getElementById('upload-modal-mask').classList.add('show');
+}
+
+function closeUploadModal() {
+  document.getElementById('upload-modal-mask').classList.remove('show');
+}
+function handleUploadMaskClick(e) {
+  if (e.target === document.getElementById('upload-modal-mask')) closeUploadModal();
+}
+
+function switchTab(tab) {
+  document.getElementById('tab-local').classList.toggle('active', tab === 'local');
+  document.getElementById('tab-library').classList.toggle('active', tab === 'library');
+  document.getElementById('panel-local').style.display = tab === 'local' ? '' : 'none';
+  document.getElementById('panel-library').style.display = tab === 'library' ? '' : 'none';
+  updateFooterNote();
+}
+
+function handleFileSelect(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(f => {
+    if (selectedFiles.length < 20) selectedFiles.push(f);
+  });
+  renderFileList();
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files);
+  files.forEach(f => {
+    if (selectedFiles.length < 20) selectedFiles.push(f);
+  });
+  renderFileList();
+}
+function removeFile(idx) {
+  selectedFiles.splice(idx, 1);
+  renderFileList();
+}
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  list.innerHTML = selectedFiles.map((f, i) => `
+    <div class="file-item">
+      <svg class="file-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/></svg>
+      <span class="file-name">${f.name}</span>
+      <span class="file-size">${(f.size/1024/1024).toFixed(1)} MB</span>
+      <button class="file-remove" onclick="removeFile(${i})">×</button>
+    </div>
+  `).join('');
+  updateFooterNote();
+}
+
+function renderLibList(data) {
+  const list = document.getElementById('lib-list');
+  list.innerHTML = data.map(item => `
+    <div class="lib-item ${selectedLibIds.has(item.id) ? 'selected' : ''}" onclick="toggleLib(${item.id}, this)">
+      <div class="lib-checkbox">
+        ${selectedLibIds.has(item.id) ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg>' : ''}
+      </div>
+      <div class="lib-item-body">
+        <div class="lib-item-title">${item.title}</div>
+        <div class="lib-item-meta">${item.meta}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function toggleLib(id, el) {
+  if (selectedLibIds.has(id)) selectedLibIds.delete(id);
+  else selectedLibIds.add(id);
+  el.classList.toggle('selected');
+  const cb = el.querySelector('.lib-checkbox');
+  cb.innerHTML = selectedLibIds.has(id) ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg>' : '';
+  updateFooterNote();
+}
+function filterLib(kw) {
+  const filtered = libData.filter(d => d.title.toLowerCase().includes(kw.toLowerCase()));
+  renderLibList(filtered);
+}
+function updateFooterNote() {
+  const isLocal = document.getElementById('tab-local').classList.contains('active');
+  const note = document.getElementById('upload-footer-note');
+  if (isLocal) {
+    note.innerHTML = selectedFiles.length ? `已选择 <strong>${selectedFiles.length}</strong> 个文件` : '未选择文件';
+  } else {
+    note.innerHTML = selectedLibIds.size ? `已选择 <strong>${selectedLibIds.size}</strong> 篇文献` : '未选择文献';
+  }
+}
+function confirmUpload() {
+  const isLocal = document.getElementById('tab-local').classList.contains('active');
+  const count = isLocal ? selectedFiles.length : selectedLibIds.size;
+  if (!count) { alert('请先选择要添加的文献'); return; }
+  alert(`已添加 ${count} 篇文献，正在解析中…`);
+  closeUploadModal();
 }
 </script>
 </body>
