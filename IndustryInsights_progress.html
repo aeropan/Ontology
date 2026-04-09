@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 执行进度</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c18;
+  --surface: #0f1729;
+  --surface2: #131d30;
+  --surface3: #1a2540;
+  --border: #1e2d4a;
+  --border2: #253550;
+  --blue: #06b6d4;
+  --blue-dim: rgba(6,182,212,0.12);
+  --purple: #8b5cf6;
+  --purple-dim: rgba(139,92,246,0.15);
+  --green: #10b981;
+  --green-dim: rgba(16,185,129,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --rose: #f43f5e;
+  --text1: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #475569;
+  --grad2: linear-gradient(135deg, #06b6d4, #3b82f6);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--text1);
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* ── 面包屑 ── */
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 20px;
+}
+.page-nav a { color: var(--text2); text-decoration: none; cursor: pointer; }
+.page-nav a:hover { color: var(--blue); }
+.page-nav .sep { color: var(--text3); }
+.page-nav .current { color: var(--text1); }
+
+.page-header { margin-bottom: 28px; }
+.page-title { font-size: 18px; font-weight: 600; }
+.page-desc  { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+/* ── 步骤条 ── */
+.steps {
+  display: flex;
+  align-items: center;
+  margin-bottom: 36px;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.step-dot {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+}
+.step.active .step-dot { border-color: var(--blue); color: var(--blue); }
+.step.active { color: var(--text1); }
+.step.done .step-dot { background: var(--green); border-color: var(--green); color: #fff; }
+.step-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin: 0 8px;
+  min-width: 40px;
+}
+
+/* ── 进度主体 ── */
+.progress-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── 整体进度卡 ── */
+.overall-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.overall-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.overall-title { font-size: 14px; font-weight: 600; }
+.overall-pct { font-size: 24px; font-weight: 700; color: var(--blue); font-family: 'JetBrains Mono', monospace; }
+
+.progress-bar-wrap {
+  background: var(--surface3);
+  border-radius: 99px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--grad2);
+  transition: width 0.5s ease;
+}
+.progress-hint { font-size: 11px; color: var(--text3); }
+
+/* ── 子步骤列表 ── */
+.steps-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.steps-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.sub-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sub-step:last-child { border-bottom: none; padding-bottom: 0; }
+.sub-step-icon {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.icon-done    { background: var(--green-dim); color: var(--green); }
+.icon-running { background: var(--blue-dim);  color: var(--blue);  }
+.icon-pending { background: var(--surface3);  color: var(--text3); border: 1px solid var(--border2); }
+
+.sub-step-body { flex: 1; }
+.sub-step-name { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+.sub-step-desc { font-size: 11px; color: var(--text3); }
+.sub-step-time { font-size: 11px; color: var(--text2); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
+/* ── 日志 ── */
+.log-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.log-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.log-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  height: 180px;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  line-height: 1.8;
+}
+.log-line.ok  { color: var(--green); }
+.log-line.run { color: var(--blue);  }
+.log-line.info { color: var(--text2); }
+
+/* ── 右侧统计 ── */
+.stat-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.stat-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.stat-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.stat-key  { color: var(--text3); }
+.stat-val  { font-weight: 600; color: var(--text1); font-family: 'JetBrains Mono', monospace; }
+.stat-val.blue   { color: var(--blue); }
+.stat-val.green  { color: var(--green); }
+
+/* ── 操作栏 ── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.btn-back {
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-back:hover { color: var(--text1); }
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── 旋转动画 ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinning { animation: spin 1s linear infinite; }
+</style>
+</head>
+<body>
+
+<div class="page-nav">
+  <a onclick="window.location.href='IndustryInsights_list.html'">行业洞察</a>
+  <span class="sep">›</span>
+  <a onclick="window.location.href='IndustryInsights_setting.html'">洞察配置</a>
+  <span class="sep">›</span>
+  <span class="current">执行进度</span>
+</div>
+
+<div class="page-header">
+  <div class="page-title">执行进度</div>
+  <div class="page-desc">风电行业技术方法综合洞察 · 抽取进行中</div>
+</div>
+
+<!-- 步骤条 -->
+<div class="steps">
+  <div class="step done">
+    <div class="step-dot">✓</div>
+    <span>基本信息</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step done">
+    <div class="step-dot">✓</div>
+    <span>洞察配置</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step active">
+    <div class="step-dot">
+      <svg class="spinning" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+    </div>
+    <span>执行抽取</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">4</div>
+    <span>查看结果</span>
+  </div>
+</div>
+
+<div class="progress-layout">
+  <div>
+    <!-- 整体进度 -->
+    <div class="overall-panel">
+      <div class="overall-header">
+        <div class="overall-title">整体进度</div>
+        <div class="overall-pct" id="pct-text">62%</div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="prog-bar" style="width:62%"></div>
+      </div>
+      <div class="progress-hint" id="prog-hint">正在执行：方法特征抽取（第 2/3 批）…</div>
+    </div>
+
+    <!-- 子步骤 -->
+    <div class="steps-panel">
+      <div class="steps-title">执行步骤</div>
+
+      <div class="sub-step">
+        <div class="sub-step-icon icon-done">✓</div>
+        <div class="sub-step-body">
+          <div class="sub-step-name">文献检索</div>
+          <div class="sub-step-desc">匹配 ERA5 相关文献，共检索到 187 篇候选论文</div>
+          <div class="sub-step-time">耗时 00:12</div>
+        </div>
+      </div>
+
+      <div class="sub-step">
+        <div class="sub-step-icon icon-done">✓</div>
+        <div class="sub-step-body">
+          <div class="sub-step-name">相关性过滤</div>
+          <div class="sub-step-desc">按阈值 ≥0.7 筛选，保留 134 篇高相关论文</div>
+          <div class="sub-step-time">耗时 00:08</div>
+        </div>
+      </div>
+
+      <div class="sub-step">
+        <div class="sub-step-icon icon-running">
+          <svg class="spinning" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+        </div>
+        <div class="sub-step-body">
+          <div class="sub-step-name">方法特征抽取</div>
+          <div class="sub-step-desc">正在从论文中提取关键方法、数据用途及技术参数</div>
+          <div class="sub-step-time">进行中…</div>
+        </div>
+      </div>
+
+      <div class="sub-step">
+        <div class="sub-step-icon icon-pending">4</div>
+        <div class="sub-step-body">
+          <div class="sub-step-name">知识图谱构建</div>
+          <div class="sub-step-desc">将抽取结果映射到本体节点并生成洞察报告</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 日志 -->
+    <div class="log-panel">
+      <div class="log-title">实时日志</div>
+      <div class="log-box" id="log-box">
+        <div class="log-line ok">[00:00] ✓ 任务初始化完成</div>
+        <div class="log-line info">[00:03] → 开始检索文献数据库…</div>
+        <div class="log-line info">[00:07] → 命中关键词：ERA5、风速预测、功率预测</div>
+        <div class="log-line ok">[00:12] ✓ 检索完成，共 187 篇候选</div>
+        <div class="log-line info">[00:14] → 执行相关性评分（阈值 0.70）…</div>
+        <div class="log-line ok">[00:22] ✓ 过滤完成，保留 134 篇</div>
+        <div class="log-line run">[00:25] ▶ 开始方法特征抽取，批次 1/3…</div>
+        <div class="log-line ok">[00:38] ✓ 批次 1 完成（45 篇）</div>
+        <div class="log-line run">[00:40] ▶ 批次 2/3 抽取中（44 篇）…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧统计 -->
+  <div>
+    <div class="stat-panel">
+      <div class="stat-title">实时统计</div>
+      <div class="stat-row">
+        <span class="stat-key">候选论文</span>
+        <span class="stat-val">187</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">已过滤保留</span>
+        <span class="stat-val blue">134</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">已抽取完成</span>
+        <span class="stat-val green">89</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">方法条目</span>
+        <span class="stat-val">213</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">已用时</span>
+        <span class="stat-val">01:42</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-key">预计剩余</span>
+        <span class="stat-val">~01:10</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 操作栏 -->
+<div class="action-bar">
+  <button class="btn-back" onclick="window.location.href='IndustryInsights_setting.html'">← 返回配置</button>
+  <button class="btn-primary" id="btn-view" onclick="window.location.href='IndustryInsights_detail.html'">
+    查看结果 →
+  </button>
+</div>
+
+<script>
+// 演示：模拟进度推进
+let pct = 62;
+const bar = document.getElementById('prog-bar');
+const pctText = document.getElementById('pct-text');
+const hint = document.getElementById('prog-hint');
+const logBox = document.getElementById('log-box');
+
+const hints = [
+  '正在执行：方法特征抽取（第 2/3 批）…',
+  '正在执行：方法特征抽取（第 3/3 批）…',
+  '正在执行：知识图谱构建…',
+  '完成！正在生成洞察报告…',
+];
+const logs = [
+  '[01:55] ✓ 批次 2 完成（44 篇）',
+  '[01:58] ▶ 批次 3/3 抽取中（45 篇）…',
+  '[02:15] ✓ 批次 3 完成，方法特征抽取全部完成',
+  '[02:18] ▶ 开始知识图谱构建…',
+  '[02:34] ✓ 本体节点映射完成（87 个节点）',
+  '[02:38] ▶ 生成洞察报告…',
+  '[02:45] ✓ 任务全部完成！',
+];
+
+let step = 0;
+const timer = setInterval(() => {
+  pct = Math.min(100, pct + Math.floor(Math.random() * 5) + 3);
+  bar.style.width = pct + '%';
+  pctText.textContent = pct + '%';
+
+  if (step < hints.length) hint.textContent = hints[Math.floor(step / 1.5)];
+  if (step < logs.length) {
+    const line = document.createElement('div');
+    line.className = 'log-line ' + (logs[step].includes('✓') ? 'ok' : logs[step].includes('▶') ? 'run' : 'info');
+    line.textContent = logs[step];
+    logBox.appendChild(line);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+  step++;
+
+  if (pct >= 100) {
+    clearInterval(timer);
+    hint.textContent = '抽取完成！共提取 134 篇论文、261 条方法记录。';
+  }
+}, 2000);
+</script>
+</body>
+</html>

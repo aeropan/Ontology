@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 列表</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c18;
+  --surface: #0f1729;
+  --surface2: #131d30;
+  --surface3: #1a2540;
+  --border: #1e2d4a;
+  --border2: #253550;
+  --blue: #06b6d4;
+  --blue-dim: rgba(6,182,212,0.12);
+  --purple: #8b5cf6;
+  --purple-dim: rgba(139,92,246,0.15);
+  --green: #10b981;
+  --green-dim: rgba(16,185,129,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --rose: #f43f5e;
+  --text1: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #475569;
+  --grad1: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  --grad2: linear-gradient(135deg, #06b6d4, #3b82f6);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--text1);
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* ── 顶部 ── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text1);
+}
+.page-desc {
+  font-size: 12px;
+  color: var(--text3);
+  margin-top: 3px;
+}
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+/* ── 筛选栏 ── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.filter-input {
+  flex: 1;
+  max-width: 320px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--text1);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.filter-input::placeholder { color: var(--text3); }
+.filter-input:focus { border-color: var(--blue); }
+
+.filter-tag {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-tag.active { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+
+/* ── 卡片列表 ── */
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.insight-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.insight-card:hover { border-color: var(--blue); background: var(--surface2); }
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text1);
+  line-height: 1.4;
+}
+.status-badge {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+}
+.status-done    { background: var(--green-dim); color: var(--green); }
+.status-running { background: var(--blue-dim);  color: var(--blue);  }
+.status-draft   { background: var(--surface3);  color: var(--text3); }
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--text3);
+}
+.card-meta span { display: flex; align-items: center; gap: 4px; }
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.card-footer-time { font-size: 11px; color: var(--text3); }
+.btn-detail {
+  font-size: 11px;
+  color: var(--blue);
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  padding: 0;
+}
+.btn-detail:hover { text-decoration: underline; }
+
+/* ── 空状态 ── */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text3);
+}
+.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+.empty-text { font-size: 13px; }
+
+/* ── 新建弹窗 ── */
+.modal-mask {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(8,12,24,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-mask.show { display: flex; }
+
+.modal {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  width: 480px;
+  max-width: 90vw;
+  padding: 28px;
+}
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.form-row { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--text1);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-select option { background: var(--surface2); }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+.btn-cancel {
+  padding: 8px 16px;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-cancel:hover { color: var(--text1); }
+</style>
+</head>
+<body>
+
+<!-- ── 页头 ── -->
+<div class="page-header">
+  <div>
+    <div class="page-title">行业洞察</div>
+    <div class="page-desc">管理和查看所有行业洞察分析任务</div>
+  </div>
+  <button class="btn-primary" onclick="openModal()">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+    新建洞察
+  </button>
+</div>
+
+<!-- ── 筛选栏 ── -->
+<div class="filter-bar">
+  <input class="filter-input" placeholder="搜索洞察任务…" oninput="filterCards(this.value)" />
+  <span class="filter-tag active" onclick="setFilter(this,'all')">全部</span>
+  <span class="filter-tag" onclick="setFilter(this,'done')">已完成</span>
+  <span class="filter-tag" onclick="setFilter(this,'running')">进行中</span>
+  <span class="filter-tag" onclick="setFilter(this,'draft')">草稿</span>
+</div>
+
+<!-- ── 卡片列表 ── -->
+<div class="insight-grid" id="card-grid">
+  <!-- 示例卡片 -->
+  <div class="insight-card" data-status="done" onclick="goDetail()">
+    <div class="card-top">
+      <div class="card-name">风电行业技术方法综合洞察</div>
+      <span class="status-badge status-done">已完成</span>
+    </div>
+    <div class="card-meta">
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v10H2z"/><path d="M5 2v4M11 2v4M2 8h12"/></svg>
+        ERA5 + SCADA
+      </span>
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        2026-03-28
+      </span>
+    </div>
+    <div class="card-footer">
+      <span class="card-footer-time">最后更新：2小时前</span>
+      <button class="btn-detail" onclick="event.stopPropagation();goDetail()">查看详情 →</button>
+    </div>
+  </div>
+
+  <div class="insight-card" data-status="running">
+    <div class="card-top">
+      <div class="card-name">近海风场气象特征分析</div>
+      <span class="status-badge status-running">进行中</span>
+    </div>
+    <div class="card-meta">
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v10H2z"/><path d="M5 2v4M11 2v4M2 8h12"/></svg>
+        ERA5
+      </span>
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        2026-04-01
+      </span>
+    </div>
+    <div class="card-footer">
+      <span class="card-footer-time">抽取中…</span>
+      <button class="btn-detail" onclick="event.stopPropagation();goProgress()">查看进度 →</button>
+    </div>
+  </div>
+
+  <div class="insight-card" data-status="draft">
+    <div class="card-top">
+      <div class="card-name">山地地形风速预测方法综述</div>
+      <span class="status-badge status-draft">草稿</span>
+    </div>
+    <div class="card-meta">
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v10H2z"/><path d="M5 2v4M11 2v4M2 8h12"/></svg>
+        待配置
+      </span>
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        2026-04-09
+      </span>
+    </div>
+    <div class="card-footer">
+      <span class="card-footer-time">未提交</span>
+      <button class="btn-detail" onclick="event.stopPropagation();goSetting()">继续配置 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 新建弹窗 ── -->
+<div class="modal-mask" id="modal-mask" onclick="handleMaskClick(event)">
+  <div class="modal">
+    <div class="modal-title">新建行业洞察</div>
+
+    <div class="form-row">
+      <label class="form-label">洞察名称</label>
+      <input class="form-input" id="f-name" placeholder="为本次洞察任务起一个名称" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">行业领域</label>
+      <select class="form-select" id="f-industry">
+        <option value="">请选择…</option>
+        <option>风电</option>
+        <option>光伏</option>
+        <option>储能</option>
+        <option>综合能源</option>
+        <option>其他</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">洞察描述（可选）</label>
+      <textarea class="form-textarea" id="f-desc" placeholder="简要描述本次洞察的目标或范围…"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-primary" onclick="submitNew()">下一步：洞察配置 →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 弹窗 ──────────────────────────────────────
+function openModal() {
+  document.getElementById('modal-mask').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal-mask').classList.remove('show');
+}
+function handleMaskClick(e) {
+  if (e.target === document.getElementById('modal-mask')) closeModal();
+}
+function submitNew() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { document.getElementById('f-name').focus(); return; }
+  closeModal();
+  goSetting();
+}
+
+// ── 筛选 ──────────────────────────────────────
+let currentFilter = 'all';
+function setFilter(el, type) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  filterCards(document.querySelector('.filter-input').value);
+}
+function filterCards(keyword) {
+  const kw = keyword.toLowerCase();
+  document.querySelectorAll('.insight-card').forEach(card => {
+    const nameMatch = card.querySelector('.card-name').textContent.toLowerCase().includes(kw);
+    const statusMatch = currentFilter === 'all' || card.dataset.status === currentFilter;
+    card.style.display = (nameMatch && statusMatch) ? '' : 'none';
+  });
+}
+
+// ── 页面跳转 ──────────────────────────────────
+function goSetting()  { window.location.href = 'IndustryInsights_setting.html'; }
+function goProgress() { window.location.href = 'IndustryInsights_progress.html'; }
+function goDetail()   { window.location.href = 'IndustryInsights_detail.html'; }
+</script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 洞察详情</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c18;
+  --surface: #0f1729;
+  --surface2: #131d30;
+  --surface3: #1a2540;
+  --border: #1e2d4a;
+  --border2: #253550;
+  --blue: #06b6d4;
+  --blue-dim: rgba(6,182,212,0.12);
+  --purple: #8b5cf6;
+  --purple-dim: rgba(139,92,246,0.15);
+  --green: #10b981;
+  --green-dim: rgba(16,185,129,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --rose: #f43f5e;
+  --rose-dim: rgba(244,63,94,0.12);
+  --text1: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #475569;
+  --grad1: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  --grad2: linear-gradient(135deg, #06b6d4, #3b82f6);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--text1);
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* ── 面包屑 ── */
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 20px;
+}
+.page-nav a { color: var(--text2); text-decoration: none; cursor: pointer; }
+.page-nav a:hover { color: var(--blue); }
+.page-nav .sep { color: var(--text3); }
+.page-nav .current { color: var(--text1); }
+
+/* ── 页头 ── */
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+.header-left .task-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.header-left .task-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.meta-item { display: flex; align-items: center; gap: 4px; }
+.badge-done { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; background: var(--green-dim); color: var(--green); }
+
+.header-actions { display: flex; gap: 10px; align-items: center; }
+.btn-ghost {
+  padding: 7px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-ghost:hover { color: var(--text1); }
+.btn-primary {
+  padding: 7px 14px;
+  background: var(--blue);
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-primary:hover { opacity: 0.85; }
+
+/* ── 统计卡行 ── */
+.stat-row-top {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.stat-card-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+.stat-card-value { font-size: 22px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.stat-card-sub   { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.val-blue   { color: var(--blue); }
+.val-green  { color: var(--green); }
+.val-purple { color: var(--purple); }
+.val-amber  { color: var(--amber); }
+
+/* ── 主体布局 ── */
+.detail-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── 面板通用 ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.panel:last-child { margin-bottom: 0; }
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-title-icon { opacity: 0.6; }
+.panel-count {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── 方法列表 ── */
+.method-list { display: flex; flex-direction: column; gap: 10px; }
+.method-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  transition: border-color 0.15s;
+  cursor: default;
+}
+.method-item:hover { border-color: var(--blue); }
+.method-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.method-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.method-tags { display: flex; gap: 6px; }
+.tag-sm {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+}
+.tag-blue   { background: var(--blue-dim);   color: var(--blue); }
+.tag-purple { background: var(--purple-dim); color: var(--purple); }
+.tag-green  { background: var(--green-dim);  color: var(--green); }
+.tag-amber  { background: var(--amber-dim);  color: var(--amber); }
+.tag-rose   { background: var(--rose-dim);   color: var(--rose); }
+
+.method-detail {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+.method-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text3);
+}
+.method-footer .paper-ref { color: var(--blue); cursor: pointer; }
+.method-footer .paper-ref:hover { text-decoration: underline; }
+
+/* ── 右侧面板 ── */
+.side-panel { display: flex; flex-direction: column; gap: 16px; }
+
+/* ── 分布图（简单条形） ── */
+.dist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.dist-row:last-child { margin-bottom: 0; }
+.dist-label { width: 80px; color: var(--text2); font-size: 11px; flex-shrink: 0; }
+.dist-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--surface3);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.dist-bar-fill { height: 100%; border-radius: 99px; }
+.dist-cnt { width: 30px; text-align: right; color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+/* ── 数据源标签云 ── */
+.source-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.source-tag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  color: var(--text2);
+}
+.source-tag.primary { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+
+/* ── 关键发现 ── */
+.finding-list { display: flex; flex-direction: column; gap: 8px; }
+.finding-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.finding-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+</style>
+</head>
+<body>
+
+<!-- 面包屑 -->
+<div class="page-nav">
+  <a onclick="window.location.href='IndustryInsights_list.html'">行业洞察</a>
+  <span class="sep">›</span>
+  <span class="current">风电行业技术方法综合洞察</span>
+</div>
+
+<!-- 页头 -->
+<div class="detail-header">
+  <div class="header-left">
+    <div class="task-title">风电行业技术方法综合洞察</div>
+    <div class="task-meta">
+      <span class="badge-done">已完成</span>
+      <span class="meta-item">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        2026-04-09 完成
+      </span>
+      <span class="meta-item">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v4c0 1.4 2.7 2.5 6 2.5S14 9.4 14 8V4"/></svg>
+        ERA5 + DEM
+      </span>
+      <span class="meta-item">耗时 02:45</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-ghost">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10v4h4l8-8-4-4-8 8z"/></svg>
+      重新配置
+    </button>
+    <button class="btn-primary">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h12M8 2v8M4 6l4 4 4-4"/></svg>
+      导出报告
+    </button>
+  </div>
+</div>
+
+<!-- 统计卡 -->
+<div class="stat-row-top">
+  <div class="stat-card">
+    <div class="stat-card-label">检索论文</div>
+    <div class="stat-card-value val-blue">134</div>
+    <div class="stat-card-sub">从 187 篇候选过滤</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">方法条目</div>
+    <div class="stat-card-value val-purple">261</div>
+    <div class="stat-card-sub">涉及 7 大方法类别</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">本体节点</div>
+    <div class="stat-card-value val-green">87</div>
+    <div class="stat-card-sub">已映射到知识图谱</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-label">数据源组合</div>
+    <div class="stat-card-value val-amber">12</div>
+    <div class="stat-card-sub">种数据融合方案</div>
+  </div>
+</div>
+
+<!-- 主体 -->
+<div class="detail-layout">
+  <div>
+
+    <!-- 方法列表 -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg class="panel-title-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h7M3 12h5"/><circle cx="12" cy="11" r="2.5"/></svg>
+          抽取方法条目
+        </div>
+        <span class="panel-count">261 条</span>
+      </div>
+
+      <div class="method-list">
+
+        <div class="method-item">
+          <div class="method-top">
+            <div class="method-label">输入通道扩展</div>
+            <div class="method-tags">
+              <span class="tag-sm tag-blue">特征融合</span>
+              <span class="tag-sm tag-green">星阙大模型</span>
+            </div>
+          </div>
+          <div class="method-detail">增加输入通道：将 ERA5 100m 风速经插值后作为海洋表面风输入，与原始 10m 风速融合，提升近海预测精度。</div>
+          <div class="method-footer">
+            <span>ERA5 → 输入通道</span>
+            <span class="paper-ref">{115} 276577条</span>
+            <span class="paper-ref">{AIA-1056}</span>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-top">
+            <div class="method-label">微调预训练权重</div>
+            <div class="method-tags">
+              <span class="tag-sm tag-blue">微调</span>
+              <span class="tag-sm tag-green">星阙大模型</span>
+            </div>
+          </div>
+          <div class="method-detail">在下游风电场数据上对预训练模型进行 LoRA 微调，保留气候先验知识的同时适配局地特征。</div>
+          <div class="method-footer">
+            <span>ERA5 → 微调</span>
+            <span class="paper-ref">{87}</span>
+            <span class="paper-ref">{102}</span>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-top">
+            <div class="method-label">随机森林回归</div>
+            <div class="method-tags">
+              <span class="tag-sm tag-purple">集成方法</span>
+              <span class="tag-sm tag-amber">传统统计</span>
+            </div>
+          </div>
+          <div class="method-detail">使用 ERA5 多层风速、温度、气压等作为特征，训练随机森林回归器预测地面观测风速，RMSE 相比线性回归降低 23%。</div>
+          <div class="method-footer">
+            <span>ERA5 → 随机森林回归</span>
+            <span class="paper-ref">{43}</span>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-top">
+            <div class="method-label">高分辨率静态通道</div>
+            <div class="method-tags">
+              <span class="tag-sm tag-blue">作为高分辨率静态通道</span>
+            </div>
+          </div>
+          <div class="method-detail">将 90m 分辨率 DEM 地形数据作为静态高分辨率通道输入模型，引导降尺度过程中的地形相关风速变化。</div>
+          <div class="method-footer">
+            <span>DEM → 静态通道</span>
+            <span class="paper-ref">{61}</span>
+            <span class="paper-ref">{78}</span>
+          </div>
+        </div>
+
+        <div class="method-item">
+          <div class="method-top">
+            <div class="method-label">图神经网络空间建模</div>
+            <div class="method-tags">
+              <span class="tag-sm tag-rose">图GNN</span>
+              <span class="tag-sm tag-blue">深度学习</span>
+            </div>
+          </div>
+          <div class="method-detail">以风机位置构建空间图，利用 GNN 捕获尾流与机组间的拓扑相关性，结合 ERA5 大尺度气象背景场进行联合预测。</div>
+          <div class="method-footer">
+            <span>ERA5 + SCADA → 图GNN</span>
+            <span class="paper-ref">{119}</span>
+            <span class="paper-ref">{131}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 关键发现 -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg class="panel-title-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l2 4 5 .5-3.5 3.5 1 5L8 12l-4.5 2 1-5L1 5.5 6 5z"/></svg>
+          关键发现
+        </div>
+      </div>
+      <div class="finding-list">
+        <div class="finding-item">
+          <div class="finding-dot"></div>
+          深度学习方法占比 68%，其中 Transformer 架构在近两年论文中增长最快，占深度学习方法的 41%。
+        </div>
+        <div class="finding-item">
+          <div class="finding-dot"></div>
+          ERA5 在所有方法中均作为气象背景场输入，与 SCADA 数据联合使用的比例达 54%，是最主流的多源融合方案。
+        </div>
+        <div class="finding-item">
+          <div class="finding-dot"></div>
+          地形数据（DEM）在近海与山地场景中被广泛引入为静态通道，显著改善复杂地形下的空间降尺度精度。
+        </div>
+        <div class="finding-item">
+          <div class="finding-dot"></div>
+          传统统计方法（随机森林、梯度提升）在中短期预测中仍具竞争力，且可解释性强，适合工程应用场景。
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 右侧 -->
+  <div class="side-panel">
+
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-header">
+        <div class="panel-title">方法类别分布</div>
+      </div>
+      <div class="dist-row">
+        <span class="dist-label">深度学习</span>
+        <div class="dist-bar-wrap"><div class="dist-bar-fill" style="width:68%;background:#06b6d4"></div></div>
+        <span class="dist-cnt">177</span>
+      </div>
+      <div class="dist-row">
+        <span class="dist-label">传统统计</span>
+        <div class="dist-bar-wrap"><div class="dist-bar-fill" style="width:20%;background:#8b5cf6"></div></div>
+        <span class="dist-cnt">52</span>
+      </div>
+      <div class="dist-row">
+        <span class="dist-label">物理模型</span>
+        <div class="dist-bar-wrap"><div class="dist-bar-fill" style="width:9%;background:#10b981"></div></div>
+        <span class="dist-cnt">23</span>
+      </div>
+      <div class="dist-row">
+        <span class="dist-label">图GNN</span>
+        <div class="dist-bar-wrap"><div class="dist-bar-fill" style="width:7%;background:#f59e0b"></div></div>
+        <span class="dist-cnt">9</span>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-header">
+        <div class="panel-title">数据源组合</div>
+      </div>
+      <div class="source-tags">
+        <span class="source-tag primary">ERA5</span>
+        <span class="source-tag primary">SCADA</span>
+        <span class="source-tag">DEM</span>
+        <span class="source-tag">MERRA-2</span>
+        <span class="source-tag">气象站</span>
+        <span class="source-tag">GFS</span>
+        <span class="source-tag">SST</span>
+        <span class="source-tag">METAR</span>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-header">
+        <div class="panel-title">任务信息</div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:2">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">创建时间</span><span>2026-04-09</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">完成时间</span><span>2026-04-09</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">耗时</span><span>02:45</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">相关性阈值</span><span>≥ 0.70</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">最大论文数</span><span>200</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
