@@ -26,8 +26,6 @@
   --text1: #e2e8f0;
   --text2: #94a3b8;
   --text3: #475569;
-  --grad1: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  --grad2: linear-gradient(135deg, #06b6d4, #3b82f6);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -57,7 +55,7 @@ body {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   gap: 16px;
 }
 .header-left .task-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
@@ -69,61 +67,47 @@ body {
   color: var(--text3);
 }
 .meta-item { display: flex; align-items: center; gap: 4px; }
-.badge-done { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; background: var(--green-dim); color: var(--green); }
-
+.badge-done {
+  padding: 4px 10px; border-radius: 6px;
+  font-size: 11px; font-weight: 500;
+  background: var(--green-dim); color: var(--green);
+}
 .header-actions { display: flex; gap: 10px; align-items: center; }
 .btn-ghost {
   padding: 7px 14px;
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: 8px;
-  font-size: 12px;
-  font-family: inherit;
-  color: var(--text2);
-  cursor: pointer;
+  font-size: 12px; font-family: inherit;
+  color: var(--text2); cursor: pointer;
   transition: all 0.15s;
   display: flex; align-items: center; gap: 6px;
 }
 .btn-ghost:hover { color: var(--text1); }
-.btn-primary {
+.btn-primary-sm {
   padding: 7px 14px;
-  background: var(--blue);
-  border: none;
+  background: var(--blue); border: none;
   border-radius: 8px;
-  font-size: 12px;
-  font-family: inherit;
-  color: #fff;
-  cursor: pointer;
+  font-size: 12px; font-family: inherit;
+  color: #fff; cursor: pointer;
   transition: opacity 0.15s;
   display: flex; align-items: center; gap: 6px;
 }
-.btn-primary:hover { opacity: 0.85; }
+.btn-primary-sm:hover { opacity: 0.85; }
 
-/* ── 统计卡行 ── */
-.stat-row-top {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+/* ── 结论图面板 ── */
+.conclusion-panel {
+  background: #0a0f1e;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
   margin-bottom: 24px;
 }
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-}
-.stat-card-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
-.stat-card-value { font-size: 22px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
-.stat-card-sub   { font-size: 11px; color: var(--text3); margin-top: 3px; }
-.val-blue   { color: var(--blue); }
-.val-green  { color: var(--green); }
-.val-purple { color: var(--purple); }
-.val-amber  { color: var(--amber); }
 
 /* ── 主体布局 ── */
 .detail-layout {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 280px;
   gap: 20px;
   align-items: start;
 }
@@ -146,132 +130,131 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .panel-title {
-  font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
 }
-.panel-title-icon { opacity: 0.6; }
-.panel-count {
-  font-size: 11px;
-  color: var(--text3);
-  font-family: 'JetBrains Mono', monospace;
-}
+.panel-count { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
 
-/* ── 方法列表 ── */
-.method-list { display: flex; flex-direction: column; gap: 10px; }
-.method-item {
+/* ── 能力洞察条目 ── */
+.insight-list { display: flex; flex-direction: column; gap: 12px; }
+.insight-item {
   background: var(--surface2);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px;
   transition: border-color 0.15s;
-  cursor: default;
 }
-.method-item:hover { border-color: var(--blue); }
-.method-top {
+.insight-item:hover { border-color: var(--blue); }
+
+.insight-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 6px;
+  gap: 12px;
+  margin-bottom: 8px;
 }
-.method-label {
-  font-size: 13px;
-  font-weight: 500;
-}
-.method-tags { display: flex; gap: 6px; }
-.tag-sm {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 500;
-}
+.insight-name { font-size: 13px; font-weight: 500; color: var(--text1); flex-shrink: 0; }
+.insight-tags { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
+
+.tag-sm { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; }
 .tag-blue   { background: var(--blue-dim);   color: var(--blue); }
 .tag-purple { background: var(--purple-dim); color: var(--purple); }
 .tag-green  { background: var(--green-dim);  color: var(--green); }
 .tag-amber  { background: var(--amber-dim);  color: var(--amber); }
 .tag-rose   { background: var(--rose-dim);   color: var(--rose); }
 
-.method-detail {
-  font-size: 12px;
-  color: var(--text2);
-  line-height: 1.6;
-  margin-bottom: 6px;
-}
-.method-footer {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 11px;
-  color: var(--text3);
-}
-.method-footer .paper-ref { color: var(--blue); cursor: pointer; }
-.method-footer .paper-ref:hover { text-decoration: underline; }
-
-/* ── 右侧面板 ── */
-.side-panel { display: flex; flex-direction: column; gap: 16px; }
-
-/* ── 分布图（简单条形） ── */
-.dist-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.insight-usage {
+  font-size: 12px; color: var(--text2); line-height: 1.65;
   margin-bottom: 10px;
-  font-size: 12px;
+}
+.insight-usage .field-label { color: var(--text3); margin-right: 4px; }
+
+.insight-footer {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 11px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.paper-count { color: var(--text3); display: flex; align-items: center; gap: 4px; }
+.paper-count strong { color: var(--text1); font-family: 'JetBrains Mono', monospace; }
+.paper-link {
+  color: var(--blue); cursor: pointer;
+  background: none; border: none;
+  font-size: 11px; font-family: inherit;
+  padding: 0; display: flex; align-items: center; gap: 3px;
+}
+.paper-link:hover { text-decoration: underline; }
+
+/* ── 右侧算法分布 ── */
+.dist-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
 }
 .dist-row:last-child { margin-bottom: 0; }
-.dist-label { width: 80px; color: var(--text2); font-size: 11px; flex-shrink: 0; }
-.dist-bar-wrap {
-  flex: 1;
-  height: 6px;
-  background: var(--surface3);
-  border-radius: 99px;
-  overflow: hidden;
-}
+.dist-label { width: 88px; color: var(--text2); font-size: 11px; flex-shrink: 0; }
+.dist-bar-wrap { flex: 1; height: 6px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
 .dist-bar-fill { height: 100%; border-radius: 99px; }
 .dist-cnt { width: 30px; text-align: right; color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
-/* ── 数据源标签云 ── */
-.source-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-.source-tag {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  border: 1px solid var(--border);
-  color: var(--text2);
+/* ── 文献弹窗 ── */
+.modal-mask {
+  display: none; position: fixed; inset: 0;
+  background: rgba(8,12,24,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 200; align-items: center; justify-content: center;
 }
-.source-tag.primary { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
-
-/* ── 关键发现 ── */
-.finding-list { display: flex; flex-direction: column; gap: 8px; }
-.finding-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text2);
-  line-height: 1.6;
+.modal-mask.show { display: flex; }
+.modal {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  width: 560px; max-width: 90vw; max-height: 75vh;
+  display: flex; flex-direction: column;
 }
-.finding-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--blue);
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  margin-top: 6px;
 }
+.modal-title { font-size: 14px; font-weight: 600; }
+.modal-close {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer; color: var(--text3);
+  transition: all 0.15s; background: none; border: none; font-family: inherit;
+  line-height: 1;
+}
+.modal-close:hover { background: var(--surface3); color: var(--text1); }
+.modal-body { padding: 16px 24px 24px; overflow-y: auto; flex: 1; }
+.modal-placeholder {
+  text-align: center; padding: 40px 0;
+  color: var(--text3); font-size: 12px; line-height: 2;
+}
+.modal-paper-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.modal-paper-item:last-child { border-bottom: none; }
+.paper-id {
+  flex-shrink: 0; padding: 2px 8px; border-radius: 4px;
+  background: var(--blue-dim); color: var(--blue);
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+}
+.paper-info { color: var(--text2); line-height: 1.6; }
+.modal-note { margin-top: 16px; padding: 10px 12px; background: var(--surface3); border-radius: 8px; font-size: 11px; color: var(--text3); }
 </style>
 </head>
 <body>
 
-<!-- 面包屑 -->
+<!-- ── 面包屑 ── -->
 <div class="page-nav">
   <a onclick="window.location.href='IndustryInsights_list.html'">行业洞察</a>
   <span class="sep">›</span>
   <span class="current">风电行业技术方法综合洞察</span>
 </div>
 
-<!-- 页头 -->
+<!-- ── 页头 ── -->
 <div class="detail-header">
   <div class="header-left">
     <div class="task-title">风电行业技术方法综合洞察</div>
@@ -281,10 +264,7 @@ body {
         <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
         2026-04-09 完成
       </span>
-      <span class="meta-item">
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v4c0 1.4 2.7 2.5 6 2.5S14 9.4 14 8V4"/></svg>
-        ERA5 + DEM
-      </span>
+      <span class="meta-item">ERA5 + DEM</span>
       <span class="meta-item">耗时 02:45</span>
     </div>
   </div>
@@ -293,170 +273,222 @@ body {
       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10v4h4l8-8-4-4-8 8z"/></svg>
       重新配置
     </button>
-    <button class="btn-primary">
+    <button class="btn-primary-sm">
       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h12M8 2v8M4 6l4 4 4-4"/></svg>
       导出报告
     </button>
   </div>
 </div>
 
-<!-- 统计卡 -->
-<div class="stat-row-top">
-  <div class="stat-card">
-    <div class="stat-card-label">检索论文</div>
-    <div class="stat-card-value val-blue">134</div>
-    <div class="stat-card-sub">从 187 篇候选过滤</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-card-label">方法条目</div>
-    <div class="stat-card-value val-purple">261</div>
-    <div class="stat-card-sub">涉及 7 大方法类别</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-card-label">本体节点</div>
-    <div class="stat-card-value val-green">87</div>
-    <div class="stat-card-sub">已映射到知识图谱</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-card-label">数据源组合</div>
-    <div class="stat-card-value val-amber">12</div>
-    <div class="stat-card-sub">种数据融合方案</div>
-  </div>
+<!-- ══════════════════════════════════════════════════
+     结论图（A3 样式 + A2 内容）
+══════════════════════════════════════════════════ -->
+<div class="conclusion-panel">
+  <svg viewBox="0 0 920 430" width="100%" style="display:block;font-family:'Noto Sans SC',sans-serif;">
+
+    <!-- 标题 -->
+    <text x="460" y="30" text-anchor="middle" fill="#e2e8f0" font-size="15" font-weight="700" letter-spacing="2">★  洞察结论图</text>
+
+    <!-- 列标题 -->
+    <text x="92"  y="60" text-anchor="middle" fill="#475569" font-size="11" letter-spacing="2">数 据 来 源</text>
+    <text x="390" y="60" text-anchor="middle" fill="#475569" font-size="11" letter-spacing="2">核 心 算 法</text>
+    <text x="765" y="60" text-anchor="middle" fill="#475569" font-size="11" letter-spacing="2">效 果 与 场 景</text>
+
+    <!-- 分隔线 -->
+    <line x1="10" y1="70" x2="910" y2="70" stroke="#1a2540" stroke-width="1"/>
+
+    <!-- ── 行左侧色条 ── -->
+    <rect x="0" y="89"  width="4" height="52" rx="2" fill="#f59e0b" opacity="0.9"/>
+    <rect x="0" y="174" width="4" height="52" rx="2" fill="#10b981" opacity="0.9"/>
+    <rect x="0" y="259" width="4" height="52" rx="2" fill="#3b82f6" opacity="0.9"/>
+    <rect x="0" y="344" width="4" height="52" rx="2" fill="#8b5cf6" opacity="0.9"/>
+
+    <!-- ════════════════════════
+         ROW 1 · 气象/NWP · #f59e0b · y_c=115
+    ════════════════════════ -->
+    <!-- 左：数据来源 -->
+    <rect x="10" y="89" width="165" height="52" rx="8" fill="rgba(245,158,11,0.07)" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="92" y="108" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">气象 / NWP 驱动</text>
+    <text x="92" y="124" text-anchor="middle" fill="#f59e0b" font-size="10" opacity="0.85">ERA5 · GFS · CMA · WRF</text>
+    <!-- 中：核心算法 -->
+    <rect x="235" y="89" width="310" height="52" rx="8" fill="rgba(245,158,11,0.07)" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="390" y="108" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">统计 + 物理 / MOS</text>
+    <text x="390" y="124" text-anchor="middle" fill="#f59e0b" font-size="10" opacity="0.85">ARIMA · MOS · 数值天气后处理校正</text>
+    <!-- 右：效果 -->
+    <rect x="620" y="89" width="290" height="52" rx="8" fill="rgba(245,158,11,0.07)" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="765" y="108" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">72h+ 中长期预报</text>
+    <text x="765" y="124" text-anchor="middle" fill="#f59e0b" font-size="10" opacity="0.85">大区域覆盖 · 偏差需校正</text>
+    <!-- 连接线 -->
+    <path d="M 175,115 C 205,115 205,115 231,115" stroke="#f59e0b" stroke-width="1.5" fill="none" opacity="0.65"/>
+    <polygon points="231,111 235,115 231,119" fill="#f59e0b" opacity="0.65"/>
+    <path d="M 545,115 C 582,115 582,115 616,115" stroke="#f59e0b" stroke-width="1.5" fill="none" opacity="0.65"/>
+    <polygon points="616,111 620,115 616,119" fill="#f59e0b" opacity="0.65"/>
+
+    <!-- ════════════════════════
+         ROW 2 · 现地观测 · #10b981 · y_c=200
+    ════════════════════════ -->
+    <rect x="10" y="174" width="165" height="52" rx="8" fill="rgba(16,185,129,0.07)" stroke="#10b981" stroke-width="1.5"/>
+    <text x="92" y="193" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">现地观测 驱动</text>
+    <text x="92" y="209" text-anchor="middle" fill="#10b981" font-size="10" opacity="0.85">气象站 · 测风仪 · 气象雷达</text>
+    <rect x="235" y="174" width="310" height="52" rx="8" fill="rgba(16,185,129,0.07)" stroke="#10b981" stroke-width="1.5"/>
+    <text x="390" y="193" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">时序预测 &amp; 机器学习</text>
+    <text x="390" y="209" text-anchor="middle" fill="#10b981" font-size="10" opacity="0.85">ARIMA · XGBoost · LSTM · TCN</text>
+    <rect x="620" y="174" width="290" height="52" rx="8" fill="rgba(16,185,129,0.07)" stroke="#10b981" stroke-width="1.5"/>
+    <text x="765" y="193" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">0-6h 局部精准预测</text>
+    <text x="765" y="209" text-anchor="middle" fill="#10b981" font-size="10" opacity="0.85">短期 · 受观测密度影响</text>
+    <path d="M 175,200 C 205,200 205,200 231,200" stroke="#10b981" stroke-width="1.5" fill="none" opacity="0.65"/>
+    <polygon points="231,196 235,200 231,204" fill="#10b981" opacity="0.65"/>
+    <path d="M 545,200 C 582,200 582,200 616,200" stroke="#10b981" stroke-width="1.5" fill="none" opacity="0.65"/>
+    <polygon points="616,196 620,200 616,204" fill="#10b981" opacity="0.65"/>
+
+    <!-- ════════════════════════
+         ROW 3 · 多源融合 · #3b82f6 · y_c=285
+    ════════════════════════ -->
+    <rect x="10" y="259" width="165" height="52" rx="8" fill="rgba(59,130,246,0.07)" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="92" y="278" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">多源数据 融合</text>
+    <text x="92" y="294" text-anchor="middle" fill="#3b82f6" font-size="10" opacity="0.85">ERA5 · 遥感 · 地形 · 激光雷达</text>
+    <rect x="235" y="259" width="310" height="52" rx="8" fill="rgba(59,130,246,0.07)" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="390" y="278" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">深度学习 + 注意力融合</text>
+    <text x="390" y="294" text-anchor="middle" fill="#3b82f6" font-size="10" opacity="0.85">Attention · 时空对齐 · 多表征融合</text>
+    <rect x="620" y="259" width="290" height="52" rx="8" fill="rgba(59,130,246,0.07)" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="765" y="278" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">风电场级多尺度预测</text>
+    <text x="765" y="294" text-anchor="middle" fill="#3b82f6" font-size="10" opacity="0.85">精度显著提升</text>
+    <path d="M 175,285 C 205,285 205,285 231,285" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.65"/>
+    <polygon points="231,281 235,285 231,289" fill="#3b82f6" opacity="0.65"/>
+    <path d="M 545,285 C 582,285 582,285 616,285" stroke="#3b82f6" stroke-width="1.5" fill="none" opacity="0.65"/>
+    <polygon points="616,281 620,285 616,289" fill="#3b82f6" opacity="0.65"/>
+
+    <!-- ════════════════════════
+         ROW 4 · 新兴AI · #8b5cf6 · y_c=370
+    ════════════════════════ -->
+    <rect x="10" y="344" width="165" height="52" rx="8" fill="rgba(139,92,246,0.07)" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="92" y="363" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">新兴数据 + AI</text>
+    <text x="92" y="379" text-anchor="middle" fill="#8b5cf6" font-size="10" opacity="0.85">卫星SAR · IoT 物联网</text>
+    <rect x="235" y="344" width="310" height="52" rx="8" fill="rgba(139,92,246,0.07)" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="390" y="363" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">迁移学习 / PINN</text>
+    <text x="390" y="379" text-anchor="middle" fill="#8b5cf6" font-size="10" opacity="0.85">小样本学习 · 物理信息神经网络</text>
+    <rect x="620" y="344" width="290" height="52" rx="8" fill="rgba(139,92,246,0.07)" stroke="#8b5cf6" stroke-width="1.5"/>
+    <text x="765" y="363" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">新观测手段拓展</text>
+    <text x="765" y="379" text-anchor="middle" fill="#8b5cf6" font-size="10" opacity="0.85">小样本场景 · 高潜力应用</text>
+    <path d="M 175,370 C 205,370 205,370 231,370" stroke="#8b5cf6" stroke-width="1.5" fill="none" opacity="0.65"/>
+    <polygon points="231,366 235,370 231,374" fill="#8b5cf6" opacity="0.65"/>
+    <path d="M 545,370 C 582,370 582,370 616,370" stroke="#8b5cf6" stroke-width="1.5" fill="none" opacity="0.65"/>
+    <polygon points="616,366 620,370 616,374" fill="#8b5cf6" opacity="0.65"/>
+
+  </svg>
 </div>
 
-<!-- 主体 -->
+<!-- ══════════════════════════════════════════════════
+     主体：能力洞察 + 右侧算法分布
+══════════════════════════════════════════════════ -->
 <div class="detail-layout">
-  <div>
 
-    <!-- 方法列表 -->
+  <!-- ── 能力洞察 ── -->
+  <div>
     <div class="panel">
       <div class="panel-header">
         <div class="panel-title">
-          <svg class="panel-title-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h7M3 12h5"/><circle cx="12" cy="11" r="2.5"/></svg>
-          抽取方法条目
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h7M3 12h5"/><circle cx="12" cy="11" r="2.5"/></svg>
+          能力洞察
         </div>
         <span class="panel-count">261 条</span>
       </div>
 
-      <div class="method-list">
+      <div class="insight-list">
 
-        <div class="method-item">
-          <div class="method-top">
-            <div class="method-label">输入通道扩展</div>
-            <div class="method-tags">
+        <div class="insight-item">
+          <div class="insight-top">
+            <div class="insight-name">输入通道扩展</div>
+            <div class="insight-tags">
               <span class="tag-sm tag-blue">特征融合</span>
               <span class="tag-sm tag-green">星阙大模型</span>
             </div>
           </div>
-          <div class="method-detail">增加输入通道：将 ERA5 100m 风速经插值后作为海洋表面风输入，与原始 10m 风速融合，提升近海预测精度。</div>
-          <div class="method-footer">
-            <span>ERA5 → 输入通道</span>
-            <span class="paper-ref">{115} 276577条</span>
-            <span class="paper-ref">{AIA-1056}</span>
+          <div class="insight-usage">
+            <span class="field-label">数据用途：</span>将 ERA5 100m 风速经插值后作为海洋表面风输入通道，与原始 10m 风速融合，提升近海场景预测精度。
+          </div>
+          <div class="insight-footer">
+            <span class="paper-count">支持文献：<strong>2</strong> 篇</span>
+            <button class="paper-link" onclick="openPaperModal('输入通道扩展',[115,'AIA-1056'])">查看文献列表 →</button>
           </div>
         </div>
 
-        <div class="method-item">
-          <div class="method-top">
-            <div class="method-label">微调预训练权重</div>
-            <div class="method-tags">
+        <div class="insight-item">
+          <div class="insight-top">
+            <div class="insight-name">微调预训练权重</div>
+            <div class="insight-tags">
               <span class="tag-sm tag-blue">微调</span>
               <span class="tag-sm tag-green">星阙大模型</span>
             </div>
           </div>
-          <div class="method-detail">在下游风电场数据上对预训练模型进行 LoRA 微调，保留气候先验知识的同时适配局地特征。</div>
-          <div class="method-footer">
-            <span>ERA5 → 微调</span>
-            <span class="paper-ref">{87}</span>
-            <span class="paper-ref">{102}</span>
+          <div class="insight-usage">
+            <span class="field-label">数据用途：</span>在下游风电场数据上对预训练模型进行 LoRA 微调，保留气候先验知识的同时适配局地特征，减少冷启动所需样本量。
+          </div>
+          <div class="insight-footer">
+            <span class="paper-count">支持文献：<strong>2</strong> 篇</span>
+            <button class="paper-link" onclick="openPaperModal('微调预训练权重',[87,102])">查看文献列表 →</button>
           </div>
         </div>
 
-        <div class="method-item">
-          <div class="method-top">
-            <div class="method-label">随机森林回归</div>
-            <div class="method-tags">
+        <div class="insight-item">
+          <div class="insight-top">
+            <div class="insight-name">随机森林回归</div>
+            <div class="insight-tags">
               <span class="tag-sm tag-purple">集成方法</span>
               <span class="tag-sm tag-amber">传统统计</span>
             </div>
           </div>
-          <div class="method-detail">使用 ERA5 多层风速、温度、气压等作为特征，训练随机森林回归器预测地面观测风速，RMSE 相比线性回归降低 23%。</div>
-          <div class="method-footer">
-            <span>ERA5 → 随机森林回归</span>
-            <span class="paper-ref">{43}</span>
+          <div class="insight-usage">
+            <span class="field-label">数据用途：</span>使用 ERA5 多层风速、温度、气压等字段作为特征训练随机森林回归器，预测地面观测风速，RMSE 较线性回归降低 23%。
+          </div>
+          <div class="insight-footer">
+            <span class="paper-count">支持文献：<strong>1</strong> 篇</span>
+            <button class="paper-link" onclick="openPaperModal('随机森林回归',[43])">查看文献列表 →</button>
           </div>
         </div>
 
-        <div class="method-item">
-          <div class="method-top">
-            <div class="method-label">高分辨率静态通道</div>
-            <div class="method-tags">
+        <div class="insight-item">
+          <div class="insight-top">
+            <div class="insight-name">高分辨率静态通道</div>
+            <div class="insight-tags">
               <span class="tag-sm tag-blue">作为高分辨率静态通道</span>
             </div>
           </div>
-          <div class="method-detail">将 90m 分辨率 DEM 地形数据作为静态高分辨率通道输入模型，引导降尺度过程中的地形相关风速变化。</div>
-          <div class="method-footer">
-            <span>DEM → 静态通道</span>
-            <span class="paper-ref">{61}</span>
-            <span class="paper-ref">{78}</span>
+          <div class="insight-usage">
+            <span class="field-label">数据用途：</span>将 90m 分辨率 DEM 地形数据作为静态高分辨率通道输入模型，引导降尺度过程中的地形相关风速变化模式。
+          </div>
+          <div class="insight-footer">
+            <span class="paper-count">支持文献：<strong>2</strong> 篇</span>
+            <button class="paper-link" onclick="openPaperModal('高分辨率静态通道',[61,78])">查看文献列表 →</button>
           </div>
         </div>
 
-        <div class="method-item">
-          <div class="method-top">
-            <div class="method-label">图神经网络空间建模</div>
-            <div class="method-tags">
+        <div class="insight-item">
+          <div class="insight-top">
+            <div class="insight-name">图神经网络空间建模</div>
+            <div class="insight-tags">
               <span class="tag-sm tag-rose">图GNN</span>
               <span class="tag-sm tag-blue">深度学习</span>
             </div>
           </div>
-          <div class="method-detail">以风机位置构建空间图，利用 GNN 捕获尾流与机组间的拓扑相关性，结合 ERA5 大尺度气象背景场进行联合预测。</div>
-          <div class="method-footer">
-            <span>ERA5 + SCADA → 图GNN</span>
-            <span class="paper-ref">{119}</span>
-            <span class="paper-ref">{131}</span>
+          <div class="insight-usage">
+            <span class="field-label">数据用途：</span>以风机位置构建空间图，利用 GNN 捕获尾流与机组间的拓扑相关性，结合 ERA5 大尺度气象背景场进行联合预测。
+          </div>
+          <div class="insight-footer">
+            <span class="paper-count">支持文献：<strong>2</strong> 篇</span>
+            <button class="paper-link" onclick="openPaperModal('图神经网络空间建模',[119,131])">查看文献列表 →</button>
           </div>
         </div>
 
       </div>
     </div>
-
-    <!-- 关键发现 -->
-    <div class="panel">
-      <div class="panel-header">
-        <div class="panel-title">
-          <svg class="panel-title-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l2 4 5 .5-3.5 3.5 1 5L8 12l-4.5 2 1-5L1 5.5 6 5z"/></svg>
-          关键发现
-        </div>
-      </div>
-      <div class="finding-list">
-        <div class="finding-item">
-          <div class="finding-dot"></div>
-          深度学习方法占比 68%，其中 Transformer 架构在近两年论文中增长最快，占深度学习方法的 41%。
-        </div>
-        <div class="finding-item">
-          <div class="finding-dot"></div>
-          ERA5 在所有方法中均作为气象背景场输入，与 SCADA 数据联合使用的比例达 54%，是最主流的多源融合方案。
-        </div>
-        <div class="finding-item">
-          <div class="finding-dot"></div>
-          地形数据（DEM）在近海与山地场景中被广泛引入为静态通道，显著改善复杂地形下的空间降尺度精度。
-        </div>
-        <div class="finding-item">
-          <div class="finding-dot"></div>
-          传统统计方法（随机森林、梯度提升）在中短期预测中仍具竞争力，且可解释性强，适合工程应用场景。
-        </div>
-      </div>
-    </div>
-
   </div>
 
-  <!-- 右侧 -->
-  <div class="side-panel">
-
-    <div class="panel" style="margin-bottom:0">
+  <!-- ── 右侧：算法与路径分布 ── -->
+  <div>
+    <div class="panel">
       <div class="panel-header">
-        <div class="panel-title">方法类别分布</div>
+        <div class="panel-title">算法与路径分布</div>
       </div>
       <div class="dist-row">
         <span class="dist-label">深度学习</span>
@@ -479,38 +511,41 @@ body {
         <span class="dist-cnt">9</span>
       </div>
     </div>
+  </div>
 
-    <div class="panel" style="margin-bottom:0">
-      <div class="panel-header">
-        <div class="panel-title">数据源组合</div>
-      </div>
-      <div class="source-tags">
-        <span class="source-tag primary">ERA5</span>
-        <span class="source-tag primary">SCADA</span>
-        <span class="source-tag">DEM</span>
-        <span class="source-tag">MERRA-2</span>
-        <span class="source-tag">气象站</span>
-        <span class="source-tag">GFS</span>
-        <span class="source-tag">SST</span>
-        <span class="source-tag">METAR</span>
-      </div>
+</div><!-- /detail-layout -->
+
+<!-- ── 文献列表弹窗（内容待设计） ── -->
+<div class="modal-mask" id="modal-mask" onclick="handleMaskClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">支持文献列表</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
     </div>
-
-    <div class="panel" style="margin-bottom:0">
-      <div class="panel-header">
-        <div class="panel-title">任务信息</div>
-      </div>
-      <div style="font-size:12px;color:var(--text2);line-height:2">
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">创建时间</span><span>2026-04-09</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">完成时间</span><span>2026-04-09</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">耗时</span><span>02:45</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">相关性阈值</span><span>≥ 0.70</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">最大论文数</span><span>200</span></div>
-      </div>
+    <div class="modal-body" id="modal-body">
+      <div class="modal-placeholder">弹窗布局待设计</div>
     </div>
-
   </div>
 </div>
 
+<script>
+function openPaperModal(insightName, papers) {
+  document.getElementById('modal-title').textContent = '支持文献 · ' + insightName;
+  const body = document.getElementById('modal-body');
+  body.innerHTML = papers.map(p =>
+    `<div class="modal-paper-item">
+      <span class="paper-id">${p}</span>
+      <div class="paper-info">论文标题待补充</div>
+    </div>`
+  ).join('') + '<div class="modal-note">弹窗详细布局待设计，当前仅展示文献 ID 占位</div>';
+  document.getElementById('modal-mask').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal-mask').classList.remove('show');
+}
+function handleMaskClick(e) {
+  if (e.target === document.getElementById('modal-mask')) closeModal();
+}
+</script>
 </body>
 </html>
