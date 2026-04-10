@@ -13,8 +13,8 @@
   --surface3: #1a2540;
   --border: #1e2d4a;
   --border2: #253550;
-  --blue: #3b82f6;
-  --blue-dim: rgba(59,130,246,0.12);
+  --blue: #06b6d4;
+  --blue-dim: rgba(6,182,212,0.12);
   --purple: #8b5cf6;
   --purple-dim: rgba(139,92,246,0.15);
   --green: #10b981;
@@ -25,8 +25,6 @@
   --text1: #e2e8f0;
   --text2: #94a3b8;
   --text3: #475569;
-  --grad1: linear-gradient(135deg, #3b82f6, #8b5cf6);
-  --grad2: linear-gradient(135deg, #06b6d4, #3b82f6);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -37,71 +35,36 @@ body {
   padding: 24px;
 }
 
-/* ── 顶部 ── */
+/* ── 页头 ── */
 .page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 24px;
 }
-.page-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text1);
-}
-.page-desc {
-  font-size: 12px;
-  color: var(--text3);
-  margin-top: 3px;
-}
+.page-title { font-size: 18px; font-weight: 600; color: var(--text1); }
+.page-desc  { font-size: 12px; color: var(--text3); margin-top: 3px; }
 .btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--blue);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: opacity 0.15s;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: var(--blue);
+  color: #fff; border: none; border-radius: 8px;
+  font-size: 13px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
 }
 .btn-primary:hover { opacity: 0.85; }
 
 /* ── 筛选栏 ── */
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
+.filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .filter-input {
-  flex: 1;
-  max-width: 320px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 7px 12px;
-  font-size: 12px;
-  color: var(--text1);
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.15s;
+  flex: 1; max-width: 320px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 12px;
+  font-size: 12px; color: var(--text1); font-family: inherit;
+  outline: none; transition: border-color 0.15s;
 }
 .filter-input::placeholder { color: var(--text3); }
 .filter-input:focus { border-color: var(--blue); }
-
 .filter-tag {
-  padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 11px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text2);
-  cursor: pointer;
-  transition: all 0.15s;
+  padding: 5px 12px; border-radius: 6px; font-size: 11px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
 }
 .filter-tag.active { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
 
@@ -111,149 +74,243 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
 }
-
 .insight-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 18px;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px; cursor: pointer;
+  transition: all 0.15s; display: flex; flex-direction: column; gap: 12px;
 }
 .insight-card:hover { border-color: var(--blue); background: var(--surface2); }
-
-.card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-}
-.card-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text1);
-  line-height: 1.4;
-}
-.status-badge {
-  flex-shrink: 0;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: 500;
-}
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.card-name { font-size: 14px; font-weight: 500; color: var(--text1); line-height: 1.4; }
+.status-badge { flex-shrink: 0; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; }
 .status-done    { background: var(--green-dim); color: var(--green); }
-.status-running { background: var(--blue-dim);  color: var(--blue);  }
+.status-running { background: var(--blue-dim);  color: var(--blue); }
 .status-draft   { background: var(--surface3);  color: var(--text3); }
-
-.card-meta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: 11px;
-  color: var(--text3);
-}
+.card-meta { display: flex; align-items: center; gap: 16px; font-size: 11px; color: var(--text3); }
 .card-meta span { display: flex; align-items: center; gap: 4px; }
-
 .card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 12px; border-top: 1px solid var(--border);
 }
 .card-footer-time { font-size: 11px; color: var(--text3); }
 .btn-detail {
-  font-size: 11px;
-  color: var(--blue);
-  cursor: pointer;
-  background: none;
-  border: none;
-  font-family: inherit;
-  padding: 0;
+  font-size: 11px; color: var(--blue); cursor: pointer;
+  background: none; border: none; font-family: inherit; padding: 0;
 }
 .btn-detail:hover { text-decoration: underline; }
 
-/* ── 空状态 ── */
-.empty-state {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 60px 0;
-  color: var(--text3);
-}
-.empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
-.empty-text { font-size: 13px; }
-
-/* ── 新建弹窗 ── */
+/* ══════════════════════════════════════════
+   新建弹窗
+══════════════════════════════════════════ */
 .modal-mask {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(8,12,24,0.7);
-  backdrop-filter: blur(4px);
-  z-index: 100;
-  align-items: center;
-  justify-content: center;
+  display: none; position: fixed; inset: 0;
+  background: rgba(8,12,24,0.75);
+  backdrop-filter: blur(5px);
+  z-index: 100; align-items: center; justify-content: center;
 }
 .modal-mask.show { display: flex; }
 
 .modal {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 16px;
-  width: 480px;
-  max-width: 90vw;
-  padding: 28px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 16px; width: 500px; max-width: 92vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column;
+  max-height: 90vh; overflow: hidden;
 }
-.modal-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 20px;
+
+/* 弹窗顶栏 */
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 0; flex-shrink: 0;
 }
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-close {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; color: var(--text3);
+  background: none; border: none; font-family: inherit; transition: all 0.15s;
+}
+.modal-close:hover { background: var(--surface3); color: var(--text1); }
+
+/* 两个标签页 */
+.modal-tabs {
+  display: flex; gap: 0;
+  padding: 16px 24px 0; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.modal-tab {
+  padding: 8px 16px; font-size: 13px; font-family: inherit;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--text3); cursor: pointer; transition: all 0.15s;
+  margin-bottom: -1px;
+}
+.modal-tab:hover { color: var(--text2); }
+.modal-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 500; }
+
+/* 弹窗主体（可滚动） */
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+
+/* 表单 */
 .form-row { margin-bottom: 16px; }
+.form-row:last-child { margin-bottom: 0; }
 .form-label {
-  display: block;
-  font-size: 11px;
-  color: var(--text2);
-  margin-bottom: 6px;
-  letter-spacing: 0.5px;
+  display: block; font-size: 11px; color: var(--text2);
+  margin-bottom: 6px; letter-spacing: 0.5px;
 }
-.form-input, .form-select, .form-textarea {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 12px;
-  font-size: 13px;
-  color: var(--text1);
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.15s;
+.form-input, .form-select {
+  width: 100%; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px; color: var(--text1);
+  font-family: inherit; outline: none; transition: border-color 0.15s;
 }
-.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
-.form-textarea { resize: vertical; min-height: 80px; }
+.form-input:focus, .form-select:focus { border-color: var(--blue); }
+.form-input.error { border-color: var(--rose); }
 .form-select option { background: var(--surface2); }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 24px;
+/* 本体选择触发器 */
+.ontology-trigger {
+  width: 100%; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 9px 12px; font-size: 13px;
+  color: var(--text3); font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  text-align: left;
+}
+.ontology-trigger:hover { border-color: var(--blue); }
+.ontology-trigger.has-value { color: var(--text1); }
+.ontology-trigger.has-value .trigger-placeholder { display: none; }
+.ontology-trigger-selected {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+}
+.ontology-trigger-icon {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.ontology-trigger-info { flex: 1; min-width: 0; }
+.ontology-trigger-name { font-size: 13px; color: var(--text1); font-weight: 500; }
+.ontology-trigger-meta { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.trigger-chevron { color: var(--text3); flex-shrink: 0; transition: transform 0.15s; }
+
+/* 无本体提示 */
+.no-ontology-hint {
+  background: var(--surface3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.no-ontology-hint-icon { color: var(--blue); flex-shrink: 0; margin-top: 1px; }
+.no-ontology-hint-text { font-size: 12px; color: var(--text2); line-height: 1.7; }
+.no-ontology-hint-text strong { color: var(--text1); }
+
+/* 弹窗底部 */
+.modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 16px 24px; border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 .btn-cancel {
-  padding: 8px 16px;
-  background: var(--surface3);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  font-size: 13px;
-  font-family: inherit;
-  color: var(--text2);
-  cursor: pointer;
-  transition: all 0.15s;
+  padding: 8px 16px; background: var(--surface3);
+  border: 1px solid var(--border2); border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: var(--text2);
+  cursor: pointer; transition: all 0.15s;
 }
 .btn-cancel:hover { color: var(--text1); }
+
+/* ══════════════════════════════════════════
+   本体选择弹窗（叠加在新建弹窗上方）
+══════════════════════════════════════════ */
+.ontology-mask {
+  display: none; position: fixed; inset: 0;
+  background: rgba(8,12,24,0.6);
+  backdrop-filter: blur(3px);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.ontology-mask.show { display: flex; }
+
+.ontology-modal {
+  background: #0f1729;
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  width: 560px; max-width: 92vw;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column;
+  max-height: 80vh; overflow: hidden;
+}
+
+.ontology-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 14px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.ontology-modal-title { font-size: 15px; font-weight: 600; }
+
+.ontology-modal-desc {
+  padding: 12px 24px; font-size: 12px; color: var(--text3);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.ontology-search-wrap {
+  padding: 12px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.ontology-search {
+  width: 100%; background: var(--surface3);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 12px 8px 34px; font-size: 13px;
+  color: var(--text1); font-family: inherit; outline: none;
+  transition: border-color 0.15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 16 16' fill='none' stroke='%23475569' stroke-width='1.5'%3E%3Ccircle cx='6.5' cy='6.5' r='4.5'/%3E%3Cpath d='M10 10l3 3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 11px center;
+}
+.ontology-search::placeholder { color: var(--text3); }
+.ontology-search:focus { border-color: var(--blue); }
+
+/* 本体列表 */
+.ontology-list { overflow-y: auto; flex: 1; padding: 8px 16px; }
+
+.onto-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 8px; border-radius: 10px;
+  cursor: pointer; transition: background 0.12s;
+  border: 1px solid transparent; margin-bottom: 4px;
+}
+.onto-item:last-child { margin-bottom: 0; }
+.onto-item:hover { background: var(--surface3); }
+.onto-item.selected {
+  background: rgba(6,182,212,0.08);
+  border-color: rgba(6,182,212,0.3);
+}
+
+.onto-icon {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+
+.onto-body { flex: 1; min-width: 0; }
+.onto-name { font-size: 14px; font-weight: 600; color: var(--text1); margin-bottom: 4px; }
+.onto-meta {
+  font-size: 11px; color: var(--text3);
+  display: flex; align-items: center; gap: 6px;
+}
+.onto-meta .dot { color: var(--border2); }
+
+.onto-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.onto-item.selected .onto-check {
+  background: var(--blue); border-color: var(--blue);
+}
+
+.ontology-modal-footer {
+  display: flex; justify-content: flex-end; gap: 10px;
+  padding: 14px 24px; border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -281,7 +338,6 @@ body {
 
 <!-- ── 卡片列表 ── -->
 <div class="insight-grid" id="card-grid">
-  <!-- 示例卡片 -->
   <div class="insight-card" data-status="done" onclick="goDetail()">
     <div class="card-top">
       <div class="card-name">风电行业技术方法综合洞察</div>
@@ -346,40 +402,136 @@ body {
   </div>
 </div>
 
-<!-- ── 新建弹窗 ── -->
+<!-- ══════════════════════════════════════════
+     新建洞察弹窗
+══════════════════════════════════════════ -->
 <div class="modal-mask" id="modal-mask" onclick="handleMaskClick(event)">
-  <div class="modal">
-    <div class="modal-title">新建行业洞察</div>
+  <div class="modal" onclick="event.stopPropagation()">
 
-    <div class="form-row">
-      <label class="form-label">洞察名称</label>
-      <input class="form-input" id="f-name" placeholder="为本次洞察任务起一个名称" />
-    </div>
-    <div class="form-row">
-      <label class="form-label">行业领域</label>
-      <select class="form-select" id="f-industry">
-        <option value="">请选择…</option>
-        <option>风电</option>
-        <option>光伏</option>
-        <option>储能</option>
-        <option>综合能源</option>
-        <option>其他</option>
-      </select>
-    </div>
-    <div class="form-row">
-      <label class="form-label">洞察描述（可选）</label>
-      <textarea class="form-textarea" id="f-desc" placeholder="简要描述本次洞察的目标或范围…"></textarea>
+    <!-- 顶栏 -->
+    <div class="modal-header">
+      <div class="modal-title">新建行业洞察</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
     </div>
 
-    <div class="modal-actions">
+    <!-- 标签切换 -->
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-with" onclick="switchTab('with')">基于本体洞察</button>
+      <button class="modal-tab" id="tab-without" onclick="switchTab('without')">无本体洞察</button>
+    </div>
+
+    <!-- 主体 -->
+    <div class="modal-body">
+
+      <!-- 共用字段：任务名称 -->
+      <div class="form-row">
+        <label class="form-label">洞察名称 <span style="color:var(--rose)">*</span></label>
+        <input class="form-input" id="f-name" placeholder="为本次洞察任务起一个名称" />
+      </div>
+
+      <!-- 共用字段：行业领域 -->
+      <div class="form-row">
+        <label class="form-label">行业领域 <span style="color:var(--rose)">*</span></label>
+        <select class="form-select" id="f-industry">
+          <option value="">请选择…</option>
+          <option value="wind">风电</option>
+          <option value="disaster">灾害预测</option>
+        </select>
+      </div>
+
+      <!-- 基于本体洞察：本体选择 -->
+      <div id="panel-with">
+        <div class="form-row" style="margin-bottom:0">
+          <label class="form-label">关联本体 <span style="color:var(--rose)">*</span></label>
+          <button class="ontology-trigger" id="ontology-trigger" onclick="openOntologyModal()">
+            <!-- 未选中时 -->
+            <span class="trigger-placeholder" style="color:var(--text3);font-size:13px;">点击选择本体…</span>
+            <!-- 选中后展示 -->
+            <div class="ontology-trigger-selected" id="trigger-selected" style="display:none">
+              <div class="ontology-trigger-icon" id="trigger-icon"></div>
+              <div class="ontology-trigger-info">
+                <div class="ontology-trigger-name" id="trigger-name"></div>
+                <div class="ontology-trigger-meta" id="trigger-meta"></div>
+              </div>
+            </div>
+            <svg class="trigger-chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 无本体洞察：提示 -->
+      <div id="panel-without" style="display:none">
+        <div class="form-row" style="margin-bottom:0">
+          <div class="no-ontology-hint">
+            <svg class="no-ontology-hint-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5.2v.4"/></svg>
+            <div class="no-ontology-hint-text">
+              本次洞察将<strong>不关联已有行业本体</strong>，系统会基于上传文献的抽取结果自动生成本体。适合探索性调研或全新领域的首次分析。
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <!-- 底部按钮 -->
+    <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">取消</button>
-      <button class="btn-primary" onclick="submitNew()">下一步：洞察配置 →</button>
+      <button class="btn-primary" onclick="submitNew()">
+        下一步：文献管理 →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     本体选择弹窗
+══════════════════════════════════════════ -->
+<div class="ontology-mask" id="ontology-mask" onclick="handleOntologyMaskClick(event)">
+  <div class="ontology-modal" onclick="event.stopPropagation()">
+
+    <div class="ontology-modal-header">
+      <div class="ontology-modal-title">选择行业本体</div>
+      <button class="modal-close" onclick="closeOntologyModal()">×</button>
+    </div>
+
+    <div class="ontology-modal-desc">
+      从本体中心选择已配置的行业本体，作为业务本体的构建基础
+    </div>
+
+    <div class="ontology-search-wrap">
+      <input class="ontology-search" id="onto-search" placeholder="搜索本体名称、领域…" oninput="filterOntologies(this.value)" />
+    </div>
+
+    <div class="ontology-list" id="onto-list"></div>
+
+    <div class="ontology-modal-footer">
+      <button class="btn-cancel" onclick="closeOntologyModal()">取消</button>
+      <button class="btn-primary" id="onto-confirm-btn" onclick="confirmOntology()">确认选择</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── 弹窗 ──────────────────────────────────────
+/* ════════════════════════════
+   本体数据
+════════════════════════════ */
+const ontologyData = [
+  { id: 1, name: '风力发电预测本体 v2', domain: '新能源', concepts: 79, relations: 43, date: '2026-03-01', icon: '🌀', color: '#0ea5e9', bg: 'rgba(14,165,233,0.15)' },
+  { id: 2, name: '灾害预警知识图谱 v1', domain: '气象',   concepts: 62, relations: 38, date: '2026-02-28', icon: '⚡', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+  { id: 3, name: '金融风控实体本体 v1', domain: '金融',   concepts: 91, relations: 55, date: '2026-02-25', icon: '💰', color: '#10b981', bg: 'rgba(16,185,129,0.15)' },
+  { id: 4, name: '药物靶点关系本体 v2', domain: '生物医药', concepts: 134, relations: 89, date: '2026-02-20', icon: '🧬', color: '#8b5cf6', bg: 'rgba(139,92,246,0.15)' },
+  { id: 5, name: '工业设备故障诊断 v1', domain: '工业',   concepts: 48, relations: 31, date: '2026-02-15', icon: '⚙️', color: '#64748b', bg: 'rgba(100,116,139,0.15)' },
+];
+
+let filteredOntologies = [...ontologyData];
+let tempSelectedId = null;   // 本体弹窗内临时选中
+let confirmedOntology = null; // 已确认选中的本体
+
+/* ════════════════════════════
+   新建弹窗
+════════════════════════════ */
+let currentTab = 'with';
+
 function openModal() {
   document.getElementById('modal-mask').classList.add('show');
 }
@@ -389,14 +541,136 @@ function closeModal() {
 function handleMaskClick(e) {
   if (e.target === document.getElementById('modal-mask')) closeModal();
 }
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tab-with').classList.toggle('active', tab === 'with');
+  document.getElementById('tab-without').classList.toggle('active', tab === 'without');
+  document.getElementById('panel-with').style.display    = tab === 'with'    ? '' : 'none';
+  document.getElementById('panel-without').style.display = tab === 'without' ? '' : 'none';
+}
+
 function submitNew() {
   const name = document.getElementById('f-name').value.trim();
-  if (!name) { document.getElementById('f-name').focus(); return; }
+  const industry = document.getElementById('f-industry').value;
+
+  // 验证名称
+  if (!name) {
+    const inp = document.getElementById('f-name');
+    inp.classList.add('error');
+    inp.focus();
+    inp.addEventListener('input', () => inp.classList.remove('error'), { once: true });
+    return;
+  }
+  // 验证领域
+  if (!industry) {
+    document.getElementById('f-industry').focus();
+    return;
+  }
+  // 基于本体时验证本体
+  if (currentTab === 'with' && !confirmedOntology) {
+    document.getElementById('ontology-trigger').style.borderColor = 'var(--rose)';
+    setTimeout(() => document.getElementById('ontology-trigger').style.borderColor = '', 1500);
+    return;
+  }
   closeModal();
   goSetting();
 }
 
-// ── 筛选 ──────────────────────────────────────
+/* ════════════════════════════
+   本体选择弹窗
+════════════════════════════ */
+function openOntologyModal() {
+  tempSelectedId = confirmedOntology ? confirmedOntology.id : null;
+  filteredOntologies = [...ontologyData];
+  document.getElementById('onto-search').value = '';
+  renderOntologyList();
+  document.getElementById('ontology-mask').classList.add('show');
+}
+function closeOntologyModal() {
+  document.getElementById('ontology-mask').classList.remove('show');
+}
+function handleOntologyMaskClick(e) {
+  if (e.target === document.getElementById('ontology-mask')) closeOntologyModal();
+}
+
+function filterOntologies(kw) {
+  const k = kw.toLowerCase();
+  filteredOntologies = ontologyData.filter(d =>
+    d.name.toLowerCase().includes(k) || d.domain.toLowerCase().includes(k)
+  );
+  renderOntologyList();
+}
+
+function renderOntologyList() {
+  const list = document.getElementById('onto-list');
+  if (!filteredOntologies.length) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:12px;">未找到匹配本体</div>';
+    return;
+  }
+  list.innerHTML = filteredOntologies.map(d => {
+    const sel = tempSelectedId === d.id;
+    return `
+      <div class="onto-item ${sel ? 'selected' : ''}" onclick="selectOntology(${d.id})">
+        <div class="onto-icon" style="background:${d.bg}">${d.icon}</div>
+        <div class="onto-body">
+          <div class="onto-name">${d.name}</div>
+          <div class="onto-meta">
+            <span>${d.domain}</span>
+            <span class="dot">·</span>
+            <span>${d.concepts} 个概念</span>
+            <span class="dot">·</span>
+            <span>${d.relations} 条关系</span>
+            <span class="dot">·</span>
+            <span>${d.date}</span>
+          </div>
+        </div>
+        <div class="onto-check">
+          ${sel ? `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.2"><path d="M2 6l3 3 5-5"/></svg>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectOntology(id) {
+  tempSelectedId = id;
+  renderOntologyList();
+}
+
+function confirmOntology() {
+  if (!tempSelectedId) return;
+  confirmedOntology = ontologyData.find(d => d.id === tempSelectedId);
+  updateTriggerDisplay();
+  closeOntologyModal();
+}
+
+function updateTriggerDisplay() {
+  const trigger = document.getElementById('ontology-trigger');
+  const selected = document.getElementById('trigger-selected');
+  const placeholder = trigger.querySelector('.trigger-placeholder');
+
+  if (confirmedOntology) {
+    placeholder.style.display = 'none';
+    selected.style.display = 'flex';
+    document.getElementById('trigger-icon').style.cssText =
+      `background:${confirmedOntology.bg};font-size:14px;`;
+    document.getElementById('trigger-icon').textContent = confirmedOntology.icon;
+    document.getElementById('trigger-name').textContent = confirmedOntology.name;
+    document.getElementById('trigger-meta').textContent =
+      `${confirmedOntology.domain} · ${confirmedOntology.concepts} 个概念 · ${confirmedOntology.relations} 条关系`;
+    trigger.classList.add('has-value');
+    trigger.style.borderColor = '';
+  } else {
+    placeholder.style.display = '';
+    selected.style.display = 'none';
+    trigger.classList.remove('has-value');
+  }
+}
+
+/* ════════════════════════════
+   列表筛选
+════════════════════════════ */
 let currentFilter = 'all';
 function setFilter(el, type) {
   currentFilter = type;
@@ -413,7 +687,9 @@ function filterCards(keyword) {
   });
 }
 
-// ── 页面跳转 ──────────────────────────────────
+/* ════════════════════════════
+   页面跳转
+════════════════════════════ */
 function goSetting()  { window.location.href = 'IndustryInsights_setting.html'; }
 function goProgress() { window.location.href = 'IndustryInsights_progress.html'; }
 function goDetail()   { window.location.href = 'IndustryInsights_detail.html'; }
