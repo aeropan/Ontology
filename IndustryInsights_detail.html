@@ -4,34 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>行业洞察 · 洞察详情</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
 <style>
-:root {
-  --bg: #080c18;
-  --surface: #0f1729;
-  --surface2: #131d30;
-  --surface3: #1a2540;
-  --border: #1e2d4a;
-  --border2: #253550;
-  --blue: #3b82f6;
-  --blue-dim: rgba(59,130,246,0.12);
-  --purple: #8b5cf6;
-  --purple-dim: rgba(139,92,246,0.15);
-  --green: #10b981;
-  --green-dim: rgba(16,185,129,0.12);
-  --amber: #f59e0b;
-  --amber-dim: rgba(245,158,11,0.12);
-  --rose: #f43f5e;
-  --rose-dim: rgba(244,63,94,0.12);
-  --text1: #e2e8f0;
-  --text2: #94a3b8;
-  --text3: #475569;
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  background: var(--bg);
-  font-family: 'Noto Sans SC', sans-serif;
-  color: var(--text1);
   min-height: 100vh;
   padding: 24px;
 }
@@ -42,13 +20,13 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--text3);
+  color: var(--text-3);
   margin-bottom: 20px;
 }
-.page-nav a { color: var(--text2); text-decoration: none; cursor: pointer; }
+.page-nav a { color: var(--text-2); text-decoration: none; cursor: pointer; }
 .page-nav a:hover { color: var(--blue); }
-.page-nav .sep { color: var(--text3); }
-.page-nav .current { color: var(--text1); }
+.page-nav .sep { color: var(--text-3); }
+.page-nav .current { color: var(--text-1); }
 
 /* ── 页头 ── */
 .detail-header {
@@ -64,7 +42,7 @@ body {
   align-items: center;
   gap: 16px;
   font-size: 12px;
-  color: var(--text3);
+  color: var(--text-3);
 }
 .meta-item { display: flex; align-items: center; gap: 4px; }
 .badge-done {
@@ -75,15 +53,15 @@ body {
 .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .btn-ghost {
   padding: 7px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
   border-radius: 8px;
   font-size: 12px; font-family: inherit;
-  color: var(--text2); cursor: pointer;
+  color: var(--text-2); cursor: pointer;
   transition: all 0.15s;
   display: flex; align-items: center; gap: 6px;
 }
-.btn-ghost:hover { color: var(--text1); border-color: var(--blue); }
+.btn-ghost:hover { color: var(--text-1); border-color: var(--blue); }
 .btn-primary-sm {
   padding: 7px 14px;
   background: var(--blue); border: none;
@@ -98,7 +76,7 @@ body {
 /* ── 结论图面板（缩小版） ── */
 .conclusion-panel {
   background: #0a0f1e;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-1);
   border-radius: 12px;
   overflow: hidden;
   margin-bottom: 24px;
@@ -119,8 +97,8 @@ body {
 
 /* ── 面板通用 ── */
 .panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
@@ -132,19 +110,19 @@ body {
   justify-content: space-between;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-1);
 }
 .panel-title {
   font-size: 13px; font-weight: 600;
   display: flex; align-items: center; gap: 8px;
 }
-.panel-count { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.panel-count { font-size: 11px; color: var(--text-3); font-family: 'JetBrains Mono', monospace; }
 
 /* ── 能力洞察条目 ── */
 .insight-list { display: flex; flex-direction: column; gap: 12px; }
 .insight-item {
-  background: var(--surface2);
-  border: 1px solid var(--border);
+  background: var(--bg-3);
+  border: 1px solid var(--border-1);
   border-radius: 8px;
   padding: 14px;
   transition: border-color 0.15s;
@@ -158,7 +136,7 @@ body {
   gap: 12px;
   margin-bottom: 8px;
 }
-.insight-name { font-size: 13px; font-weight: 500; color: var(--text1); flex-shrink: 0; }
+.insight-name { font-size: 13px; font-weight: 500; color: var(--text-1); flex-shrink: 0; }
 .insight-tags { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
 
 .tag-sm { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; }
@@ -169,19 +147,19 @@ body {
 .tag-rose   { background: var(--rose-dim);   color: var(--rose); }
 
 .insight-usage {
-  font-size: 12px; color: var(--text2); line-height: 1.65;
+  font-size: 12px; color: var(--text-2); line-height: 1.65;
   margin-bottom: 10px;
 }
-.insight-usage .field-label { color: var(--text3); margin-right: 4px; }
+.insight-usage .field-label { color: var(--text-3); margin-right: 4px; }
 
 .insight-footer {
   display: flex; align-items: center; gap: 14px;
   font-size: 11px;
   padding-top: 10px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-1);
 }
-.paper-count { color: var(--text3); display: flex; align-items: center; gap: 4px; }
-.paper-count strong { color: var(--text1); font-family: 'JetBrains Mono', monospace; }
+.paper-count { color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+.paper-count strong { color: var(--text-1); font-family: 'JetBrains Mono', monospace; }
 .paper-link {
   color: var(--blue); cursor: pointer;
   background: none; border: none;
@@ -195,28 +173,21 @@ body {
   display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
 }
 .dist-row:last-child { margin-bottom: 0; }
-.dist-label { width: 88px; color: var(--text2); font-size: 11px; flex-shrink: 0; }
-.dist-bar-wrap { flex: 1; height: 6px; background: var(--surface3); border-radius: 99px; overflow: hidden; }
+.dist-label { width: 88px; color: var(--text-2); font-size: 11px; flex-shrink: 0; }
+.dist-bar-wrap { flex: 1; height: 6px; background: var(--bg-4); border-radius: 99px; overflow: hidden; }
 .dist-bar-fill { height: 100%; border-radius: 99px; }
-.dist-cnt { width: 30px; text-align: right; color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.dist-cnt { width: 30px; text-align: right; color: var(--text-3); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
 
 /* ══════════════════════════════════
-   通用弹窗底层
+   通用弹窗底层（使用 shared.css .modal-overlay）
 ══════════════════════════════════ */
-.modal-mask {
-  display: none; position: fixed; inset: 0;
-  background: rgba(8,12,24,0.78);
-  backdrop-filter: blur(5px);
-  z-index: 200; align-items: center; justify-content: center;
-}
-.modal-mask.show { display: flex; }
 
 /* ══════════════════════════════════
    文献详情弹窗
 ══════════════════════════════════ */
 .paper-modal {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
   border-radius: 16px;
   width: 680px; max-width: 92vw; max-height: 80vh;
   display: flex; flex-direction: column;
@@ -225,7 +196,7 @@ body {
 .paper-modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 24px 14px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-1);
   flex-shrink: 0;
   gap: 12px;
 }
@@ -234,31 +205,31 @@ body {
   display: flex; align-items: center; gap: 8px;
 }
 .paper-modal-subtitle {
-  font-size: 11px; color: var(--text3); font-weight: 400; margin-top: 2px;
+  font-size: 11px; color: var(--text-3); font-weight: 400; margin-top: 2px;
 }
 .modal-close {
   width: 28px; height: 28px; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; cursor: pointer; color: var(--text3);
+  font-size: 16px; cursor: pointer; color: var(--text-3);
   transition: all 0.15s; background: none; border: none; font-family: inherit;
   flex-shrink: 0;
 }
-.modal-close:hover { background: var(--surface3); color: var(--text1); }
+.modal-close:hover { background: var(--bg-4); color: var(--text-1); }
 
 /* 弹窗搜索栏 */
 .paper-modal-search {
   padding: 12px 24px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-1);
   flex-shrink: 0;
 }
 .search-input {
   width: 100%;
-  background: var(--surface3);
-  border: 1px solid var(--border);
+  background: var(--bg-4);
+  border: 1px solid var(--border-1);
   border-radius: 8px;
   padding: 7px 12px 7px 32px;
   font-size: 12px;
-  color: var(--text1);
+  color: var(--text-1);
   font-family: inherit;
   outline: none;
   transition: border-color 0.15s;
@@ -266,7 +237,7 @@ body {
   background-repeat: no-repeat;
   background-position: 10px center;
 }
-.search-input::placeholder { color: var(--text3); }
+.search-input::placeholder { color: var(--text-3); }
 .search-input:focus { border-color: var(--blue); }
 
 /* 弹窗主体 */
@@ -279,12 +250,12 @@ body {
 .paper-item {
   display: flex; align-items: flex-start; gap: 14px;
   padding: 16px 24px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-1);
   transition: background 0.12s;
   cursor: default;
 }
 .paper-item:last-child { border-bottom: none; }
-.paper-item:hover { background: var(--surface3); }
+.paper-item:hover { background: var(--bg-4); }
 
 .paper-item-left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .paper-num {
@@ -296,24 +267,24 @@ body {
   flex-shrink: 0;
 }
 .paper-year-badge {
-  font-size: 10px; color: var(--text3);
+  font-size: 10px; color: var(--text-3);
   font-family: 'JetBrains Mono', monospace;
 }
 
 .paper-item-body { flex: 1; min-width: 0; }
 .paper-item-title {
-  font-size: 13px; font-weight: 500; color: var(--text1);
+  font-size: 13px; font-weight: 500; color: var(--text-1);
   line-height: 1.5; margin-bottom: 5px;
 }
 .paper-item-meta {
   display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
-  font-size: 11px; color: var(--text3); margin-bottom: 8px;
+  font-size: 11px; color: var(--text-3); margin-bottom: 8px;
 }
-.paper-item-meta .sep { color: var(--border2); }
+.paper-item-meta .sep { color: var(--border-2); }
 .paper-item-abstract {
-  font-size: 11px; color: var(--text2); line-height: 1.7;
-  background: var(--surface);
-  border-left: 2px solid var(--border2);
+  font-size: 11px; color: var(--text-2); line-height: 1.7;
+  background: var(--bg-2);
+  border-left: 2px solid var(--border-2);
   padding: 8px 10px;
   border-radius: 0 4px 4px 0;
   margin-bottom: 8px;
@@ -322,7 +293,7 @@ body {
 .paper-item-actions {
   display: flex; align-items: center; gap: 10px;
   margin-top: 10px; padding-top: 10px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-1);
 }
 .action-link {
   font-size: 11px; color: var(--blue);
@@ -330,16 +301,16 @@ body {
   padding: 0; cursor: pointer; display: flex; align-items: center; gap: 3px;
 }
 .action-link:hover { text-decoration: underline; }
-.action-link.secondary { color: var(--text3); }
-.action-link.secondary:hover { color: var(--text2); text-decoration: underline; }
+.action-link.secondary { color: var(--text-3); }
+.action-link.secondary:hover { color: var(--text-2); text-decoration: underline; }
 
 /* 弹窗底栏 */
 .paper-modal-footer {
   padding: 12px 24px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-1);
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between;
-  font-size: 11px; color: var(--text3);
+  font-size: 11px; color: var(--text-3);
 }
 .footer-note { display: flex; align-items: center; gap: 6px; }
 .footer-note svg { opacity: 0.5; }
@@ -348,8 +319,8 @@ body {
    文献上传弹窗
 ══════════════════════════════════ */
 .upload-modal {
-  background: var(--surface2);
-  border: 1px solid var(--border2);
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
   border-radius: 16px;
   width: 560px; max-width: 92vw;
   box-shadow: 0 24px 64px rgba(0,0,0,0.5);
@@ -359,7 +330,7 @@ body {
 .upload-modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 24px 14px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-1);
   flex-shrink: 0;
 }
 .upload-modal-title { font-size: 14px; font-weight: 600; }
@@ -368,7 +339,7 @@ body {
 /* 标签切换 */
 .tab-bar {
   display: flex; gap: 0;
-  background: var(--surface3);
+  background: var(--bg-4);
   border-radius: 8px;
   padding: 3px;
   margin-bottom: 18px;
@@ -378,13 +349,13 @@ body {
   font-size: 12px; font-family: inherit;
   border: none; border-radius: 6px;
   cursor: pointer; transition: all 0.15s;
-  background: transparent; color: var(--text3);
+  background: transparent; color: var(--text-3);
 }
-.tab-btn.active { background: var(--surface2); color: var(--text1); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.tab-btn.active { background: var(--bg-3); color: var(--text-1); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
 
 /* 上传区 */
 .upload-zone {
-  border: 2px dashed var(--border2);
+  border: 2px dashed var(--border-2);
   border-radius: 10px;
   padding: 32px 20px;
   text-align: center;
@@ -397,27 +368,27 @@ body {
   background: var(--blue-dim);
 }
 .upload-zone-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.5; }
-.upload-zone-title { font-size: 13px; color: var(--text1); margin-bottom: 4px; }
-.upload-zone-hint { font-size: 11px; color: var(--text3); line-height: 1.7; }
+.upload-zone-title { font-size: 13px; color: var(--text-1); margin-bottom: 4px; }
+.upload-zone-hint { font-size: 11px; color: var(--text-3); line-height: 1.7; }
 .upload-zone-hint strong { color: var(--blue); }
 
 /* 已选文件列表 */
 .file-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
 .file-item {
   display: flex; align-items: center; gap: 10px;
-  background: var(--surface3);
-  border: 1px solid var(--border);
+  background: var(--bg-4);
+  border: 1px solid var(--border-1);
   border-radius: 8px;
   padding: 10px 12px;
   font-size: 12px;
 }
 .file-icon { color: var(--blue); flex-shrink: 0; }
-.file-name { flex: 1; color: var(--text1); }
-.file-size { color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+.file-name { flex: 1; color: var(--text-1); }
+.file-size { color: var(--text-3); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
 .file-remove {
   width: 20px; height: 20px; border-radius: 4px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; cursor: pointer; color: var(--text3);
+  font-size: 14px; cursor: pointer; color: var(--text-3);
   background: none; border: none; font-family: inherit;
   transition: all 0.12s; flex-shrink: 0;
 }
@@ -431,17 +402,17 @@ body {
 .lib-item {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 10px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-1);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.12s;
-  background: var(--surface3);
+  background: var(--bg-4);
 }
 .lib-item:hover { border-color: var(--blue); }
 .lib-item.selected { border-color: var(--blue); background: var(--blue-dim); }
 .lib-checkbox {
   width: 16px; height: 16px; border-radius: 4px;
-  border: 1.5px solid var(--border2);
+  border: 1.5px solid var(--border-2);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; margin-top: 1px;
   transition: all 0.12s;
@@ -450,26 +421,26 @@ body {
   background: var(--blue); border-color: var(--blue);
 }
 .lib-item-body { flex: 1; }
-.lib-item-title { font-size: 12px; color: var(--text1); margin-bottom: 3px; line-height: 1.4; }
-.lib-item-meta { font-size: 10px; color: var(--text3); }
+.lib-item-title { font-size: 12px; color: var(--text-1); margin-bottom: 3px; line-height: 1.4; }
+.lib-item-meta { font-size: 10px; color: var(--text-3); }
 
 /* 弹窗底部 */
 .upload-modal-footer {
   padding: 14px 24px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-1);
   display: flex; align-items: center; justify-content: space-between;
   flex-shrink: 0;
 }
-.footer-selected { font-size: 11px; color: var(--text3); }
-.footer-selected strong { color: var(--text1); }
+.footer-selected { font-size: 11px; color: var(--text-3); }
+.footer-selected strong { color: var(--text-1); }
 .footer-actions { display: flex; gap: 10px; }
 .btn-cancel {
   padding: 7px 16px;
-  background: var(--surface3); border: 1px solid var(--border2);
+  background: var(--bg-4); border: 1px solid var(--border-2);
   border-radius: 8px; font-size: 12px; font-family: inherit;
-  color: var(--text2); cursor: pointer; transition: all 0.15s;
+  color: var(--text-2); cursor: pointer; transition: all 0.15s;
 }
-.btn-cancel:hover { color: var(--text1); }
+.btn-cancel:hover { color: var(--text-1); }
 .btn-confirm {
   padding: 7px 16px;
   background: var(--blue); border: none;
@@ -750,7 +721,7 @@ body {
 <!-- ══════════════════════════════════════════════════
      文献详情弹窗
 ══════════════════════════════════════════════════ -->
-<div class="modal-mask" id="paper-modal-mask" onclick="handlePaperMaskClick(event)">
+<div class="modal-overlay" id="paper-modal-mask" onclick="handlePaperMaskClick(event)">
   <div class="paper-modal">
     <div class="paper-modal-header">
       <div>
@@ -778,7 +749,7 @@ body {
 <!-- ══════════════════════════════════════════════════
      文献上传弹窗
 ══════════════════════════════════════════════════ -->
-<div class="modal-mask" id="upload-modal-mask" onclick="handleUploadMaskClick(event)">
+<div class="modal-overlay" id="upload-modal-mask" onclick="handleUploadMaskClick(event)">
   <div class="upload-modal">
     <div class="upload-modal-header">
       <div class="upload-modal-title" id="upload-modal-title">添加文献</div>
@@ -868,13 +839,13 @@ function openPaperModal(insightName, papers) {
     支持文献 · ${insightName}`;
   document.getElementById('paper-modal-subtitle').textContent = `共 ${papers.length} 篇文献`;
   renderPapers(papers);
-  document.getElementById('paper-modal-mask').classList.add('show');
+  document.getElementById('paper-modal-mask').classList.add('active');
 }
 
 function renderPapers(papers) {
   const body = document.getElementById('paper-modal-body');
   if (!papers.length) {
-    body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-size:12px;">未找到匹配文献</div>';
+    body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-3);font-size:12px;">未找到匹配文献</div>';
     return;
   }
   body.innerHTML = papers.map((p, i) => `
@@ -921,7 +892,7 @@ function filterPapers(kw) {
 }
 
 function closePaperModal() {
-  document.getElementById('paper-modal-mask').classList.remove('show');
+  document.getElementById('paper-modal-mask').classList.remove('active');
 }
 function handlePaperMaskClick(e) {
   if (e.target === document.getElementById('paper-modal-mask')) closePaperModal();
@@ -947,11 +918,11 @@ function openUploadModal(tab) {
   renderFileList();
   renderLibList(libData);
   switchTab(tab);
-  document.getElementById('upload-modal-mask').classList.add('show');
+  document.getElementById('upload-modal-mask').classList.add('active');
 }
 
 function closeUploadModal() {
-  document.getElementById('upload-modal-mask').classList.remove('show');
+  document.getElementById('upload-modal-mask').classList.remove('active');
 }
 function handleUploadMaskClick(e) {
   if (e.target === document.getElementById('upload-modal-mask')) closeUploadModal();
