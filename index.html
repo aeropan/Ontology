@@ -18,8 +18,6 @@
   --border2: #253550;
   --blue: #3b82f6;
   --blue-dim: rgba(59,130,246,0.15);
-  --blue: #06b6d4;
-  --blue-dim: rgba(6,182,212,0.12);
   --purple: #8b5cf6;
   --purple-dim: rgba(139,92,246,0.15);
   --green: #10b981;
@@ -245,13 +243,25 @@ body {
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="5" height="5" rx="1"/><rect x="10" y="4" width="5" height="5" rx="1"/><path d="M6 6.5h4M8 4V2M8 9v2.5M4 11.5c0 1 .5 2 2 2h4c1.5 0 2-1 2-2"/></svg>
       业务本体生成
     </div>
-    <div class="nav-item" id="nav-industry" onclick="navigate('data_explorer.html', null, ['行业洞察'])">
+    <div class="nav-item" id="nav-industry-v2" onclick="navigate('IndustryInsights_list.html', null, ['行业洞察'])">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="10" width="4" height="5" rx="0.5"/><rect x="6" y="6" width="4" height="9" rx="0.5"/><rect x="11" y="2" width="4" height="13" rx="0.5"/></svg>
       行业洞察
     </div>
     <div class="nav-item" onclick="showToast('API管理模块建设中…')">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v2H3zM3 7h7v2H3zM3 11h5v2H3z"/></svg>
       API管理
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">备份</div>
+    <div class="nav-item" id="nav-industry" onclick="navigate('data_explorer.html', null, ['备份', '行业洞察（旧版备份）'])">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="10" width="4" height="5" rx="0.5"/><rect x="6" y="6" width="4" height="9" rx="0.5"/><rect x="11" y="2" width="4" height="13" rx="0.5"/></svg>
+      行业洞察（旧版备份）
+    </div>
+    <div class="nav-item" id="nav-setting-backup" onclick="navigate('setting_backup.html', null, ['备份', '数据分析设置'])">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42"/></svg>
+      数据分析设置
     </div>
   </div>
 
@@ -298,7 +308,9 @@ const NAV_MAP = {
   'nav-global-library': { file: 'main.html',          page: 'global-library', crumbs: ['知识工厂', '文献库'] },
   'nav-onto':           { file: 'main.html',          page: 'onto-list',      crumbs: ['本体中心'] },
   'nav-biz':            { file: 'main.html',          page: 'biz-list',       crumbs: ['业务本体生成'] },
-  'nav-industry':       { file: 'data_explorer.html', page: null,             crumbs: ['行业洞察'] },
+  'nav-industry-v2':      { file: 'IndustryInsights_list.html', page: null, crumbs: ['行业洞察'] },
+  'nav-industry':         { file: 'data_explorer.html',         page: null, crumbs: ['备份', '行业洞察（旧版备份）'] },
+  'nav-setting-backup':   { file: 'setting_backup.html',        page: null, crumbs: ['备份', '数据分析设置'] },
 };
 
 let currentFile = 'main.html';
