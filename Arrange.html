@@ -586,6 +586,62 @@
 
     .empty-prop .icon { font-size: 32px; opacity: .4; }
 
+    /* ── NODE EXTRA INTERACTIONS ── */
+    .node-extra-box {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ds-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 4px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .ds-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 8px;
+      font-size: 10px;
+      background: rgba(255,255,255,.02);
+    }
+
+    .ds-field + .ds-field { border-top: 1px solid var(--border); }
+
+    .ds-field-lbl { color: var(--text-muted); }
+    .ds-field-val { color: var(--accent-cyan); font-family: 'Space Mono', monospace; font-size: 9px; }
+
+    .model-cmp-btn {
+      width: 100%;
+      padding: 9px;
+      background: linear-gradient(135deg, var(--accent-amber-dim), rgba(245,158,11,.04));
+      border: 1px solid rgba(245,158,11,.3);
+      border-radius: 8px;
+      color: var(--accent-amber);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+      transition: all .2s;
+      letter-spacing: .04em;
+    }
+
+    .model-cmp-btn:hover {
+      background: rgba(245,158,11,.15);
+      border-color: var(--accent-amber);
+      box-shadow: 0 0 14px rgba(245,158,11,.2);
+    }
+
     /* ── ANIMATIONS ── */
     @keyframes blink {
       0%,100% { opacity: 1 } 50% { opacity: .25 }
@@ -976,6 +1032,79 @@
     }
 
     // ── Node select ──
+    // 节点分组：datasource / llm / model(默认)
+    const WF_NODE_GROUP = {
+      'wf-n1': 'datasource',  // 协议
+      'wf-n2': 'datasource',  // 规范
+      'wf-n3': 'datasource',  // 因果链路
+      'wf-n5': 'datasource',  // 多源数据接入
+      'wf-n7': 'llm',         // 星阙大模型
+    };
+
+    function wf_nodeExtraHTML(id) {
+      const g = WF_NODE_GROUP[id] || 'model';
+
+      if (g === 'datasource') {
+        return `
+        <div class="prop-group">
+          <div class="prop-label" style="margin-bottom:6px">数据来源</div>
+          <div class="node-extra-box">
+            <div>
+              <div class="prop-label">数据类型</div>
+              <select class="prop-select" style="margin-top:4px">
+                <option>气象卫星数据</option>
+                <option>预报数据</option>
+                <option>地面气象数据</option>
+              </select>
+            </div>
+            <div>
+              <div class="prop-label">数据集</div>
+              <select class="prop-select" style="margin-top:4px">
+                <option>NOAA GSOD全球逐日汇总数据</option>
+                <option>中国地面气象观测数据(CMA)</option>
+                <option>全球高空探空数据(IGRA，NOAA)</option>
+              </select>
+            </div>
+            <div class="ds-fields">
+              <div class="ds-field">
+                <span class="ds-field-lbl">时间范围</span>
+                <span class="ds-field-val">2020-01 ~ 2024-12</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-field-lbl">数据频率</span>
+                <span class="ds-field-val">逐日</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-field-lbl">数据质量</span>
+                <span class="ds-field-val">优</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      if (g === 'llm') {
+        return `
+        <div class="prop-group">
+          <button class="model-cmp-btn"
+                  onclick="window.open('https://ai-dev.insightst.com/home/evaluation?tab=weather','_blank')">
+            ⊞ 模型对比
+          </button>
+        </div>`;
+      }
+
+      // 其他节点：模型选择下拉
+      return `
+        <div class="prop-group">
+          <div class="prop-label">模型选择</div>
+          <select class="prop-select" style="margin-top:4px">
+            <option>星阙-WindForecast-v2</option>
+            <option>LSTM-Temporal-v1</option>
+            <option>Transformer-ERA5-v3</option>
+          </select>
+        </div>`;
+    }
+
     let wf_selectedNode = null;
     function wf_selectNode(id, name, type, desc) {
       if (wf_selectedNode) {
@@ -991,6 +1120,7 @@
         <div class="prop-group"><div class="prop-label">节点类型</div>
           <input class="prop-input" value="${type}"
             style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent-cyan)"/></div>
+        ${wf_nodeExtraHTML(id)}
         <div class="prop-group"><div class="prop-label">描述</div>
           <textarea class="prop-input" rows="4" style="resize:none;line-height:1.5">${desc}</textarea></div>
         <div class="prop-group"><div class="prop-label">超时时间 (ms)</div>
