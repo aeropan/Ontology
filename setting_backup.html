@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 洞察配置</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c18;
+  --surface: #0f1729;
+  --surface2: #131d30;
+  --surface3: #1a2540;
+  --border: #1e2d4a;
+  --border2: #253550;
+  --blue: #3b82f6;
+  --blue-dim: rgba(59,130,246,0.12);
+  --purple: #8b5cf6;
+  --purple-dim: rgba(139,92,246,0.15);
+  --green: #10b981;
+  --green-dim: rgba(16,185,129,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --rose: #f43f5e;
+  --text1: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #475569;
+  --grad1: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  --grad2: linear-gradient(135deg, #06b6d4, #3b82f6);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--text1);
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* ── 顶部导航 ── */
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 20px;
+}
+.page-nav a { color: var(--text2); text-decoration: none; cursor: pointer; }
+.page-nav a:hover { color: var(--blue); }
+.page-nav .sep { color: var(--text3); }
+.page-nav .current { color: var(--text1); }
+
+.page-header { margin-bottom: 28px; }
+.page-title { font-size: 18px; font-weight: 600; }
+.page-desc  { font-size: 12px; color: var(--text3); margin-top: 3px; }
+
+/* ── 步骤进度条 ── */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 32px;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.step-dot {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+  flex-shrink: 0;
+}
+.step.active .step-dot { border-color: var(--blue); color: var(--blue); }
+.step.active { color: var(--text1); }
+.step.done .step-dot { background: var(--green); border-color: var(--green); color: #fff; }
+.step-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin: 0 8px;
+  min-width: 40px;
+}
+
+/* ── 配置区域 ── */
+.config-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+}
+
+.config-main { display: flex; flex-direction: column; gap: 20px; }
+
+.config-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-icon { opacity: 0.6; }
+
+.form-row { margin-bottom: 16px; }
+.form-row:last-child { margin-bottom: 0; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--text1);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); }
+.form-textarea { resize: vertical; min-height: 90px; }
+.form-select option { background: var(--surface2); }
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── 标签选择 ── */
+.tag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.tag-item {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.tag-item:hover { border-color: var(--blue); color: var(--text1); }
+.tag-item.selected { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+
+/* ── 右侧摘要 ── */
+.config-sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+.summary-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+}
+.summary-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 12px;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.summary-row:last-child { margin-bottom: 0; }
+.summary-key { color: var(--text3); flex-shrink: 0; }
+.summary-val { color: var(--text1); text-align: right; }
+
+.tip-panel {
+  background: var(--blue-dim);
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.7;
+}
+.tip-panel strong { color: var(--blue); }
+
+/* ── 底部操作 ── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.btn-back:hover { color: var(--text1); }
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<!-- ── 面包屑 ── -->
+<div class="page-nav">
+  <a onclick="window.location.href='IndustryInsights_list.html'">行业洞察</a>
+  <span class="sep">›</span>
+  <span class="current">洞察配置</span>
+</div>
+
+<div class="page-header">
+  <div class="page-title">洞察配置</div>
+  <div class="page-desc">配置本次行业洞察的数据源、分析维度和抽取参数</div>
+</div>
+
+<!-- ── 步骤条 ── -->
+<div class="steps">
+  <div class="step done">
+    <div class="step-dot">✓</div>
+    <span>基本信息</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step active">
+    <div class="step-dot">2</div>
+    <span>洞察配置</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">3</div>
+    <span>执行抽取</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">4</div>
+    <span>查看结果</span>
+  </div>
+</div>
+
+<!-- ── 主体布局 ── -->
+<div class="config-layout">
+  <div class="config-main">
+
+    <!-- 数据源配置 -->
+    <div class="config-panel">
+      <div class="panel-title">
+        <svg class="panel-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="4" rx="6" ry="2.5"/><path d="M2 4v4c0 1.4 2.7 2.5 6 2.5S14 9.4 14 8V4"/><path d="M2 8v4c0 1.4 2.7 2.5 6 2.5S14 13.4 14 12V8"/></svg>
+        数据源
+      </div>
+      <div class="form-row">
+        <label class="form-label">主数据源</label>
+        <select class="form-select">
+          <option>ERA5 再分析数据</option>
+          <option>SCADA 风机运行数据</option>
+          <option>气象站观测数据</option>
+          <option>卫星遥感数据</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">辅助数据源（可多选）</label>
+        <div class="tag-grid">
+          <span class="tag-item" onclick="this.classList.toggle('selected')">MERRA-2</span>
+          <span class="tag-item selected" onclick="this.classList.toggle('selected')">地形 DEM</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">土地覆盖</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">海温 SST</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">GFS 预报</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">METAR</span>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin-bottom:0">
+          <label class="form-label">时间范围（起）</label>
+          <input class="form-input" type="date" value="2020-01-01" />
+        </div>
+        <div class="form-row" style="margin-bottom:0">
+          <label class="form-label">时间范围（止）</label>
+          <input class="form-input" type="date" value="2025-12-31" />
+        </div>
+      </div>
+    </div>
+
+    <!-- 分析维度 -->
+    <div class="config-panel">
+      <div class="panel-title">
+        <svg class="panel-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h7M3 12h5"/><circle cx="12" cy="11" r="2.5"/></svg>
+        分析维度
+      </div>
+      <div class="form-row">
+        <label class="form-label">关注方法类别</label>
+        <div class="tag-grid">
+          <span class="tag-item selected" onclick="this.classList.toggle('selected')">风速预测</span>
+          <span class="tag-item selected" onclick="this.classList.toggle('selected')">功率预测</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">湍流分析</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">尾流效应</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">极端天气</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">时序特征</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">空间插值</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">算法类型偏好</label>
+        <div class="tag-grid">
+          <span class="tag-item selected" onclick="this.classList.toggle('selected')">深度学习</span>
+          <span class="tag-item selected" onclick="this.classList.toggle('selected')">Transformer</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">传统统计</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">集成方法</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">图神经网络</span>
+          <span class="tag-item" onclick="this.classList.toggle('selected')">物理模型</span>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label class="form-label">补充说明（指定关键词或特殊要求）</label>
+        <textarea class="form-textarea" placeholder="例如：重点关注近海场景下的数据融合方法…"></textarea>
+      </div>
+    </div>
+
+    <!-- 抽取参数 -->
+    <div class="config-panel">
+      <div class="panel-title">
+        <svg class="panel-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 8h6M8 5v6"/></svg>
+        抽取参数
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin-bottom:0">
+          <label class="form-label">最大抽取论文数</label>
+          <input class="form-input" type="number" value="200" min="10" max="2000" />
+        </div>
+        <div class="form-row" style="margin-bottom:0">
+          <label class="form-label">相关性阈值</label>
+          <select class="form-select">
+            <option>宽松（≥0.5）</option>
+            <option selected>标准（≥0.7）</option>
+            <option>严格（≥0.85）</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /config-main -->
+
+  <!-- 右侧摘要 -->
+  <div class="config-sidebar">
+    <div class="summary-panel">
+      <div class="summary-title">配置摘要</div>
+      <div class="summary-row">
+        <span class="summary-key">任务名称</span>
+        <span class="summary-val">风电行业技术方法综合洞察</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">行业领域</span>
+        <span class="summary-val">风电</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">主数据源</span>
+        <span class="summary-val">ERA5</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">时间范围</span>
+        <span class="summary-val">2020 – 2025</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">分析维度</span>
+        <span class="summary-val">风速预测、功率预测</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-key">最大论文数</span>
+        <span class="summary-val">200 篇</span>
+      </div>
+    </div>
+
+    <div class="tip-panel">
+      <strong>提示</strong><br>
+      配置完成后点击「开始抽取」，系统将自动检索匹配文献并提取关键方法信息，过程约需 1-3 分钟。
+    </div>
+  </div>
+</div><!-- /config-layout -->
+
+<!-- ── 操作栏 ── -->
+<div class="action-bar">
+  <a class="btn-back" onclick="window.location.href='IndustryInsights_list.html'">
+    ← 返回列表
+  </a>
+  <button class="btn-primary" onclick="window.location.href='IndustryInsights_progress.html'">
+    开始抽取
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+  </button>
+</div>
+
+</body>
+</html>

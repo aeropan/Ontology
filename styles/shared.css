@@ -1,0 +1,361 @@
+/*
+ * shared.css — 全局设计规范
+ *
+ * 使用方式：在 <head> 中引入
+ *   <link rel="stylesheet" href="styles/shared.css">
+ *
+ * 内容：
+ *   1. Design Tokens  — CSS 变量（颜色、字体、圆角、阴影等）
+ *   2. Base Reset     — 全局 box-sizing / body 基础样式
+ *   3. Typography     — 字体加载与基础排版
+ *   4. Components     — 可复用 UI 组件（按钮、徽章、模态框骨架等）
+ */
+
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+
+:root {
+  /* --- 背景色（层级从深到浅）--- */
+  --bg-0: #080c18;          /* 最底层：页面背景 */
+  --bg-1: #0d1220;          /* 侧边栏 / 次级面板 */
+  --bg-2: #0f1729;          /* 卡片 / 主内容区 */
+  --bg-3: #131d30;          /* 悬浮层 / 高亮区 */
+  --bg-4: #1a2540;          /* 最高层：下拉 / tooltip */
+
+  /* --- 边框 --- */
+  --border-1: #1e2d4a;      /* 主边框 */
+  --border-2: #253550;      /* 次边框（分割线等） */
+
+  /* --- 文字 --- */
+  --text-1: #e2e8f0;        /* 主文字 */
+  --text-2: #94a3b8;        /* 次要文字（说明、标签） */
+  --text-3: #475569;        /* 占位 / 禁用 */
+
+  /* --- 品牌色 + 半透明变体 --- */
+  --blue:        #3b82f6;
+  --blue-dim:    rgba(59, 130, 246, 0.15);
+
+  --cyan:        #06b6d4;
+  --cyan-dim:    rgba(6, 182, 212, 0.12);
+
+  --purple:      #8b5cf6;
+  --purple-dim:  rgba(139, 92, 246, 0.15);
+
+  --green:       #10b981;
+  --green-dim:   rgba(16, 185, 129, 0.12);
+
+  --amber:       #f59e0b;
+  --amber-dim:   rgba(245, 158, 11, 0.12);
+
+  --rose:        #f43f5e;
+  --rose-dim:    rgba(244, 63, 94, 0.12);
+
+  /* --- 渐变 --- */
+  --grad-1: linear-gradient(135deg, #3b82f6, #8b5cf6);   /* 蓝→紫 */
+  --grad-2: linear-gradient(135deg, #06b6d4, #3b82f6);   /* 青→蓝 */
+  --grad-3: linear-gradient(135deg, #8b5cf6, #ec4899);   /* 紫→粉 */
+
+  /* --- 字体 --- */
+  --font-sans: 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* --- 圆角 --- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* --- 阴影 --- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+  /* --- 过渡 --- */
+  --transition: 0.2s ease;
+}
+
+
+/* ============================================================
+   2. BASE RESET
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg-0);
+  color: var(--text-1);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+
+/* ============================================================
+   3. TYPOGRAPHY
+   字体通过各页面 <head> 的 <link> 统一引入（见下方说明）
+
+   推荐引入方式（复制到各页面 <head>）：
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+   ============================================================ */
+
+code, pre, .mono {
+  font-family: var(--font-mono);
+}
+
+
+/* ============================================================
+   4. COMPONENTS
+   ============================================================ */
+
+/* ----------------------------------------------------------
+   按钮
+   用法：<button class="btn btn-primary">确认</button>
+   变体：btn-primary / btn-secondary / btn-ghost / btn-danger
+   ---------------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition),
+              opacity var(--transition), box-shadow var(--transition);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+.btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px var(--blue-dim);
+}
+
+.btn-secondary {
+  background: var(--bg-3);
+  color: var(--text-1);
+  border-color: var(--border-2);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-4);
+  border-color: var(--blue);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+  border-color: transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-3);
+  color: var(--text-1);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--rose);
+  border-color: var(--rose);
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--rose-dim);
+  box-shadow: 0 0 0 3px var(--rose-dim);
+}
+
+/* 尺寸修饰符 */
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.btn-lg {
+  padding: 10px 22px;
+  font-size: 14px;
+}
+
+
+/* ----------------------------------------------------------
+   徽章 / 标签
+   用法：<span class="badge badge-blue">ERA5</span>
+   变体：badge-blue / badge-cyan / badge-purple / badge-green
+         badge-amber / badge-rose
+   ---------------------------------------------------------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.badge-blue   { background: var(--blue-dim);   color: var(--blue);   }
+.badge-cyan   { background: var(--cyan-dim);   color: var(--cyan);   }
+.badge-purple { background: var(--purple-dim); color: var(--purple); }
+.badge-green  { background: var(--green-dim);  color: var(--green);  }
+.badge-amber  { background: var(--amber-dim);  color: var(--amber);  }
+.badge-rose   { background: var(--rose-dim);   color: var(--rose);   }
+
+
+/* ----------------------------------------------------------
+   模态框骨架
+   用法：
+     <div class="modal-overlay" id="myModal">
+       <div class="modal">
+         <div class="modal-header">...</div>
+         <div class="modal-body">...</div>
+         <div class="modal-footer">...</div>
+       </div>
+     </div>
+   JS 控制：modal-overlay 加/去 class "active" 即可显示/隐藏
+   ---------------------------------------------------------- */
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  width: 560px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-1);
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+
+
+/* ----------------------------------------------------------
+   关闭按钮（常用于模态框右上角）
+   用法：<button class="btn-close" aria-label="关闭">✕</button>
+   ---------------------------------------------------------- */
+
+.btn-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-3);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.btn-close:hover {
+  background: var(--bg-4);
+  color: var(--text-1);
+}
+
+
+/* ----------------------------------------------------------
+   空状态占位
+   用法：
+     <div class="empty-state">
+       <div class="empty-icon">📭</div>
+       <div class="empty-text">暂无数据</div>
+     </div>
+   ---------------------------------------------------------- */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 24px;
+  color: var(--text-3);
+}
+
+.empty-icon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.empty-text {
+  font-size: 13px;
+}

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 文献管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c18;
+  --surface: #0f1729;
+  --surface2: #131d30;
+  --surface3: #1a2540;
+  --border: #1e2d4a;
+  --border2: #253550;
+  --blue: #3b82f6;
+  --blue-dim: rgba(6,182,212,0.12);
+  --green: #10b981;
+  --green-dim: rgba(16,185,129,0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245,158,11,0.12);
+  --rose: #f43f5e;
+  --rose-dim: rgba(244,63,94,0.12);
+  --text1: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #475569;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--text1);
+  min-height: 100vh;
+  padding: 24px 28px;
+}
+
+/* ── 面包屑 ── */
+.page-nav {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text3); margin-bottom: 18px;
+}
+.page-nav a { color: var(--text2); text-decoration: none; cursor: pointer; }
+.page-nav a:hover { color: var(--blue); }
+.page-nav .sep { color: var(--text3); }
+.page-nav .current { color: var(--text1); }
+
+/* ── 步骤条 ── */
+.steps {
+  display: flex; align-items: center; margin-bottom: 28px;
+}
+.step {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text3);
+}
+.step-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; flex-shrink: 0;
+}
+.step.active .step-dot { border-color: var(--blue); color: var(--blue); }
+.step.active { color: var(--text1); }
+.step.done .step-dot { background: var(--green); border-color: var(--green); color: #fff; }
+.step-line { flex: 1; height: 1px; background: var(--border); margin: 0 8px; min-width: 40px; }
+
+/* ── 页头 ── */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; gap: 16px;
+}
+.header-left .page-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.header-left .page-subtitle { font-size: 12px; color: var(--text3); }
+.header-left .page-subtitle strong { color: var(--text2); }
+.header-actions { display: flex; gap: 10px; align-items: center; }
+
+/* ── 按钮 ── */
+.btn-ghost {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 8px; font-size: 12px; font-family: inherit;
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+}
+.btn-ghost:hover { color: var(--text1); border-color: var(--blue); }
+.btn-primary {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  background: var(--blue); border: none;
+  border-radius: 8px; font-size: 12px; font-family: inherit;
+  color: #fff; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-back {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 8px; font-size: 13px; font-family: inherit;
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+}
+.btn-back:hover { color: var(--text1); }
+.btn-next {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 20px;
+  background: var(--blue); border: none;
+  border-radius: 8px; font-size: 13px; font-family: inherit;
+  color: #fff; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-next:hover { opacity: 0.85; }
+
+/* ── 拖拽上传区 ── */
+.upload-zone {
+  background: var(--surface);
+  border: 1.5px dashed var(--border2);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex; align-items: center; gap: 16px;
+  cursor: pointer; transition: all 0.15s;
+  margin-bottom: 24px;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--blue); background: rgba(6,182,212,0.05);
+}
+.upload-zone-icon {
+  width: 40px; height: 40px; border-radius: 8px;
+  background: var(--surface3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: var(--text3);
+}
+.upload-zone-text { flex: 1; }
+.upload-zone-title { font-size: 13px; font-weight: 500; color: var(--text1); margin-bottom: 3px; }
+.upload-zone-hint { font-size: 11px; color: var(--text3); }
+.btn-select-file {
+  padding: 7px 14px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; font-size: 12px; font-family: inherit;
+  color: var(--text2); cursor: pointer; transition: all 0.15s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.btn-select-file:hover { color: var(--text1); border-color: var(--blue); }
+
+/* ── 已上传文献区 ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; gap: 12px;
+}
+.section-title { font-size: 13px; font-weight: 600; color: var(--text1); }
+.section-stats { font-size: 11px; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+.section-stats .ok { color: var(--green); }
+.section-stats .err { color: var(--rose); }
+
+.filter-bar { display: flex; align-items: center; gap: 10px; }
+.filter-input {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 10px 6px 30px;
+  font-size: 12px; color: var(--text1); font-family: inherit;
+  outline: none; transition: border-color 0.15s; width: 220px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 16 16' fill='none' stroke='%23475569' stroke-width='1.5'%3E%3Ccircle cx='6.5' cy='6.5' r='4.5'/%3E%3Cpath d='M10 10l3 3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 9px center;
+}
+.filter-input::placeholder { color: var(--text3); }
+.filter-input:focus { border-color: var(--blue); }
+
+.filter-select {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 28px 6px 10px;
+  font-size: 12px; color: var(--text2); font-family: inherit;
+  outline: none; cursor: pointer; transition: border-color 0.15s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%23475569' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+}
+.filter-select:focus { border-color: var(--blue); }
+.filter-select option { background: var(--surface2); }
+
+/* ── 文献表格 ── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.lit-table { width: 100%; border-collapse: collapse; }
+.lit-table thead tr {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.lit-table th {
+  padding: 10px 14px;
+  font-size: 11px; font-weight: 500;
+  color: var(--text3); text-align: left;
+  white-space: nowrap; letter-spacing: 0.3px;
+}
+.lit-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.lit-table tbody tr:last-child { border-bottom: none; }
+.lit-table tbody tr:hover { background: var(--surface2); }
+.lit-table td {
+  padding: 11px 14px;
+  font-size: 12px; color: var(--text2);
+  vertical-align: middle;
+}
+.td-title {
+  color: var(--text1) !important;
+  font-weight: 500; max-width: 420px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.td-mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+/* 来源方式徽章 */
+.badge-source {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 500;
+}
+.badge-upload { background: var(--blue-dim); color: var(--blue); }
+.badge-lib    { background: rgba(139,92,246,0.12); color: #a78bfa; }
+
+/* 解析状态 */
+.status-ok {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--green);
+}
+.status-ok::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.status-fail {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--rose);
+}
+.status-fail::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--rose); flex-shrink:0; }
+.status-pending {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--amber);
+}
+.status-pending::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--amber); flex-shrink:0; }
+
+/* 操作列 */
+.td-actions { white-space: nowrap; }
+.act-btn {
+  background: none; border: none; font-family: inherit;
+  font-size: 11px; cursor: pointer; padding: 2px 0;
+  transition: color 0.12s;
+}
+.act-preview { color: var(--blue); }
+.act-preview:hover { text-decoration: underline; }
+.act-delete  { color: var(--rose); }
+.act-delete:hover { text-decoration: underline; }
+.act-retry   { color: var(--amber); }
+.act-retry:hover { text-decoration: underline; }
+.act-sep { color: var(--border2); margin: 0 6px; user-select: none; }
+
+/* 空状态 */
+.empty-row td {
+  text-align: center; padding: 48px 0 !important;
+  color: var(--text3); font-size: 12px;
+}
+
+/* ── 底部操作栏 ── */
+.action-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 28px; padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ══════════════════════════════════
+   通用弹窗遮罩
+══════════════════════════════════ */
+.modal-mask {
+  display: none; position: fixed; inset: 0;
+  background: rgba(8,12,24,0.78);
+  backdrop-filter: blur(5px);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.modal-mask.show { display: flex; }
+.modal-close {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; color: var(--text3);
+  background: none; border: none; font-family: inherit;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.modal-close:hover { background: var(--surface3); color: var(--text1); }
+
+/* ══════════════════════════════════
+   文件上传弹窗
+══════════════════════════════════ */
+.upload-modal {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 16px; width: 540px; max-width: 92vw; max-height: 85vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+.upload-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px 14px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.upload-modal-title { font-size: 14px; font-weight: 600; }
+.upload-modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+
+.drop-zone {
+  border: 2px dashed var(--border2); border-radius: 10px;
+  padding: 36px 20px; text-align: center; cursor: pointer;
+  transition: all 0.15s; margin-bottom: 16px;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--blue); background: var(--blue-dim);
+}
+.drop-zone-icon { font-size: 32px; margin-bottom: 10px; opacity: 0.45; }
+.drop-zone-title { font-size: 13px; color: var(--text1); margin-bottom: 4px; }
+.drop-zone-hint { font-size: 11px; color: var(--text3); line-height: 1.8; }
+.drop-zone-hint strong { color: var(--blue); }
+
+.pending-list { display: flex; flex-direction: column; gap: 8px; }
+.pending-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px; font-size: 12px;
+}
+.pending-item-icon { color: var(--blue); flex-shrink: 0; }
+.pending-item-name { flex: 1; color: var(--text1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pending-item-size { color: var(--text3); font-family: 'JetBrains Mono', monospace; font-size: 10px; flex-shrink: 0; }
+.pending-remove {
+  width: 20px; height: 20px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; cursor: pointer; color: var(--text3);
+  background: none; border: none; font-family: inherit;
+  transition: all 0.12s; flex-shrink: 0;
+}
+.pending-remove:hover { background: var(--rose-dim); color: var(--rose); }
+
+.upload-modal-footer {
+  padding: 13px 24px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.footer-info { font-size: 11px; color: var(--text3); }
+.footer-info strong { color: var(--text1); }
+.footer-btns { display: flex; gap: 10px; }
+.btn-cancel {
+  padding: 7px 16px; background: var(--surface3);
+  border: 1px solid var(--border2); border-radius: 8px;
+  font-size: 12px; font-family: inherit; color: var(--text2);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-cancel:hover { color: var(--text1); }
+.btn-confirm {
+  padding: 7px 16px; background: var(--blue); border: none;
+  border-radius: 8px; font-size: 12px; font-family: inherit;
+  color: #fff; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-confirm:hover { opacity: 0.85; }
+
+/* ══════════════════════════════════
+   文献库选择弹窗
+══════════════════════════════════ */
+.lib-modal {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 16px; width: 640px; max-width: 92vw; max-height: 82vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+.lib-modal-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 18px 24px 14px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0; gap: 12px;
+}
+.lib-modal-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.lib-modal-sub { font-size: 11px; color: var(--text3); }
+.lib-modal-search {
+  padding: 12px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.lib-search-input {
+  width: 100%; background: var(--surface3);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 12px 7px 32px; font-size: 12px;
+  color: var(--text1); font-family: inherit; outline: none;
+  transition: border-color 0.15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 16 16' fill='none' stroke='%23475569' stroke-width='1.5'%3E%3Ccircle cx='6.5' cy='6.5' r='4.5'/%3E%3Cpath d='M10 10l3 3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 10px center;
+}
+.lib-search-input::placeholder { color: var(--text3); }
+.lib-search-input:focus { border-color: var(--blue); }
+
+.lib-modal-body { overflow-y: auto; flex: 1; padding: 8px 0; }
+
+.lib-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 24px; cursor: pointer; transition: background 0.12s;
+  border-bottom: 1px solid var(--border);
+}
+.lib-item:last-child { border-bottom: none; }
+.lib-item:hover { background: var(--surface3); }
+.lib-item.selected { background: rgba(6,182,212,0.06); }
+.lib-item.already-added { opacity: 0.45; cursor: not-allowed; }
+
+.lib-checkbox {
+  width: 17px; height: 17px; border-radius: 4px;
+  border: 1.5px solid var(--border2); flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s; background: transparent;
+}
+.lib-item.selected .lib-checkbox { background: var(--blue); border-color: var(--blue); }
+
+.lib-item-body { flex: 1; min-width: 0; }
+.lib-item-title {
+  font-size: 12px; font-weight: 500; color: var(--text1);
+  line-height: 1.5; margin-bottom: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lib-item.already-added .lib-item-title { color: var(--text3); }
+.lib-item-meta { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 8px; }
+.lib-item-meta .sep { color: var(--border2); }
+.already-label {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 1px 7px; border-radius: 4px;
+  font-size: 10px; background: var(--surface3); color: var(--text3);
+}
+
+.lib-modal-footer {
+  padding: 13px 24px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+
+/* ── 删除确认弹窗 ── */
+.confirm-modal {
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 14px; width: 380px; max-width: 90vw;
+  padding: 24px; box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+.confirm-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+.confirm-desc { font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.btn-danger {
+  padding: 7px 16px; background: var(--rose); border: none;
+  border-radius: 8px; font-size: 12px; font-family: inherit;
+  color: #fff; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-danger:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<!-- ── 面包屑 ── -->
+<div class="page-nav">
+  <a onclick="window.location.href='IndustryInsights_list.html'">行业洞察</a>
+  <span class="sep">›</span>
+  <span class="current">文献管理</span>
+</div>
+
+<!-- ── 步骤条 ── -->
+<div class="steps">
+  <div class="step done">
+    <div class="step-dot">✓</div>
+    <span>基本信息</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step active">
+    <div class="step-dot">2</div>
+    <span>文献管理</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">3</div>
+    <span>抽取配置</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">4</div>
+    <span>执行抽取</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">5</div>
+    <span>查看结果</span>
+  </div>
+</div>
+
+<!-- ── 页头 ── -->
+<div class="page-header">
+  <div class="header-left">
+    <div class="page-title">文献管理</div>
+    <div class="page-subtitle">
+      风力发电预测本体 v2 &nbsp;·&nbsp; 当前 <strong id="total-count">24</strong> 篇文献
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-ghost" onclick="openLibModal()">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v10H2z"/><path d="M5 3v10M9 6h4M9 9h4"/></svg>
+      从文献库中添加
+    </button>
+    <button class="btn-primary" onclick="document.getElementById('file-input-main').click()">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M4 6l4-4 4 4"/><path d="M2 12h12v2H2z"/></svg>
+      上传文献
+    </button>
+    <input type="file" id="file-input-main" multiple accept=".pdf,.doc,.docx" style="display:none" onchange="handleMainFileSelect(event)"/>
+  </div>
+</div>
+
+<!-- ── 拖拽上传区 ── -->
+<div class="upload-zone" id="main-drop-zone"
+     ondragover="event.preventDefault();this.classList.add('drag-over')"
+     ondragleave="this.classList.remove('drag-over')"
+     ondrop="handleMainDrop(event)"
+     onclick="document.getElementById('file-input-main').click()">
+  <div class="upload-zone-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6M12 12v6M9 15l3-3 3 3"/></svg>
+  </div>
+  <div class="upload-zone-text">
+    <div class="upload-zone-title">拖拽 PDF 文献到此处，或点击上传</div>
+    <div class="upload-zone-hint">支持批量上传，单文件最大 50MB</div>
+  </div>
+  <button class="btn-select-file" onclick="event.stopPropagation();document.getElementById('file-input-main').click()">选择文件</button>
+</div>
+
+<!-- ── 已上传文献 ── -->
+<div class="section-header">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span class="section-title">已上传文献</span>
+    <div class="filter-bar">
+      <input class="filter-input" placeholder="搜索文献标题…" oninput="filterTable(this.value)" />
+      <select class="filter-select" onchange="filterByStatus(this.value)">
+        <option value="">解析状态 ▾</option>
+        <option value="ok">解析成功</option>
+        <option value="fail">解析失败</option>
+        <option value="pending">解析中</option>
+      </select>
+    </div>
+  </div>
+  <div class="section-stats" id="stats-text">
+    24 篇 &nbsp;·&nbsp; 解析成功 <span class="ok">22</span> &nbsp;·&nbsp; 失败 <span class="err">2</span>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table class="lit-table" id="lit-table">
+    <thead>
+      <tr>
+        <th>文献标题</th>
+        <th>来源 / 作者</th>
+        <th>方式</th>
+        <th>年份</th>
+        <th>大小</th>
+        <th>解析状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody id="lit-tbody"></tbody>
+  </table>
+</div>
+
+<!-- ── 底部操作栏 ── -->
+<div class="action-bar">
+  <button class="btn-back" onclick="window.location.href='IndustryInsights_list.html'">← 返回列表</button>
+  <button class="btn-next" onclick="window.location.href='IndustryInsights_progress.html'">
+    下一步：配置抽取 →
+  </button>
+</div>
+
+<!-- ══════════════════════════════════
+     文件上传弹窗
+══════════════════════════════════ -->
+<div class="modal-mask" id="upload-mask" onclick="handleMaskClick(event,'upload-mask')">
+  <div class="upload-modal">
+    <div class="upload-modal-header">
+      <div class="upload-modal-title">上传文献</div>
+      <button class="modal-close" onclick="closeUploadModal()">×</button>
+    </div>
+    <div class="upload-modal-body">
+      <div class="drop-zone" id="drop-zone"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="handleModalDrop(event)"
+           onclick="document.getElementById('file-input-modal').click()">
+        <div class="drop-zone-icon">📄</div>
+        <div class="drop-zone-title">拖拽文件到此处，或点击选择</div>
+        <div class="drop-zone-hint">
+          支持 <strong>PDF / Word</strong> 格式&emsp;单文件 ≤ 50 MB&emsp;单次 ≤ 20 个
+        </div>
+      </div>
+      <input type="file" id="file-input-modal" multiple accept=".pdf,.doc,.docx" style="display:none" onchange="handleModalFileSelect(event)"/>
+      <div class="pending-list" id="pending-list"></div>
+    </div>
+    <div class="upload-modal-footer">
+      <div class="footer-info" id="upload-footer-info">未选择文件</div>
+      <div class="footer-btns">
+        <button class="btn-cancel" onclick="closeUploadModal()">取消</button>
+        <button class="btn-confirm" onclick="confirmUpload()">确认上传</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     文献库选择弹窗
+══════════════════════════════════ -->
+<div class="modal-mask" id="lib-mask" onclick="handleMaskClick(event,'lib-mask')">
+  <div class="lib-modal">
+    <div class="lib-modal-header">
+      <div>
+        <div class="lib-modal-title">从文献库中添加</div>
+        <div class="lib-modal-sub">选择已入库文献添加至本次任务</div>
+      </div>
+      <button class="modal-close" onclick="closeLibModal()">×</button>
+    </div>
+    <div class="lib-modal-search">
+      <input class="lib-search-input" placeholder="搜索文献标题、作者、期刊…" oninput="filterLib(this.value)" />
+    </div>
+    <div class="lib-modal-body" id="lib-modal-body"></div>
+    <div class="lib-modal-footer">
+      <div class="footer-info" id="lib-footer-info">未选择文献</div>
+      <div class="footer-btns">
+        <button class="btn-cancel" onclick="closeLibModal()">取消</button>
+        <button class="btn-confirm" onclick="confirmLibAdd()">添加所选文献</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     删除确认弹窗
+══════════════════════════════════ -->
+<div class="modal-mask" id="confirm-mask" onclick="handleMaskClick(event,'confirm-mask')">
+  <div class="confirm-modal">
+    <div class="confirm-title">确认删除</div>
+    <div class="confirm-desc" id="confirm-desc">确定要删除这篇文献吗？删除后无法恢复。</div>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">取消</button>
+      <button class="btn-danger" onclick="doDelete()">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════
+   数据
+════════════════════════════ */
+let litData = [
+  { id:1,  title:'A deep learning-based evolutionary model for short-term wind speed forecasting', source:'Energy Conversion', method:'upload', year:2024, size:'2.4MB', status:'ok' },
+  { id:2,  title:'The study and application of a novel hybrid forecasting model', source:'Applied Energy', method:'lib', year:2023, size:'1.8MB', status:'ok' },
+  { id:3,  title:'Forecasting Wind Speed using Artificial Neural Networks', source:'ICACER 2020', method:'upload', year:2020, size:'3.1MB', status:'ok' },
+  { id:4,  title:'Wind speed prediction using LSTM and ARIMA time series analysis models', source:'Turkish Journal', method:'lib', year:2023, size:'2.7MB', status:'ok' },
+  { id:5,  title:'Research on a Combined Model Based on Linear and Nonlinear', source:'Renewable Energy', method:'upload', year:2024, size:'1.5MB', status:'ok' },
+  { id:6,  title:'Short-term wind power forecasting based on Transformer architecture', source:'IEEE Trans.', method:'lib', year:2023, size:'2.2MB', status:'ok' },
+  { id:7,  title:'ERA5 reanalysis data for offshore wind resource assessment', source:'Wind Energy', method:'upload', year:2022, size:'4.0MB', status:'ok' },
+  { id:8,  title:'Graph neural network for wind farm power prediction', source:'Applied Energy', method:'lib', year:2024, size:'3.3MB', status:'fail' },
+  { id:9,  title:'Physics-informed neural network for wind turbine modeling', source:'Nature Energy', method:'upload', year:2023, size:'2.9MB', status:'ok' },
+  { id:10, title:'Multi-step wind speed forecasting with attention mechanism', source:'Energy', method:'lib', year:2022, size:'1.6MB', status:'ok' },
+  { id:11, title:'Transfer learning for wind power prediction in data-scarce scenarios', source:'Renewable Energy', method:'upload', year:2024, size:'2.1MB', status:'ok' },
+  { id:12, title:'DEM-guided statistical downscaling of ERA5 wind fields', source:'Geoscientific', method:'lib', year:2023, size:'3.5MB', status:'ok' },
+  { id:13, title:'Hybrid NWP and machine learning model for day-ahead wind forecasting', source:'Applied Energy', method:'upload', year:2023, size:'2.8MB', status:'ok' },
+  { id:14, title:'LoRA fine-tuning of climate foundation models for wind farm adaptation', source:'Nature Energy', method:'lib', year:2024, size:'1.9MB', status:'ok' },
+  { id:15, title:'Spatio-temporal attention network for regional wind speed prediction', source:'IEEE TPWRS', method:'upload', year:2022, size:'2.3MB', status:'fail' },
+  { id:16, title:'Ensemble post-processing of NWP wind forecasts via gradient boosting', source:'Atmospheric Research', method:'lib', year:2023, size:'1.4MB', status:'ok' },
+  { id:17, title:'Federated learning for distributed wind power forecasting', source:'Applied Energy', method:'upload', year:2024, size:'2.6MB', status:'ok' },
+  { id:18, title:'Extreme wind speed prediction using extreme value theory', source:'Renewable Energy', method:'lib', year:2022, size:'1.7MB', status:'ok' },
+  { id:19, title:'Terrain-aware wind resource mapping with convolutional networks', source:'Wind Energy', method:'upload', year:2023, size:'3.8MB', status:'ok' },
+  { id:20, title:'Turbulence intensity estimation from SCADA data using deep learning', source:'IEEE Trans.', method:'lib', year:2024, size:'2.0MB', status:'ok' },
+  { id:21, title:'Wake effect modeling for large offshore wind farms', source:'Applied Energy', method:'upload', year:2022, size:'2.5MB', status:'ok' },
+  { id:22, title:'Real-time wind power ramp detection using LSTM networks', source:'Energy', method:'lib', year:2023, size:'1.3MB', status:'ok' },
+  { id:23, title:'Satellite-based wind speed estimation using SAR data', source:'Remote Sensing', method:'upload', year:2024, size:'4.2MB', status:'ok' },
+  { id:24, title:'Probabilistic wind forecasting with quantile regression forests', source:'Renewable Energy', method:'lib', year:2023, size:'2.4MB', status:'ok' },
+];
+
+const libPool = [
+  { id:101, title:'Comparative study of machine learning algorithms for wind speed prediction', source:'Energy Reports', year:2024 },
+  { id:102, title:'Long short-term memory networks for multi-step wind speed forecasting', source:'Applied Sciences', year:2023 },
+  { id:103, title:'Wavelet transform combined with ARIMA for wind power prediction', source:'Energies', year:2022 },
+  { id:104, title:'Numerical weather prediction bias correction using neural networks', source:'Atmospheric Research', year:2024 },
+  { id:105, title:'Offshore wind energy potential assessment using ERA5 and satellite data', source:'Renewable Energy', year:2023 },
+  { id:106, title:'Convolutional neural network for spatial wind speed pattern recognition', source:'IEEE TPWRS', year:2024 },
+  { id:107, title:'Random forest ensemble for short-term wind power interval forecasting', source:'Applied Energy', year:2022 },
+  { id:108, title:'Seasonal decomposition of wind speed time series for improved forecasting', source:'Energy Conversion', year:2023 },
+];
+
+let pendingFiles = [];
+let selectedLibIds = new Set();
+let deleteTargetId = null;
+let filterKw = '';
+let filterStatus = '';
+
+/* ════════════════════════════
+   渲染表格
+════════════════════════════ */
+function renderTable() {
+  const tbody = document.getElementById('lit-tbody');
+  const rows = litData.filter(d => {
+    const kwMatch = !filterKw || d.title.toLowerCase().includes(filterKw) || d.source.toLowerCase().includes(filterKw);
+    const stMatch = !filterStatus || d.status === filterStatus;
+    return kwMatch && stMatch;
+  });
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">暂无匹配文献</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(d => `
+    <tr data-id="${d.id}">
+      <td class="td-title" title="${d.title}">${d.title}</td>
+      <td>${d.source}</td>
+      <td>
+        <span class="badge-source ${d.method === 'upload' ? 'badge-upload' : 'badge-lib'}">
+          ${d.method === 'upload' ? '上传' : '文献库'}
+        </span>
+      </td>
+      <td class="td-mono">${d.year}</td>
+      <td class="td-mono">${d.size}</td>
+      <td>
+        ${d.status === 'ok'      ? '<span class="status-ok">解析成功</span>'  : ''}
+        ${d.status === 'fail'    ? '<span class="status-fail">解析失败</span>' : ''}
+        ${d.status === 'pending' ? '<span class="status-pending">解析中</span>' : ''}
+      </td>
+      <td class="td-actions">
+        <button class="act-btn act-preview" onclick="previewPaper(${d.id})">预览</button>
+        <span class="act-sep">|</span>
+        ${d.status === 'fail'
+          ? `<button class="act-btn act-retry" onclick="retryParse(${d.id})">重试</button><span class="act-sep">|</span>`
+          : ''}
+        <button class="act-btn act-delete" onclick="confirmDelete(${d.id}, '${d.title.substring(0,20)}…')">删除</button>
+      </td>
+    </tr>
+  `).join('');
+
+  updateStats();
+}
+
+function updateStats() {
+  const ok   = litData.filter(d => d.status === 'ok').length;
+  const fail = litData.filter(d => d.status === 'fail').length;
+  document.getElementById('total-count').textContent = litData.length;
+  document.getElementById('stats-text').innerHTML =
+    `${litData.length} 篇 &nbsp;·&nbsp; 解析成功 <span class="ok">${ok}</span> &nbsp;·&nbsp; 失败 <span class="err">${fail}</span>`;
+}
+
+function filterTable(kw) { filterKw = kw.toLowerCase(); renderTable(); }
+function filterByStatus(v) { filterStatus = v; renderTable(); }
+function previewPaper(id) { alert('预览功能即将上线'); }
+function retryParse(id) {
+  const d = litData.find(x => x.id === id);
+  if (d) { d.status = 'pending'; renderTable(); setTimeout(() => { d.status = 'ok'; renderTable(); }, 2000); }
+}
+
+/* ════════════════════════════
+   删除
+════════════════════════════ */
+function confirmDelete(id, titleSnippet) {
+  deleteTargetId = id;
+  document.getElementById('confirm-desc').textContent = `确定要删除「${titleSnippet}」吗？删除后无法恢复。`;
+  document.getElementById('confirm-mask').classList.add('show');
+}
+function closeConfirm() { document.getElementById('confirm-mask').classList.remove('show'); deleteTargetId = null; }
+function doDelete() {
+  if (deleteTargetId !== null) {
+    litData = litData.filter(d => d.id !== deleteTargetId);
+    renderTable();
+  }
+  closeConfirm();
+}
+
+/* ════════════════════════════
+   主区域拖拽/文件选择 → 直接加入列表
+════════════════════════════ */
+function handleMainFileSelect(e) {
+  addFilesToTable(Array.from(e.target.files));
+  e.target.value = '';
+}
+function handleMainDrop(e) {
+  e.preventDefault();
+  document.getElementById('main-drop-zone').classList.remove('drag-over');
+  addFilesToTable(Array.from(e.dataTransfer.files));
+}
+function addFilesToTable(files) {
+  files.forEach(f => {
+    const newId = Date.now() + Math.random();
+    litData.unshift({ id: newId, title: f.name.replace(/\.[^.]+$/, ''), source: '—', method: 'upload', year: new Date().getFullYear(), size: (f.size/1024/1024).toFixed(1) + 'MB', status: 'pending' });
+    setTimeout(() => { const d = litData.find(x => x.id === newId); if (d) { d.status = 'ok'; renderTable(); } }, 2500);
+  });
+  renderTable();
+}
+
+/* ════════════════════════════
+   上传弹窗
+════════════════════════════ */
+function openUploadModal() {
+  pendingFiles = [];
+  renderPendingList();
+  document.getElementById('upload-mask').classList.add('show');
+}
+function closeUploadModal() { document.getElementById('upload-mask').classList.remove('show'); }
+
+function handleModalFileSelect(e) { addPendingFiles(Array.from(e.target.files)); }
+function handleModalDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  addPendingFiles(Array.from(e.dataTransfer.files));
+}
+function addPendingFiles(files) {
+  files.forEach(f => { if (pendingFiles.length < 20) pendingFiles.push(f); });
+  renderPendingList();
+}
+function removePendingFile(idx) { pendingFiles.splice(idx, 1); renderPendingList(); }
+function renderPendingList() {
+  const list = document.getElementById('pending-list');
+  list.innerHTML = pendingFiles.map((f, i) => `
+    <div class="pending-item">
+      <svg class="pending-item-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/></svg>
+      <span class="pending-item-name">${f.name}</span>
+      <span class="pending-item-size">${(f.size/1024/1024).toFixed(1)} MB</span>
+      <button class="pending-remove" onclick="removePendingFile(${i})">×</button>
+    </div>
+  `).join('');
+  const info = document.getElementById('upload-footer-info');
+  info.innerHTML = pendingFiles.length ? `已选择 <strong>${pendingFiles.length}</strong> 个文件` : '未选择文件';
+}
+function confirmUpload() {
+  if (!pendingFiles.length) { alert('请先选择文件'); return; }
+  addFilesToTable(pendingFiles);
+  closeUploadModal();
+}
+
+/* ════════════════════════════
+   文献库弹窗
+════════════════════════════ */
+let libFilteredData = [...libPool];
+function openLibModal() {
+  selectedLibIds = new Set();
+  libFilteredData = [...libPool];
+  renderLibList();
+  document.getElementById('lib-mask').classList.add('show');
+}
+function closeLibModal() { document.getElementById('lib-mask').classList.remove('show'); }
+
+function filterLib(kw) {
+  const k = kw.toLowerCase();
+  libFilteredData = libPool.filter(d => d.title.toLowerCase().includes(k) || d.source.toLowerCase().includes(k));
+  renderLibList();
+}
+function renderLibList() {
+  const alreadyIds = new Set(litData.filter(d => d.method === 'lib').map(d => d.source));
+  const body = document.getElementById('lib-modal-body');
+  body.innerHTML = libFilteredData.map(d => {
+    const sel = selectedLibIds.has(d.id);
+    return `
+      <div class="lib-item ${sel ? 'selected' : ''}" onclick="toggleLibItem(${d.id})">
+        <div class="lib-checkbox">
+          ${sel ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.2"><path d="M2 6l3 3 5-5"/></svg>' : ''}
+        </div>
+        <div class="lib-item-body">
+          <div class="lib-item-title">${d.title}</div>
+          <div class="lib-item-meta">
+            <span>${d.source}</span>
+            <span class="sep">·</span>
+            <span>${d.year}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('') || '<div style="text-align:center;padding:40px;color:var(--text3);font-size:12px;">未找到匹配文献</div>';
+  updateLibFooter();
+}
+function toggleLibItem(id) {
+  if (selectedLibIds.has(id)) selectedLibIds.delete(id);
+  else selectedLibIds.add(id);
+  renderLibList();
+}
+function updateLibFooter() {
+  const info = document.getElementById('lib-footer-info');
+  info.innerHTML = selectedLibIds.size ? `已选择 <strong>${selectedLibIds.size}</strong> 篇文献` : '未选择文献';
+}
+function confirmLibAdd() {
+  if (!selectedLibIds.size) { alert('请先选择文献'); return; }
+  selectedLibIds.forEach(id => {
+    const src = libPool.find(d => d.id === id);
+    if (src) {
+      litData.unshift({ id: Date.now() + id, title: src.title, source: src.source, method: 'lib', year: src.year, size: (Math.random()*3+1).toFixed(1)+'MB', status: 'ok' });
+    }
+  });
+  renderTable();
+  closeLibModal();
+}
+
+/* ════════════════════════════
+   遮罩点击
+════════════════════════════ */
+function handleMaskClick(e, maskId) {
+  if (e.target === document.getElementById(maskId)) {
+    document.getElementById(maskId).classList.remove('show');
+  }
+}
+
+/* ════════════════════════════
+   初始化
+════════════════════════════ */
+renderTable();
+</script>
+</body>
+</html>
