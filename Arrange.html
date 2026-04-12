@@ -4,41 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>业务本体详情 · 风力发电预测模型</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&family=Space+Mono:wght@400;700&display=swap');
-
-    /* ===== CSS VARS ===== */
-    :root {
-      --bg: #080c18;
-      --sidebar-bg: #0d1220;
-      --surface: #0f1729;
-      --surface2: #131d30;
-      --surface3: #1a2540;
-      --border: #1e2d4a;
-      --border2: #253550;
-      --blue: #3b82f6;
-      --blue-dim: rgba(59,130,246,0.15);
-      --cyan: #06b6d4;
-      --cyan-dim: rgba(6,182,212,0.12);
-      --purple: #8b5cf6;
-      --purple-dim: rgba(139,92,246,0.15);
-      --green: #10b981;
-      --green-dim: rgba(16,185,129,0.12);
-      --amber: #f59e0b;
-      --amber-dim: rgba(245,158,11,0.12);
-      --rose: #f43f5e;
-      --text1: #e2e8f0;
-      --text2: #94a3b8;
-      --text3: #475569;
-      --grad1: linear-gradient(135deg,#3b82f6,#8b5cf6);
-    }
-
-    * { margin:0; padding:0; box-sizing:border-box; }
 
     body {
-      background: var(--bg);
-      font-family: 'Noto Sans SC', sans-serif;
-      color: var(--text1);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -48,8 +20,8 @@
     /* ===== TOPBAR ===== */
     .topbar {
       height: 48px;
-      background: var(--sidebar-bg);
-      border-bottom: 1px solid var(--border);
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border-1);
       display: flex;
       align-items: center;
       padding: 0 20px;
@@ -65,7 +37,7 @@
 
     .logo-icon {
       width: 26px; height: 26px;
-      background: var(--grad1);
+      background: var(--grad-1);
       border-radius: 6px;
       display: flex; align-items: center; justify-content: center;
       font-size: 13px;
@@ -75,12 +47,12 @@
 
     .breadcrumb {
       display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: var(--text2);
+      font-size: 12px; color: var(--text-2);
       margin-left: 16px;
     }
 
-    .breadcrumb .sep { color: var(--text3); }
-    .breadcrumb .current { color: var(--text1); font-weight: 500; }
+    .breadcrumb .sep { color: var(--text-3); }
+    .breadcrumb .current { color: var(--text-1); font-weight: 500; }
 
     .topbar-right {
       margin-left: auto;
@@ -89,11 +61,11 @@
 
     .icon-btn {
       width: 28px; height: 28px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-1);
       border-radius: 6px;
-      background: var(--surface);
+      background: var(--bg-2);
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 12px; color: var(--text2);
+      cursor: pointer; font-size: 12px; color: var(--text-2);
     }
 
     /* ===== PAGE WRAPPER ===== */
@@ -108,8 +80,8 @@
     .module-topnav {
       display: flex; align-items: center; gap: 10px;
       padding: 8px 12px; margin-bottom: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
       border-radius: 8px;
       flex-shrink: 0;
     }
@@ -118,12 +90,12 @@
 
     .module-tab {
       padding: 5px 10px; border-radius: 6px;
-      font-size: 11px; color: var(--text2);
+      font-size: 11px; color: var(--text-2);
       cursor: pointer; border: 1px solid transparent;
       transition: all 0.15s;
     }
 
-    .module-tab:hover { border-color: rgba(59,130,246,.35); color: var(--text1); }
+    .module-tab:hover { border-color: rgba(59,130,246,.35); color: var(--text-1); }
 
     .module-tab.active {
       background: var(--blue-dim); color: var(--blue);
@@ -152,34 +124,25 @@
 
     .page-title { font-size: 16px; font-weight: 700; }
     .page-title span { color: var(--blue); }
-    .page-subtitle { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .page-subtitle { font-size: 12px; color: var(--text-2); margin-top: 2px; }
 
-    /* ===== BUTTONS ===== */
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 14px; border-radius: 6px;
-      font-size: 12px; font-weight: 500;
-      cursor: pointer; transition: all 0.15s;
-      border: none; font-family: inherit;
-    }
-
-    .btn-primary { background: var(--blue); color: white; }
-    .btn-primary:hover { background: #2563eb; }
-
+    /* ===== BUTTONS (page-specific overrides) ===== */
+    /* .btn / .btn-primary 已由 shared.css 提供 */
     .btn-ghost {
       background: transparent;
-      border: 1px solid var(--border2);
-      color: var(--text2);
+      border: 1px solid var(--border-2);
+      color: var(--text-2);
     }
 
     .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
 
+    /* shared.css 无 btn-sm，此页专属 */
     .btn-sm { padding: 4px 10px; font-size: 11px; }
 
     /* ===== ONTO BAR ===== */
     .onto-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
       border-radius: 8px;
       padding: 10px 16px;
       margin-bottom: 10px;
@@ -188,10 +151,10 @@
     }
 
     .onto-bar-label {
-      font-size: 11px; font-weight: 600; color: var(--text2); white-space: nowrap;
+      font-size: 11px; font-weight: 600; color: var(--text-2); white-space: nowrap;
     }
 
-    .onto-bar-divider { width: 1px; height: 20px; background: var(--border); }
+    .onto-bar-divider { width: 1px; height: 20px; background: var(--border-1); }
 
     .biz-onto-chip {
       display: inline-flex; align-items: center; gap: 5px;
@@ -202,7 +165,7 @@
     }
 
     .onto-bar-hint {
-      margin-left: auto; font-size: 10px; color: var(--text3);
+      margin-left: auto; font-size: 10px; color: var(--text-3);
     }
 
     /* ===== MODAL ===== */
@@ -216,38 +179,38 @@
     .modal-overlay.show { display: flex; }
 
     .modal {
-      background: var(--surface);
-      border: 1px solid var(--border2);
+      background: var(--bg-2);
+      border: 1px solid var(--border-2);
       border-radius: 10px; width: 540px;
       max-height: 80vh; overflow-y: auto;
       box-shadow: 0 20px 60px rgba(0,0,0,.6);
     }
 
     .modal-header {
-      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      padding: 16px 20px; border-bottom: 1px solid var(--border-1);
       display: flex; align-items: center; justify-content: space-between;
     }
 
     .modal-title { font-size: 14px; font-weight: 600; }
-    .modal-close { cursor: pointer; color: var(--text2); font-size: 16px; }
+    .modal-close { cursor: pointer; color: var(--text-2); font-size: 16px; }
     .modal-body { padding: 20px; }
 
     .modal-footer {
-      padding: 14px 20px; border-top: 1px solid var(--border);
+      padding: 14px 20px; border-top: 1px solid var(--border-1);
       display: flex; justify-content: flex-end; gap: 8px;
     }
 
     .search-input {
       display: flex; align-items: center; gap: 6px;
-      background: var(--surface2); border: 1px solid var(--border);
+      background: var(--bg-3); border: 1px solid var(--border-1);
       border-radius: 6px; padding: 6px 10px;
-      font-size: 11px; color: var(--text2); margin-bottom: 12px;
+      font-size: 11px; color: var(--text-2); margin-bottom: 12px;
     }
 
     /* ===== TOAST ===== */
     .toast {
       position: fixed; bottom: 24px; right: 24px;
-      background: var(--surface2); border: 1px solid var(--border2);
+      background: var(--bg-3); border: 1px solid var(--border-2);
       border-radius: 8px; padding: 12px 16px;
       font-size: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.4);
       transform: translateY(80px); opacity: 0;
@@ -256,10 +219,7 @@
 
     .toast.show { transform: translateY(0); opacity: 1; }
 
-    /* ===== SCROLLBAR ===== */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    /* 全局 scrollbar 已由 shared.css 统一定义 */
 
     /* ===== WORKFLOW CANVAS (scoped) ===== */
     #wf-scope {
@@ -269,7 +229,7 @@
       flex: 1; min-height: 0;
       display: flex; flex-direction: column;
       border-radius: 8px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-1);
       margin-bottom: 16px;
 
       --bg: #080c14;
@@ -953,37 +913,37 @@
             <div style="width:16px;height:16px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;flex-shrink:0">✓</div>
           </div>
 
-          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.15s"
-               onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'"
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-3);border:1px solid var(--border-1);border-radius:8px;cursor:pointer;transition:all 0.15s"
+               onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border-1)'"
                onclick="addOntoChip('灾害预警知识图谱 v1','⚠️','#f59e0b')">
             <div style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚠️</div>
             <div style="flex:1">
               <div style="font-size:12px;font-weight:600">灾害预警知识图谱 v1</div>
               <div style="font-size:10px;color:#94a3b8;margin-top:2px">气象 · 62个概念 · 38条关系 · 2026-02-28</div>
             </div>
-            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border2);flex-shrink:0"></div>
+            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border-2);flex-shrink:0"></div>
           </div>
 
-          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.15s"
-               onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'"
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-3);border:1px solid var(--border-1);border-radius:8px;cursor:pointer;transition:all 0.15s"
+               onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border-1)'"
                onclick="addOntoChip('工业设备故障诊断 v1','⚙','#06b6d4')">
             <div style="width:32px;height:32px;border-radius:8px;background:rgba(6,182,212,.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚙</div>
             <div style="flex:1">
               <div style="font-size:12px;font-weight:600">工业设备故障诊断 v1</div>
               <div style="font-size:10px;color:#94a3b8;margin-top:2px">工业 · 48个概念 · 31条关系 · 2026-02-15</div>
             </div>
-            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border2);flex-shrink:0"></div>
+            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border-2);flex-shrink:0"></div>
           </div>
 
-          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.15s"
-               onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border)'"
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-3);border:1px solid var(--border-1);border-radius:8px;cursor:pointer;transition:all 0.15s"
+               onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border-1)'"
                onclick="addOntoChip('金融风控实体本体 v1','💰','#10b981')">
             <div style="width:32px;height:32px;border-radius:8px;background:rgba(16,185,129,.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💰</div>
             <div style="flex:1">
               <div style="font-size:12px;font-weight:600">金融风控实体本体 v1</div>
               <div style="font-size:10px;color:#94a3b8;margin-top:2px">金融 · 91个概念 · 55条关系 · 2026-02-25</div>
             </div>
-            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border2);flex-shrink:0"></div>
+            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border-2);flex-shrink:0"></div>
           </div>
 
         </div>
