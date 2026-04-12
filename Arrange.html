@@ -479,6 +479,49 @@
 
     .status-running .status-dot { animation: blink .8s infinite; }
 
+    /* ── CANVAS INFO BAR ── */
+    .wf-canvas-infobar {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: stretch;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .wf-canvas-infobar .ib-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 28px;
+      gap: 2px;
+    }
+
+    .wf-canvas-infobar .ib-stat + .ib-stat {
+      border-left: 1px solid var(--border);
+    }
+
+    .wf-canvas-infobar .ib-val {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      line-height: 1;
+    }
+
+    .wf-canvas-infobar .ib-lbl {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
     /* ── RIGHT PANEL ── */
     .wf-right-panel {
       width: 210px; flex-shrink: 0;
@@ -790,29 +833,32 @@
             </div>
 
           </div><!-- /wf-scaleWrap -->
+
+          <!-- 画布顶部流程基础信息 -->
+          <div class="wf-canvas-infobar">
+            <div class="ib-stat">
+              <div class="ib-val val-cyan">8</div>
+              <div class="ib-lbl">节点</div>
+            </div>
+            <div class="ib-stat">
+              <div class="ib-val val-amber">7</div>
+              <div class="ib-lbl">连线</div>
+            </div>
+            <div class="ib-stat">
+              <div class="ib-val val-purple">0</div>
+              <div class="ib-lbl">分支</div>
+            </div>
+            <div class="ib-stat">
+              <div class="ib-val val-green" id="wf-runCountEl">0</div>
+              <div class="ib-lbl">运行次数</div>
+            </div>
+          </div>
+
         </div><!-- /wf-canvas -->
 
         <!-- RIGHT PANEL -->
         <div class="wf-right-panel">
           <div class="prop-title">⚙ 属性配置</div>
-          <div class="mini-stats">
-            <div class="stat-card">
-              <div class="stat-val val-cyan">8</div>
-              <div class="stat-lbl">节点</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-val val-amber">7</div>
-              <div class="stat-lbl">连线</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-val val-purple">0</div>
-              <div class="stat-lbl">分支</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-val val-green" id="wf-runCountEl">0</div>
-              <div class="stat-lbl">运行次数</div>
-            </div>
-          </div>
           <div id="wf-propContent">
             <div class="empty-prop">
               <div class="icon">☲</div>
