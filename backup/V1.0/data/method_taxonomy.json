@@ -1,0 +1,367 @@
+{
+  "_comment": "method 三级分类配置。结构：父类(parents) → 子类(children) → 孙类(grandchildren)。grandchildren 为字符串数组，每个字符串是该方法的一种表述（中文/英文/缩写/全称/别名），用于匹配输入 → 定位子类 → 映射到父类。由 update_data.py 读取，未知方法自动追加至'其他'父类。",
+
+  "parents": [
+    {
+      "key": "xingque_model",
+      "label": "星阙大模型",
+      "description": "",
+      "children": [
+        {
+          "key": "xingque_model_methods",
+          "label": "星阙大模型",
+          "description": "",
+          "grandchildren": ["星阙大模型"]
+        }
+      ]
+    },
+    {
+      "key": "statistical_timeseries",
+      "label": "传统统计与时间序列模型",
+      "description": "基于统计学原理和经典时间序列分析理论，是预测领域的基石和常用基线",
+      "children": [
+        {
+          "key": "ar_ma",
+          "label": "自回归/滑动平均类",
+          "description": "基于历史序列自相关结构建模",
+          "grandchildren": ["AR", "MA", "ARMA", "ARIMA", "SARIMA", "VAR", "VECM"]
+        },
+        {
+          "key": "conditional_heteroskedasticity",
+          "label": "条件异方差类",
+          "description": "对方差随时间变化建模",
+          "grandchildren": ["ARCH", "GARCH"]
+        },
+        {
+          "key": "exponential_smoothing",
+          "label": "指数平滑类",
+          "description": "对历史数据加权平滑进行预测",
+          "grandchildren": ["Holt-Winter", "o-SES", "Trigg & Leach", "T-L", "Pantazopoulos and Pappis", "P-P"]
+        },
+        {
+          "key": "baseline_regression",
+          "label": "基础基准与回归类",
+          "description": "经典统计回归方法及持续法基准",
+          "grandchildren": [
+            "Persistence", "Naive model", "持续法", "朴素预测",
+            "Climatology", "气候学",
+            "Linear Regression", "LR",
+            "Polynomial Regression", "多项式回归",
+            "Lasso Regression",
+            "Ridge", "岭回归",
+            "MLR", "多元线性回归"
+          ]
+        },
+        {
+          "key": "other_statistical",
+          "label": "其他统计模型",
+          "description": "贝叶斯、相似法等其他统计方法",
+          "grandchildren": [
+            "MCMC", "马尔可夫链蒙特卡洛",
+            "BMA", "贝叶斯模型平均",
+            "Analogs", "相似法",
+            "Markov Chain", "MC"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "classical_ml",
+      "label": "经典机器学习模型",
+      "description": "深度学习普及前广泛使用的、基于统计学习理论的机器学习算法",
+      "children": [
+        {
+          "key": "svm",
+          "label": "支持向量机类",
+          "description": "基于核函数的间隔最大化方法",
+          "grandchildren": ["SVM", "SVR", "Support Vector Regression"]
+        },
+        {
+          "key": "tree_ensemble",
+          "label": "树模型与集成学习",
+          "description": "决策树及其各种集成变体",
+          "grandchildren": [
+            "Decision Tree", "DT",
+            "Random Forest", "RF",
+            "Extra Trees",
+            "AdaBoost",
+            "GBM", "梯度提升机", "GBRT",
+            "XGBoost",
+            "LightGBM",
+            "SGB",
+            "CatBoost"
+          ]
+        },
+        {
+          "key": "knn",
+          "label": "最近邻算法",
+          "description": "基于实例距离的非参数方法",
+          "grandchildren": ["KNN", "K近邻算法"]
+        },
+        {
+          "key": "fuzzy_neuro",
+          "label": "模糊系统与神经模糊",
+          "description": "结合模糊逻辑与神经网络的方法",
+          "grandchildren": ["ANFIS", "ANFIS-FCM", "ANFIS-SC", "ANFIS-GP", "ANFIS-PSO", "ANFIS-GA", "NF", "神经模糊系统"]
+        },
+        {
+          "key": "other_classical",
+          "label": "其他经典方法",
+          "description": "高斯过程等其他经典机器学习方法",
+          "grandchildren": ["GPR", "高斯过程回归"]
+        }
+      ]
+    },
+    {
+      "key": "deep_learning",
+      "label": "神经网络与深度学习模型",
+      "description": "涵盖各种基础神经网络架构，是当前预测模型的主体",
+      "children": [
+        {
+          "key": "feedforward_nn",
+          "label": "前馈神经网络",
+          "description": "无反馈连接的基础神经网络",
+          "grandchildren": ["ANN", "MLP", "BPNN", "FFNN", "ENN", "GRNN", "RBF", "RBFNN", "FT-DNN", "PNN", "WNN", "小波神经网络"]
+        },
+        {
+          "key": "recurrent_nn",
+          "label": "循环神经网络及其变体",
+          "description": "具有时序记忆能力的循环结构网络",
+          "grandchildren": ["RNN", "LSTM", "BiLSTM", "GRU", "NLSTM", "NAR", "NARX", "Elman NN", "ConvLSTM", "E3DLSTM", "PhyDNet"]
+        },
+        {
+          "key": "cnn",
+          "label": "卷积神经网络",
+          "description": "基于卷积操作提取空间特征的网络",
+          "grandchildren": ["CNN", "2D CNN", "3D CNN", "2D+Attention", "2D+Upscaling", "U-Net", "SmaAt-UNet"]
+        },
+        {
+          "key": "transformer",
+          "label": "注意力与Transformer架构",
+          "description": "基于自注意力机制的序列建模框架",
+          "grandchildren": ["Transformer", "FEDformer", "iTransformer", "NSTransformer", "TimesNet", "TimeMixer", "Informer", "Stormer"]
+        },
+        {
+          "key": "autoencoder_generative",
+          "label": "自编码器与生成模型",
+          "description": "通过编解码结构学习数据表示",
+          "grandchildren": ["DBN", "Autoencoder", "VAE", "VNN"]
+        },
+        {
+          "key": "other_dl",
+          "label": "其他专门网络",
+          "description": "特定任务设计的专门神经网络结构",
+          "grandchildren": ["ESN", "回声状态网络", "GMDH", "数据处理组合方法", "TCN", "STAN", "PSTN", "FlowFormer", "DMeKAN", "ConvE-STF"]
+        }
+      ]
+    },
+    {
+      "key": "spatiotemporal_graph",
+      "label": "时空预测与图神经网络模型",
+      "description": "专门为处理具有空间关联性和图结构数据而设计的模型",
+      "children": [
+        {
+          "key": "spatiotemporal",
+          "label": "时空模型",
+          "description": "同时建模时间和空间维度的模型",
+          "grandchildren": ["ConvLSTM", "E3DLSTM", "PhyDNet", "SimVP", "TAU", "STDGN"]
+        },
+        {
+          "key": "gnn",
+          "label": "图神经网络",
+          "description": "将实体作为图节点，拓扑关系作为边进行建模",
+          "grandchildren": ["GNN", "GraphCast", "Hi", "分层图神经网络"]
+        }
+      ]
+    },
+    {
+      "key": "ensemble_hybrid",
+      "label": "集成、组合与优化模型",
+      "description": "通过策略组合多个基模型或引入优化算法形成的框架",
+      "children": [
+        {
+          "key": "ensemble",
+          "label": "集成方法",
+          "description": "多模型输出融合的集成策略",
+          "grandchildren": ["Deep Ensembles", "MeanLSTM", "ANNLSTM", "Stacking"]
+        },
+        {
+          "key": "decompose_predict",
+          "label": "分解-预测混合框架",
+          "description": "先用信号分解方法拆分序列，再分别预测重组",
+          "grandchildren": ["EMD系列组合", "EEMD系列组合", "CEEMDAN系列组合", "VMD系列组合", "WT系列组合"]
+        },
+        {
+          "key": "optimizer_enhanced",
+          "label": "优化算法增强模型",
+          "description": "用元启发式优化算法调参或增强预测模型",
+          "grandchildren": ["PSO增强系列", "GA增强系列", "GWO增强系列", "WOA增强系列"]
+        }
+      ]
+    },
+    {
+      "key": "probabilistic",
+      "label": "概率预测与不确定性量化方法",
+      "description": "专注于输出预测区间或概率分布的方法",
+      "children": [
+        {
+          "key": "quantile_regression",
+          "label": "分位数回归",
+          "description": "预测条件分位数以构建预测区间",
+          "grandchildren": ["QR", "CQR", "QNN", "Quantile Regression Lasso", "QrLASso"]
+        },
+        {
+          "key": "bayesian",
+          "label": "贝叶斯方法",
+          "description": "基于贝叶斯推断的不确定性量化",
+          "grandchildren": ["BNN", "MCDropout", "Laplace", "SWAG", "DKL", "DUE"]
+        },
+        {
+          "key": "generative_diffusion",
+          "label": "生成与扩散模型",
+          "description": "基于生成模型的概率预测方法",
+          "grandchildren": ["VNN", "DNN", "CARD"]
+        },
+        {
+          "key": "other_probabilistic",
+          "label": "其他概率方法",
+          "description": "核密度估计等其他不确定性量化方法",
+          "grandchildren": ["KDE", "核密度估计", "TN", "截断正态分布回归模型"]
+        }
+      ]
+    },
+    {
+      "key": "meteorological_physical",
+      "label": "气象与物理类专业模型",
+      "description": "来自气象学、大气科学或流体力学领域的专业方法",
+      "children": [
+        {
+          "key": "nwp",
+          "label": "数值天气预报模型",
+          "description": "基于大气方程数值求解的预报系统",
+          "grandchildren": ["ECMWF-HRES", "IFSHRES", "AROME", "WRF", "Fitch", "EWP", "Pangu-Weather", "GraphCast", "FuXi"]
+        },
+        {
+          "key": "downscaling_postprocess",
+          "label": "物理降尺度与后处理",
+          "description": "基于物理规律的风速廓线和统计校正方法",
+          "grandchildren": ["BLS", "边界层缩放", "LOG", "对数风廓线法", "POW", "幂律法", "KF", "卡尔曼滤波", "EKF", "UKF"]
+        },
+        {
+          "key": "cfd",
+          "label": "计算流体动力学",
+          "description": "基于流体力学方程数值求解的模拟方法",
+          "grandchildren": ["CFD"]
+        }
+      ]
+    },
+    {
+      "key": "other_paradigm",
+      "label": "其他与特定范式模型",
+      "description": "不易归入以上类别或具有特定范式的模型",
+      "children": [
+        {
+          "key": "rule_grey",
+          "label": "规则系统与灰色理论",
+          "description": "基于规则推理或灰色系统理论的方法",
+          "grandchildren": ["模糊逻辑", "Fuzzy net", "灰色模型", "Grey model"]
+        },
+        {
+          "key": "reinforcement_learning",
+          "label": "强化学习组件",
+          "description": "用强化学习进行权重优化等",
+          "grandchildren": ["Q-learning"]
+        },
+        {
+          "key": "resnet_uq",
+          "label": "残差网络基础",
+          "description": "基于ResNet主干的不确定性量化方法",
+          "grandchildren": ["ResNet-18", "ResNet-18各类UQ方法"]
+        },
+        {
+          "key": "symbolic_regression",
+          "label": "符号回归",
+          "description": "通过搜索学习数学表达式",
+          "grandchildren": ["EQL", "Equation Learner"]
+        },
+        {
+          "key": "special_loss",
+          "label": "特定损失函数训练",
+          "description": "使用特殊损失函数训练的模型变体",
+          "grandchildren": ["不平衡回归损失ConvLSTM"]
+        }
+      ]
+    },
+    {
+      "key": "finetune",
+      "label": "微调",
+      "description": "",
+      "children": [
+        {
+          "key": "finetune_methods",
+          "label": "微调",
+          "description": "",
+          "grandchildren": ["微调"]
+        }
+      ]
+    },
+    {
+      "key": "input_channel",
+      "label": "输入通道",
+      "description": "",
+      "children": [
+        {
+          "key": "input_channel_methods",
+          "label": "输入通道",
+          "description": "",
+          "grandchildren": ["增加输入通道"]
+        }
+      ]
+    },
+    {
+      "key": "feature_fusion",
+      "label": "特征融合",
+      "description": "",
+      "children": [
+        {
+          "key": "feature_fusion_methods",
+          "label": "特征融合",
+          "description": "",
+          "grandchildren": ["特征融合", "与主干融合", "设计CNN"]
+        }
+      ]
+    },
+    {
+      "key": "post_correction",
+      "label": "后处理校正",
+      "description": "",
+      "children": [
+        {
+          "key": "post_correction_methods",
+          "label": "后处理校正",
+          "description": "",
+          "grandchildren": ["后处理"]
+        }
+      ]
+    },
+    {
+      "key": "conditional_injection",
+      "label": "条件注入",
+      "description": "",
+      "children": [
+        {
+          "key": "conditional_injection_methods",
+          "label": "条件注入",
+          "description": "",
+          "grandchildren": ["条件注入"]
+        }
+      ]
+    },
+    {
+      "key": "others",
+      "label": "其他",
+      "description": "未归类的处理方法，由 update_data.py 自动追加",
+      "children": []
+    }
+  ]
+}
