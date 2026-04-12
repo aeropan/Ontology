@@ -252,10 +252,17 @@
 
   <script>
     function selectCard(card) {
-      const allCards = document.querySelectorAll('.template-card');
-      allCards.forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      document.getElementById('btn-use').disabled = false;
+      const isSelected = card.classList.contains('selected');
+      // 先清除所有选中状态
+      document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+      if (!isSelected) {
+        // 原本未选中 → 选中
+        card.classList.add('selected');
+        document.getElementById('btn-use').disabled = false;
+      } else {
+        // 原本已选中 → 取消选择，按钮恢复禁用
+        document.getElementById('btn-use').disabled = true;
+      }
     }
   </script>
 

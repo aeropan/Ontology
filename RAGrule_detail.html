@@ -337,6 +337,150 @@ body.drawer-open .drawer-tab-arrow { transform: rotate(180deg); }
   margin-top: 4px;
 }
 
+/* ════════════════════════════
+   知识源选择 & 文献列表
+════════════════════════════ */
+.source-btn-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.source-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.source-btn:hover {
+  border-color: var(--border2);
+  color: var(--text1);
+  background: var(--surface3);
+}
+.source-btn.primary-btn {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.source-btn.primary-btn:hover {
+  opacity: 0.85;
+}
+
+/* ── 文献表格 ── */
+.lit-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.lit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.lit-table thead tr {
+  background: var(--surface3);
+}
+.lit-table th {
+  padding: 9px 11px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text3);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.lit-table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.lit-table tbody tr:last-child { border-bottom: none; }
+.lit-table tbody tr:hover { background: var(--surface2); }
+.lit-table td {
+  padding: 9px 11px;
+  color: var(--text2);
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 0;
+}
+.lit-table td:nth-child(2) { color: var(--text1); max-width: 200px; }
+
+.lit-type-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.lit-type-badge.pdf  { background: rgba(239,68,68,0.12);  color: #ef4444; }
+.lit-type-badge.xlsx { background: rgba(16,185,129,0.12);  color: var(--green); }
+.lit-type-badge.docx { background: rgba(59,130,246,0.12);  color: var(--blue); }
+.lit-type-badge.txt  { background: rgba(148,163,184,0.12); color: var(--text2); }
+
+.lit-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--green);
+}
+.lit-status::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.btn-del {
+  padding: 3px 9px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 11px;
+  color: var(--text3);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.btn-del:hover { border-color: var(--rose); color: var(--rose); }
+
+/* ── 分页 ── */
+.lit-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 11px;
+  color: var(--text3);
+}
+.lit-pag-btns { display: flex; gap: 6px; }
+.lit-pag-btn {
+  padding: 4px 11px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 11px;
+  font-family: inherit;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.lit-pag-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--text1); }
+.lit-pag-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+
 /* 加载占位 */
 .sim-loading {
   display: flex; flex-direction: column; align-items: center;
@@ -356,7 +500,7 @@ body.drawer-open .drawer-tab-arrow { transform: rotate(180deg); }
 <!-- ── 开关 Tab（固定在右侧） ── -->
 <div class="drawer-tab" id="drawer-tab" onclick="toggleDrawer()" title="展开/收纳实时效果仿真">
   <svg class="drawer-tab-arrow" width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-    <path d="M6 3l5 5-5 5"/>
+    <path d="M10 3l-5 5 5 5"/>
   </svg>
 </div>
 
@@ -394,14 +538,54 @@ body.drawer-open .drawer-tab-arrow { transform: rotate(180deg); }
       <input class="form-input" type="text" placeholder="例：2026风电场网络协议合规检查" />
     </div>
 
+    <!-- 知识源 -->
     <div class="field-group" style="margin-bottom:20px">
-      <label class="field-label">选择知识源（上传文档）</label>
-      <select class="form-select">
-        <option>《国家风电利用率2026版.pdf》</option>
-        <option>ERA5气象数据集手册.pdf</option>
-        <option>风电场SCADA数据规范.xlsx</option>
-        <option>+ 上传新文档…</option>
-      </select>
+      <label class="field-label">选择知识源</label>
+
+      <!-- 操作按钮行 -->
+      <div class="source-btn-row">
+        <button class="source-btn primary-btn" onclick="triggerUpload()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M3 11v2h10v-2M8 2v7M5 5l3-3 3 3"/>
+          </svg>
+          上传文档
+        </button>
+        <button class="source-btn" onclick="openLibraryModal()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="3" width="12" height="2" rx="1"/><rect x="2" y="7" width="12" height="2" rx="1"/><rect x="2" y="11" width="8" height="2" rx="1"/>
+          </svg>
+          从文献库选择
+        </button>
+      </div>
+
+      <!-- 已选文献列表 -->
+      <div class="lit-table-wrap">
+        <table class="lit-table">
+          <thead>
+            <tr>
+              <th style="width:32px">#</th>
+              <th>文献名称</th>
+              <th style="width:56px">格式</th>
+              <th style="width:70px">大小</th>
+              <th style="width:90px">上传时间</th>
+              <th style="width:60px">状态</th>
+              <th style="width:48px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="lit-tbody"></tbody>
+        </table>
+        <div class="lit-pagination" id="lit-pagination" style="display:none">
+          <span id="lit-page-info"></span>
+          <div class="lit-pag-btns">
+            <button class="lit-pag-btn" id="btn-prev" onclick="litChangePage(-1)">上一页</button>
+            <button class="lit-pag-btn" id="btn-next" onclick="litChangePage(1)">下一页</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 隐藏的文件输入 -->
+      <input type="file" id="file-upload-input" accept=".pdf,.xlsx,.docx,.txt"
+        style="display:none" multiple onchange="handleFileUpload(event)">
     </div>
 
     <!-- ❶ 解析与切片策略 -->
@@ -625,8 +809,99 @@ function handleConfirm() {
   /* 待实现 */
 }
 
+/* ─── 文献列表数据与渲染 ─── */
+const LIT_DATA = [
+  { name: '《国家风电利用率2026版》',        type: 'PDF',  size: '2.4 MB', time: '2026-03-15' },
+  { name: 'ERA5气象数据集技术手册',           type: 'PDF',  size: '8.1 MB', time: '2026-03-10' },
+  { name: '风电场SCADA数据规范',              type: 'XLSX', size: '1.2 MB', time: '2026-03-08' },
+  { name: 'IEC 61400-12风功率曲线标准',       type: 'PDF',  size: '3.6 MB', time: '2026-03-01' },
+  { name: '山地复杂地形气流模拟报告',         type: 'DOCX', size: '5.3 MB', time: '2026-02-28' },
+  { name: '变桨控制系统运维手册v3',           type: 'PDF',  size: '7.8 MB', time: '2026-02-20' },
+  { name: '风电并网技术要求2025',             type: 'PDF',  size: '4.1 MB', time: '2026-02-15' },
+  { name: '偏航系统故障诊断指南',             type: 'XLSX', size: '0.8 MB', time: '2026-02-10' },
+  { name: '叶片气动特性分析报告',             type: 'DOCX', size: '6.2 MB', time: '2026-01-28' },
+  { name: '电网频率调节技术规范',             type: 'PDF',  size: '2.9 MB', time: '2026-01-20' },
+  { name: '高海拔风资源评估方法',             type: 'PDF',  size: '3.4 MB', time: '2026-01-15' },
+  { name: 'SCADA告警阈值配置表',              type: 'XLSX', size: '0.5 MB', time: '2026-01-10' },
+];
+
+const LIT_PAGE_SIZE = 10;
+let litPage = 0;
+
+function renderLitTable() {
+  const tbody = document.getElementById('lit-tbody');
+  const pag   = document.getElementById('lit-pagination');
+  const total = LIT_DATA.length;
+  const totalPages = Math.ceil(total / LIT_PAGE_SIZE) || 1;
+  const start = litPage * LIT_PAGE_SIZE;
+  const slice = LIT_DATA.slice(start, start + LIT_PAGE_SIZE);
+
+  if (total === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:22px 0;color:var(--text3)">暂无文献，请上传或从文献库选择</td></tr>`;
+    pag.style.display = 'none';
+    return;
+  }
+
+  tbody.innerHTML = slice.map((row, i) => {
+    const typeKey = row.type.toLowerCase();
+    return `<tr>
+      <td style="color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:10px">${start + i + 1}</td>
+      <td title="${row.name}">${row.name}</td>
+      <td><span class="lit-type-badge ${typeKey}">${row.type}</span></td>
+      <td style="color:var(--text3);font-size:11px">${row.size}</td>
+      <td style="color:var(--text3);font-size:11px">${row.time}</td>
+      <td><span class="lit-status">已解析</span></td>
+      <td><button class="btn-del" onclick="deleteLit(${start + i})">移除</button></td>
+    </tr>`;
+  }).join('');
+
+  pag.style.display = total > LIT_PAGE_SIZE ? 'flex' : 'none';
+  document.getElementById('lit-page-info').textContent =
+    `共 ${total} 篇，第 ${litPage + 1} / ${totalPages} 页`;
+  document.getElementById('btn-prev').disabled = litPage === 0;
+  document.getElementById('btn-next').disabled = litPage >= totalPages - 1;
+}
+
+function litChangePage(delta) {
+  const totalPages = Math.ceil(LIT_DATA.length / LIT_PAGE_SIZE) || 1;
+  litPage = Math.max(0, Math.min(litPage + delta, totalPages - 1));
+  renderLitTable();
+}
+
+function deleteLit(idx) {
+  LIT_DATA.splice(idx, 1);
+  const totalPages = Math.ceil(LIT_DATA.length / LIT_PAGE_SIZE) || 1;
+  if (litPage >= totalPages) litPage = totalPages - 1;
+  renderLitTable();
+}
+
+function triggerUpload() {
+  document.getElementById('file-upload-input').click();
+}
+
+function handleFileUpload(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(f => {
+    const ext  = f.name.split('.').pop().toUpperCase();
+    const size = f.size < 1024 * 1024
+      ? (f.size / 1024).toFixed(1) + ' KB'
+      : (f.size / (1024 * 1024)).toFixed(1) + ' MB';
+    const now  = new Date().toISOString().slice(0, 10);
+    LIT_DATA.unshift({ name: f.name, type: ext, size, time: now });
+  });
+  litPage = 0;
+  renderLitTable();
+  event.target.value = '';
+}
+
+function openLibraryModal() {
+  /* 待实现：弹出文献库选择弹窗 */
+  alert('文献库选择功能即将上线');
+}
+
 /* ─── 初始化所有滑块轨道颜色 ─── */
 document.querySelectorAll('input[type=range]').forEach(paintSlider);
+renderLitTable();
 </script>
 </body>
 </html>
