@@ -326,7 +326,7 @@
     }
 
     .panel-body {
-      flex: 1; overflow-y: auto; padding: 14px;
+      flex: 1; min-height: 0; overflow-y: auto; padding: 14px;
       display: flex; flex-direction: column; gap: 10px;
     }
 
@@ -390,7 +390,8 @@
     .apply-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(6,182,212,.4); }
 
     /* ── CANVAS ── */
-    .wf-canvas { flex: 1; position: relative; overflow: hidden; }
+    .wf-canvas { flex: 1; position: relative; overflow: hidden; cursor: grab; }
+    .wf-canvas.panning { cursor: grabbing; }
 
     /* ── NODES ── */
     .node {
@@ -1244,18 +1245,77 @@
       wf_spawnTimer = setInterval(wf_spawnBatch, 1350);
     }
 
+    // ── Viewport state (pan + zoom) ──────────────────────────
+    const VP = { tx: 0, ty: 0, scale: 1 };
+
+    function vp_apply() {
+      const sw = document.getElementById('wf-scaleWrap');
+      if (sw) sw.style.transform = `translate(${VP.tx}px,${VP.ty}px) scale(${VP.scale})`;
+    }
+
     function wf_scaleCanvas() {
-      const wrap      = document.getElementById('wf-canvasWrap');
-      const scaleWrap = document.getElementById('wf-scaleWrap');
-      if (!wrap || !scaleWrap) return;
+      const wrap = document.getElementById('wf-canvasWrap');
+      if (!wrap) return;
       const DESIGN_W = 980, DESIGN_H = 560;
       const availW = wrap.clientWidth, availH = wrap.clientHeight;
       if (!availW || !availH) return;
-      const scale   = Math.min(availW / DESIGN_W, availH / DESIGN_H, 1);
-      const offsetX = Math.max(0, (availW - DESIGN_W * scale) / 2);
-      const offsetY = Math.max(0, (availH - DESIGN_H * scale) / 2);
-      scaleWrap.style.transform = `translate(${offsetX}px,${offsetY}px) scale(${scale})`;
+      VP.scale = Math.min(availW / DESIGN_W, availH / DESIGN_H, 1);
+      VP.tx    = Math.max(0, (availW - DESIGN_W * VP.scale) / 2);
+      VP.ty    = Math.max(0, (availH - DESIGN_H * VP.scale) / 2);
+      vp_apply();
     }
+
+    // ── Canvas pan / zoom ─────────────────────────────────────
+    (function () {
+      const ZOOM_MIN = 0.25, ZOOM_MAX = 3, ZOOM_STEP = 0.12;
+      let drag = null, moved = false;
+      const wrap = document.getElementById('wf-canvasWrap');
+
+      // 滚轮缩放：以鼠标位置为缩放锚点
+      wrap.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        const rect = wrap.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const factor = e.deltaY < 0 ? 1 + ZOOM_STEP : 1 - ZOOM_STEP;
+        const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, VP.scale * factor));
+        // 保持鼠标下方内容位置不变
+        VP.tx = mx - (mx - VP.tx) * (newScale / VP.scale);
+        VP.ty = my - (my - VP.ty) * (newScale / VP.scale);
+        VP.scale = newScale;
+        vp_apply();
+      }, { passive: false });
+
+      // 鼠标拖拽平移（仅画布背景，不拦截节点）
+      wrap.addEventListener('mousedown', function (e) {
+        if (e.target.closest('.node')) return;
+        drag = { sx: e.clientX, sy: e.clientY, stx: VP.tx, sty: VP.ty };
+        moved = false;
+        wrap.classList.add('panning');
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!drag) return;
+        const dx = e.clientX - drag.sx;
+        const dy = e.clientY - drag.sy;
+        if (!moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) moved = true;
+        VP.tx = drag.stx + dx;
+        VP.ty = drag.sty + dy;
+        vp_apply();
+      });
+
+      window.addEventListener('mouseup', function () {
+        if (!drag) return;
+        drag = null;
+        wrap.classList.remove('panning');
+      });
+
+      // 拖拽结束后抑制节点 click 误触发
+      wrap.addEventListener('click', function (e) {
+        if (moved) { e.stopPropagation(); moved = false; }
+      }, true);
+    })();
 
     function wf_typewrite(el, text, speed = 18) {
       el.innerHTML = '';
