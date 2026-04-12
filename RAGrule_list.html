@@ -65,10 +65,30 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 18px;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
   position: relative;
+  cursor: pointer;
 }
-.rule-card:hover { border-color: var(--border2); }
+.rule-card:hover { border-color: var(--border2); background: var(--surface2); }
+
+/* 顶部颜色条（data-color 属性驱动） */
+.rule-card[data-color="cyan"]   { border-top: 4px solid #0ea5e9; }
+.rule-card[data-color="amber"]  { border-top: 4px solid var(--amber); }
+.rule-card[data-color="purple"] { border-top: 4px solid var(--purple); }
+.rule-card[data-color="cyan"]:hover   { border-top-color: #0ea5e9; }
+.rule-card[data-color="amber"]:hover  { border-top-color: var(--amber); }
+.rule-card[data-color="purple"]:hover { border-top-color: var(--purple); }
+
+/* 本体彩色徽章 */
+.onto-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 500;
+}
+.onto-cyan   { background: rgba(14,165,233,0.14); color: #0ea5e9; }
+.onto-amber  { background: var(--amber-dim);       color: var(--amber); }
+.onto-purple { background: var(--purple-dim);      color: var(--purple); }
+.onto-gray   { background: var(--surface3);        color: var(--text3); }
 
 /* 卡片头部：名称 + 设置按钮 */
 .card-head {
@@ -209,10 +229,10 @@ body {
 <!-- ── 卡片列表 ── -->
 <div class="rule-grid" id="rule-grid">
 
-  <div class="rule-card" data-id="1" data-name="风电预测增强规则集">
+  <div class="rule-card" data-id="1" data-name="风电预测增强规则集" data-color="cyan" onclick="goDetail()">
     <div class="card-head">
       <div class="card-name">风电预测增强规则集</div>
-      <div class="card-settings-wrap">
+      <div class="card-settings-wrap" onclick="event.stopPropagation()">
         <button class="btn-settings" onclick="toggleDropdown(this)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="13" r="1.2" fill="currentColor" stroke="none"/></svg>
         </button>
@@ -239,16 +259,18 @@ body {
         2026-03-15
       </span>
       <span class="card-meta-item">
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
-        风电本体 v2
+        <span class="onto-badge onto-cyan">
+          <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/></svg>
+          风电本体 v2
+        </span>
       </span>
     </div>
   </div>
 
-  <div class="rule-card" data-id="2" data-name="气象灾害检索规则">
+  <div class="rule-card" data-id="2" data-name="气象灾害检索规则" data-color="amber" onclick="goDetail()">
     <div class="card-head">
       <div class="card-name">气象灾害检索规则</div>
-      <div class="card-settings-wrap">
+      <div class="card-settings-wrap" onclick="event.stopPropagation()">
         <button class="btn-settings" onclick="toggleDropdown(this)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="13" r="1.2" fill="currentColor" stroke="none"/></svg>
         </button>
@@ -275,16 +297,18 @@ body {
         2026-03-28
       </span>
       <span class="card-meta-item">
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
-        灾害预警图谱 v1
+        <span class="onto-badge onto-amber">
+          <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/></svg>
+          灾害预警图谱 v1
+        </span>
       </span>
     </div>
   </div>
 
-  <div class="rule-card" data-id="3" data-name="通用文献语义检索">
+  <div class="rule-card" data-id="3" data-name="通用文献语义检索" data-color="purple" onclick="goDetail()">
     <div class="card-head">
       <div class="card-name">通用文献语义检索</div>
-      <div class="card-settings-wrap">
+      <div class="card-settings-wrap" onclick="event.stopPropagation()">
         <button class="btn-settings" onclick="toggleDropdown(this)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="13" r="1.2" fill="currentColor" stroke="none"/></svg>
         </button>
@@ -311,8 +335,10 @@ body {
         2026-04-02
       </span>
       <span class="card-meta-item">
-        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
-        无关联本体
+        <span class="onto-badge onto-gray">
+          <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/></svg>
+          无关联本体
+        </span>
       </span>
     </div>
   </div>
