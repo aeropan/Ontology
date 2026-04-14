@@ -85,15 +85,34 @@ body {
 .tpl-card-title {
   font-size: 14px; font-weight: 600; color: var(--text-1); line-height: 1.4;
 }
+/* 更多按钮 + 下拉 */
+.tpl-more-wrap { position: relative; flex-shrink: 0; }
 .tpl-more {
-  flex-shrink: 0; width: 24px; height: 24px;
+  width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 6px; border: none; background: transparent;
-  color: var(--text-3); cursor: pointer; font-size: 15px;
-  font-family: inherit; transition: all 0.15s; letter-spacing: 1px;
-  line-height: 1;
+  border-radius: 7px; border: 1px solid transparent; background: transparent;
+  color: var(--text-3); cursor: pointer; transition: all 0.15s;
 }
-.tpl-more:hover { background: var(--bg-4); color: var(--text-1); }
+.tpl-more:hover { background: var(--bg-4); border-color: var(--border-1); color: var(--text-1); }
+.tpl-more.open  { background: var(--bg-4); border-color: var(--border-2); color: var(--text-1); }
+
+.tpl-dropdown {
+  display: none; position: absolute; top: calc(100% + 6px); right: 0;
+  background: var(--bg-4); border: 1px solid var(--border-2);
+  border-radius: 9px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  padding: 5px; min-width: 110px; z-index: 100; flex-direction: column;
+}
+.tpl-dropdown.open { display: flex; }
+.tpl-dropdown-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 10px; border-radius: 6px; border: none;
+  background: transparent; font-size: 13px; font-family: inherit;
+  color: var(--text-2); cursor: pointer; text-align: left; width: 100%;
+  transition: all 0.12s;
+}
+.tpl-dropdown-item:hover { background: var(--bg-3); color: var(--text-1); }
+.tpl-dropdown-item.danger:hover { color: var(--rose); }
+.tpl-dropdown-sep { height: 1px; background: var(--border-1); margin: 3px 0; }
 
 /* 描述 */
 .tpl-card-desc {
@@ -117,6 +136,15 @@ body {
   padding: 2px 8px; border-radius: 4px;
   font-size: 10px; font-weight: 500;
 }
+/* 页头主按钮 */
+.btn-primary {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: var(--blue);
+  color: #fff; border: none; border-radius: 8px;
+  font-size: 13px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.85; }
+
 /* 标签配色 */
 .tpl-tag-blue   { background: var(--blue-dim);   color: var(--blue);   }
 .tpl-tag-purple { background: var(--purple-dim); color: var(--purple); }
@@ -141,6 +169,10 @@ body {
     <div class="page-title">洞察模板</div>
     <div class="page-desc">选择预置模板快速配置洞察任务的抽取策略与提示词</div>
   </div>
+  <button class="btn-primary" onclick="newTemplate()">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v12M2 8h12"/></svg>
+    新建洞察模板
+  </button>
 </div>
 
 <!-- 筛选栏 -->
@@ -159,7 +191,22 @@ body {
   <div class="tpl-card" data-color="blue" data-domain="wind" onclick="goDetail()">
     <div class="tpl-card-top">
       <div class="tpl-card-title">风电技术方法提取模板</div>
-      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+      <div class="tpl-more-wrap" onclick="event.stopPropagation()">
+        <button class="tpl-more" onclick="toggleMenu(event,this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/></svg>
+        </button>
+        <div class="tpl-dropdown">
+          <button class="tpl-dropdown-item" onclick="editTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3z"/></svg>
+            修改
+          </button>
+          <div class="tpl-dropdown-sep"></div>
+          <button class="tpl-dropdown-item danger" onclick="deleteTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M5 4V2h6v2M6 7v5M10 7v5M4 4l1 10h6l1-10"/></svg>
+            删除
+          </button>
+        </div>
+      </div>
     </div>
     <div class="tpl-card-desc">
       面向风电领域的综合方法提取模板，涵盖功率预测、风速建模、叶片故障检测等核心任务，配置了针对气象数据与SCADA日志的专项抽取策略。
@@ -178,7 +225,22 @@ body {
   <div class="tpl-card" data-color="purple" data-domain="disaster" onclick="goDetail()">
     <div class="tpl-card-top">
       <div class="tpl-card-title">气象灾害预测方法模板</div>
-      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+      <div class="tpl-more-wrap" onclick="event.stopPropagation()">
+        <button class="tpl-more" onclick="toggleMenu(event,this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/></svg>
+        </button>
+        <div class="tpl-dropdown">
+          <button class="tpl-dropdown-item" onclick="editTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3z"/></svg>
+            修改
+          </button>
+          <div class="tpl-dropdown-sep"></div>
+          <button class="tpl-dropdown-item danger" onclick="deleteTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M5 4V2h6v2M6 7v5M10 7v5M4 4l1 10h6l1-10"/></svg>
+            删除
+          </button>
+        </div>
+      </div>
     </div>
     <div class="tpl-card-desc">
       针对气象灾害预警场景，定义相似度阈值与关键词权重，优先检索高置信度气象事件文献，适配短临预报与极端天气分析需求。
@@ -197,7 +259,22 @@ body {
   <div class="tpl-card" data-color="cyan" data-domain="all" onclick="goDetail()">
     <div class="tpl-card-top">
       <div class="tpl-card-title">通用文献语义检索模板</div>
-      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+      <div class="tpl-more-wrap" onclick="event.stopPropagation()">
+        <button class="tpl-more" onclick="toggleMenu(event,this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/></svg>
+        </button>
+        <div class="tpl-dropdown">
+          <button class="tpl-dropdown-item" onclick="editTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3z"/></svg>
+            修改
+          </button>
+          <div class="tpl-dropdown-sep"></div>
+          <button class="tpl-dropdown-item danger" onclick="deleteTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M5 4V2h6v2M6 7v5M10 7v5M4 4l1 10h6l1-10"/></svg>
+            删除
+          </button>
+        </div>
+      </div>
     </div>
     <div class="tpl-card-desc">
       不依赖特定本体的通用语义检索规则，适用于探索性查询场景，支持跨领域文献的模糊匹配与聚合，适合无领域本体时的快速启动。
@@ -216,7 +293,22 @@ body {
   <div class="tpl-card" data-color="green" data-domain="solar" onclick="goDetail()">
     <div class="tpl-card-top">
       <div class="tpl-card-title">光伏发电效率分析模板</div>
-      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+      <div class="tpl-more-wrap" onclick="event.stopPropagation()">
+        <button class="tpl-more" onclick="toggleMenu(event,this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/></svg>
+        </button>
+        <div class="tpl-dropdown">
+          <button class="tpl-dropdown-item" onclick="editTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3z"/></svg>
+            修改
+          </button>
+          <div class="tpl-dropdown-sep"></div>
+          <button class="tpl-dropdown-item danger" onclick="deleteTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M5 4V2h6v2M6 7v5M10 7v5M4 4l1 10h6l1-10"/></svg>
+            删除
+          </button>
+        </div>
+      </div>
     </div>
     <div class="tpl-card-desc">
       聚焦光伏电站发电效率评估，涵盖组件衰减模型、辐照量修正、温度系数分析等维度的方法提取，支持多厂商组件对比洞察。
@@ -235,7 +327,22 @@ body {
   <div class="tpl-card" data-color="amber" data-domain="hydro" onclick="goDetail()">
     <div class="tpl-card-top">
       <div class="tpl-card-title">水电调度优化方法模板</div>
-      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+      <div class="tpl-more-wrap" onclick="event.stopPropagation()">
+        <button class="tpl-more" onclick="toggleMenu(event,this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/></svg>
+        </button>
+        <div class="tpl-dropdown">
+          <button class="tpl-dropdown-item" onclick="editTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3z"/></svg>
+            修改
+          </button>
+          <div class="tpl-dropdown-sep"></div>
+          <button class="tpl-dropdown-item danger" onclick="deleteTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M5 4V2h6v2M6 7v5M10 7v5M4 4l1 10h6l1-10"/></svg>
+            删除
+          </button>
+        </div>
+      </div>
     </div>
     <div class="tpl-card-desc">
       面向梯级水电站调度优化场景，提取水库调度规则、径流预测模型与多目标优化算法，兼容水文模型与水情自动测报数据。
@@ -254,7 +361,22 @@ body {
   <div class="tpl-card" data-color="rose" data-domain="wind" onclick="goDetail()">
     <div class="tpl-card-top">
       <div class="tpl-card-title">海上风电运维知识提取模板</div>
-      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+      <div class="tpl-more-wrap" onclick="event.stopPropagation()">
+        <button class="tpl-more" onclick="toggleMenu(event,this)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="8" cy="13" r="1.2"/></svg>
+        </button>
+        <div class="tpl-dropdown">
+          <button class="tpl-dropdown-item" onclick="editTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3z"/></svg>
+            修改
+          </button>
+          <div class="tpl-dropdown-sep"></div>
+          <button class="tpl-dropdown-item danger" onclick="deleteTemplate(this)">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M5 4V2h6v2M6 7v5M10 7v5M4 4l1 10h6l1-10"/></svg>
+            删除
+          </button>
+        </div>
+      </div>
     </div>
     <div class="tpl-card-desc">
       专注海上风电场运维知识库构建，抽取设备故障模式、腐蚀防护措施、台风预案等运维经验，辅助构建运维知识图谱。
@@ -274,6 +396,41 @@ body {
 </div>
 
 <script>
+/* ════════════════════════════
+   更多菜单
+════════════════════════════ */
+function toggleMenu(e, btn) {
+  e.stopPropagation();
+  const dropdown = btn.nextElementSibling;
+  const isOpen = dropdown.classList.contains('open');
+  // 关闭所有已打开的菜单
+  closeAllMenus();
+  if (!isOpen) {
+    dropdown.classList.add('open');
+    btn.classList.add('open');
+  }
+}
+function closeAllMenus() {
+  document.querySelectorAll('.tpl-dropdown.open').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.tpl-more.open').forEach(b => b.classList.remove('open'));
+}
+document.addEventListener('click', closeAllMenus);
+
+function editTemplate(btn) {
+  const title = btn.closest('.tpl-card').querySelector('.tpl-card-title').textContent.trim();
+  alert(`修改模板：${title}`);
+  closeAllMenus();
+}
+function deleteTemplate(btn) {
+  const card = btn.closest('.tpl-card');
+  const title = card.querySelector('.tpl-card-title').textContent.trim();
+  if (!confirm(`确认删除模板「${title}」？`)) return;
+  card.remove();
+}
+function newTemplate() {
+  alert('新建洞察模板（待实现）');
+}
+
 /* ════════════════════════════
    筛选
 ════════════════════════════ */
