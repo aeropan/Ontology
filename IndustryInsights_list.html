@@ -59,6 +59,14 @@ body {
   transition: all 0.15s; display: flex; flex-direction: column; gap: 12px;
 }
 .insight-card:hover { border-color: var(--blue); background: var(--bg-3); }
+/* ── 顶部颜色条（按状态） ── */
+.insight-card[data-status="done"]    { border-top: 4px solid var(--green); }
+.insight-card[data-status="running"] { border-top: 4px solid var(--blue); }
+.insight-card[data-status="draft"]   { border-top: 4px solid var(--amber); }
+/* 悬停时保持顶部色（specificity 覆盖 hover 的 border-color shorthand） */
+.insight-card[data-status="done"]:hover    { border-top-color: var(--green); }
+.insight-card[data-status="running"]:hover { border-top-color: var(--blue); }
+.insight-card[data-status="draft"]:hover   { border-top-color: var(--amber); }
 .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .card-name { font-size: 14px; font-weight: 500; color: var(--text-1); line-height: 1.4; }
 .status-badge { flex-shrink: 0; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; }

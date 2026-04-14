@@ -231,9 +231,9 @@ body {
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
       本体中心
     </div>
-    <div class="nav-item" onclick="showToast('图谱管理模块建设中…')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="8" r="2"/><circle cx="11" cy="4" r="2"/><circle cx="11" cy="12" r="2"/><path d="M7 8h2M7 7l2-2M7 9l2 2"/></svg>
-      图谱管理
+    <div class="nav-item" id="nav-rag" onclick="navigate('RAGrule_list.html', null, ['RAG增强管理'])">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v2H2zM2 7h9v2H2zM2 11h11v2H2z"/><circle cx="13.5" cy="12" r="2" fill="none"/><path d="M12.5 12h2M13.5 11v2"/></svg>
+      RAG增强管理
     </div>
   </div>
 
@@ -311,6 +311,7 @@ const NAV_MAP = {
   'nav-industry-v2':      { file: 'IndustryInsights_list.html', page: null, crumbs: ['行业洞察'] },
   'nav-industry':         { file: 'data_explorer.html',         page: null, crumbs: ['备份', '行业洞察（旧版备份）'] },
   'nav-setting-backup':   { file: 'setting_backup.html',        page: null, crumbs: ['备份', '数据分析设置'] },
+  'nav-rag':              { file: 'RAGrule_list.html',          page: null, crumbs: ['RAG增强管理'] },
 };
 
 let currentFile = 'main.html';
