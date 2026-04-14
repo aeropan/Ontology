@@ -118,7 +118,7 @@ body {
 ══════════════════════════════════════ */
 .main-layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 1fr;
   gap: 16px;
   flex: 1;
   min-height: 0;
@@ -287,12 +287,39 @@ body {
 .result-box {
   flex: 1; background: var(--bg-1);
   border: 1px solid var(--border-1); border-radius: 8px;
-  padding: 12px 14px; font-size: 12px; font-family: var(--font-mono);
-  color: var(--text-3); overflow-y: auto; line-height: 1.7;
-  white-space: pre-wrap; word-break: break-all;
+  padding: 0; overflow-y: auto;
 }
-.result-box.has-result { color: var(--text-2); }
-.result-placeholder { opacity: 0.5; }
+.result-placeholder {
+  padding: 16px; font-size: 12px; color: var(--text-3); opacity: 0.6;
+}
+/* 结构化结果条目 */
+.result-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-1);
+}
+.result-item:last-child { border-bottom: none; }
+.result-field-label {
+  font-size: 10px; color: var(--text-3);
+  letter-spacing: 0.6px; margin-bottom: 5px;
+  text-transform: uppercase;
+}
+.result-field-value {
+  font-size: 13px; color: var(--text-1); line-height: 1.65;
+}
+.result-field-value.mono {
+  font-family: var(--font-mono); color: var(--blue); font-size: 12px;
+}
+.result-field-value.muted { color: var(--text-2); }
+/* 下载按钮 */
+.btn-download {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 7px;
+  background: transparent; border: 1px solid var(--border-2);
+  color: var(--text-3); font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-download:hover { border-color: var(--blue); color: var(--blue); }
+.btn-download:disabled { opacity: 0.3; cursor: not-allowed; }
 
 </style>
 </head>
@@ -504,13 +531,19 @@ body {
       <div class="debug-result">
         <div class="debug-result-header">
           <span class="debug-result-label">调试结果</span>
-          <button class="btn-run" id="btn-run" onclick="runDebug()" disabled>
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l9 5-9 5V3z" fill="currentColor" stroke="none"/></svg>
-            执行规则
-          </button>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button class="btn-download" id="btn-download" onclick="downloadResult()" disabled>
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2v8M4 10l4 4 4-4"/><path d="M2 14h12"/></svg>
+              下载
+            </button>
+            <button class="btn-run" id="btn-run" onclick="runDebug()" disabled>
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l9 5-9 5V3z" fill="currentColor" stroke="none"/></svg>
+              执行规则
+            </button>
+          </div>
         </div>
         <div class="result-box" id="result-box">
-          <span class="result-placeholder">上传调试文件后执行规则，结果将在此处展示…</span>
+          <div class="result-placeholder">上传调试文件后执行规则，结果将在此处展示…</div>
         </div>
       </div>
 
@@ -598,27 +631,81 @@ function setDebugFile(name) {
   document.getElementById('debug-dot').classList.add('ready');
 }
 
+const mockResults = [
+  {
+    label: 'DOI',
+    value: '10.3402/tellusa.v65i0.21206',
+    style: 'mono'
+  },
+  {
+    label: '是否使用 ERA5',
+    value: '否',
+    style: ''
+  },
+  {
+    label: '论文题目',
+    value: 'Comparison of non-homogeneous regression models for probabilistic wind speed forecasting',
+    style: ''
+  },
+  {
+    label: '发表年份',
+    value: '2013 年，发表于 Tellus A: Dynamic Meteorology and Oceanography',
+    style: 'muted'
+  },
+  {
+    label: '空间分辨率',
+    value: '混合尺度（注：ECMWF 原始集成预报场具有约 33 km 的水平网格分辨率（horizontal resolution of about 33 km），但研究随后通过双线性插值（bilinear interpolation）将网格输出转化落脚于 228 个具体天气观测站（synoptic observation stations）的单点位置进行评估与预测）',
+    style: 'muted'
+  },
+  {
+    label: '时间分辨率',
+    value: '逐 12 小时（00:00 UTC 与 12:00 UTC 初始化预报）',
+    style: 'muted'
+  },
+  {
+    label: '核心方法',
+    value: 'Non-homogeneous Gaussian Regression (NGR) / EMOS；Ensemble Model Output Statistics',
+    style: ''
+  },
+  {
+    label: '数据来源',
+    value: 'ECMWF EPS 集成预报系统；欧洲 228 个地面气象站观测数据',
+    style: 'muted'
+  },
+];
+
 function runDebug() {
   const btn = document.getElementById('btn-run');
   btn.classList.add('running');
   btn.disabled = true;
   btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M12 2a10 10 0 0 1 10 10"/></svg> 执行中…`;
-  document.getElementById('result-box').innerHTML = '<span class="result-placeholder">正在执行规则，请稍候…</span>';
+  document.getElementById('result-box').innerHTML = '<div class="result-placeholder">正在执行规则，请稍候…</div>';
 
   setTimeout(() => {
     btn.classList.remove('running');
     btn.disabled = false;
     btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l9 5-9 5V3z" fill="currentColor" stroke="none"/></svg> 执行规则`;
+
     const box = document.getElementById('result-box');
-    box.classList.add('has-result');
-    box.textContent =
-`[2026-04-14 12:00:01] 规则加载完成，共 3 条抽取规则
-[2026-04-14 12:00:02] 开始处理文献…
-[2026-04-14 12:00:03] ✓ 命中规则: wind_power_extract — 找到 12 个方法节点
-[2026-04-14 12:00:03] ✓ 命中规则: wind_speed_model   — 找到 8 个方法节点
-[2026-04-14 12:00:04] ✓ 命中规则: fault_detection    — 找到 5 个方法节点
-[2026-04-14 12:00:04] 抽取完成，共 25 个方法节点，置信度 ≥ 0.85`;
+    box.innerHTML = mockResults.map(r => `
+      <div class="result-item">
+        <div class="result-field-label">${r.label}</div>
+        <div class="result-field-value ${r.style}">${r.value}</div>
+      </div>
+    `).join('');
+
+    document.getElementById('btn-download').disabled = false;
+    document.getElementById('debug-dot').classList.add('ready');
   }, 1800);
+}
+
+function downloadResult() {
+  const lines = mockResults.map(r => `${r.label}\n${r.value}`).join('\n\n');
+  const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'debug_result.txt'; a.click();
+  URL.revokeObjectURL(url);
 }
 
 /* ════════════════════════════
