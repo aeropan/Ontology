@@ -4,34 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>行业洞察 · 执行进度</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
 <style>
-:root {
-  --bg: #080c18;
-  --surface: #0f1729;
-  --surface2: #131d30;
-  --surface3: #1a2540;
-  --border: #1e2d4a;
-  --border2: #253550;
-  --blue: #3b82f6;
-  --blue-dim: rgba(59,130,246,0.12);
-  --purple: #8b5cf6;
-  --purple-dim: rgba(139,92,246,0.15);
-  --green: #10b981;
-  --green-dim: rgba(16,185,129,0.12);
-  --amber: #f59e0b;
-  --amber-dim: rgba(245,158,11,0.12);
-  --rose: #f43f5e;
-  --text1: #e2e8f0;
-  --text2: #94a3b8;
-  --text3: #475569;
-  --grad2: linear-gradient(135deg, #06b6d4, #3b82f6);
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  background: var(--bg);
-  font-family: 'Noto Sans SC', sans-serif;
-  color: var(--text1);
   min-height: 100vh;
   padding: 24px;
 }
@@ -42,17 +20,17 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--text3);
+  color: var(--text-3);
   margin-bottom: 20px;
 }
-.page-nav a { color: var(--text2); text-decoration: none; cursor: pointer; }
+.page-nav a { color: var(--text-2); text-decoration: none; cursor: pointer; }
 .page-nav a:hover { color: var(--blue); }
-.page-nav .sep { color: var(--text3); }
-.page-nav .current { color: var(--text1); }
+.page-nav .sep { color: var(--text-3); }
+.page-nav .current { color: var(--text-1); }
 
 .page-header { margin-bottom: 28px; }
 .page-title { font-size: 18px; font-weight: 600; }
-.page-desc  { font-size: 12px; color: var(--text3); margin-top: 3px; }
+.page-desc  { font-size: 12px; color: var(--text-3); margin-top: 3px; }
 
 /* ── 步骤条 ── */
 .steps {
@@ -65,23 +43,23 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--text3);
+  color: var(--text-3);
 }
 .step-dot {
   width: 24px; height: 24px;
   border-radius: 50%;
-  border: 2px solid var(--border2);
+  border: 2px solid var(--border-2);
   display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 600;
   flex-shrink: 0;
 }
 .step.active .step-dot { border-color: var(--blue); color: var(--blue); }
-.step.active { color: var(--text1); }
+.step.active { color: var(--text-1); }
 .step.done .step-dot { background: var(--green); border-color: var(--green); color: #fff; }
 .step-line {
   flex: 1;
   height: 1px;
-  background: var(--border);
+  background: var(--border-1);
   margin: 0 8px;
   min-width: 40px;
 }
@@ -96,8 +74,8 @@ body {
 
 /* ── 整体进度卡 ── */
 .overall-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 20px;
@@ -112,7 +90,7 @@ body {
 .overall-pct { font-size: 24px; font-weight: 700; color: var(--blue); font-family: 'JetBrains Mono', monospace; }
 
 .progress-bar-wrap {
-  background: var(--surface3);
+  background: var(--bg-4);
   border-radius: 99px;
   height: 8px;
   overflow: hidden;
@@ -121,15 +99,15 @@ body {
 .progress-bar-fill {
   height: 100%;
   border-radius: 99px;
-  background: var(--grad2);
+  background: var(--grad-2);
   transition: width 0.5s ease;
 }
-.progress-hint { font-size: 11px; color: var(--text3); }
+.progress-hint { font-size: 11px; color: var(--text-3); }
 
 /* ── 子步骤列表 ── */
 .steps-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 20px;
@@ -137,7 +115,7 @@ body {
 .steps-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text2);
+  color: var(--text-2);
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 16px;
@@ -147,7 +125,7 @@ body {
   align-items: flex-start;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-1);
 }
 .sub-step:last-child { border-bottom: none; padding-bottom: 0; }
 .sub-step-icon {
@@ -160,48 +138,48 @@ body {
 }
 .icon-done    { background: var(--green-dim); color: var(--green); }
 .icon-running { background: var(--blue-dim);  color: var(--blue);  }
-.icon-pending { background: var(--surface3);  color: var(--text3); border: 1px solid var(--border2); }
+.icon-pending { background: var(--bg-4);  color: var(--text-3); border: 1px solid var(--border-2); }
 
 .sub-step-body { flex: 1; }
 .sub-step-name { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
-.sub-step-desc { font-size: 11px; color: var(--text3); }
-.sub-step-time { font-size: 11px; color: var(--text2); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+.sub-step-desc { font-size: 11px; color: var(--text-3); }
+.sub-step-time { font-size: 11px; color: var(--text-2); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
 
 /* ── 日志 ── */
 .log-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
   border-radius: 12px;
   padding: 20px;
 }
 .log-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text2);
+  color: var(--text-2);
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 12px;
 }
 .log-box {
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: var(--bg-0);
+  border: 1px solid var(--border-1);
   border-radius: 8px;
   padding: 12px;
   height: 180px;
   overflow-y: auto;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  color: var(--text3);
+  color: var(--text-3);
   line-height: 1.8;
 }
 .log-line.ok  { color: var(--green); }
 .log-line.run { color: var(--blue);  }
-.log-line.info { color: var(--text2); }
+.log-line.info { color: var(--text-2); }
 
 /* ── 右侧统计 ── */
 .stat-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 16px;
@@ -209,7 +187,7 @@ body {
 .stat-title {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text2);
+  color: var(--text-2);
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 14px;
@@ -221,11 +199,11 @@ body {
   font-size: 12px;
   margin-bottom: 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-1);
 }
 .stat-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-.stat-key  { color: var(--text3); }
-.stat-val  { font-weight: 600; color: var(--text1); font-family: 'JetBrains Mono', monospace; }
+.stat-key  { color: var(--text-3); }
+.stat-val  { font-weight: 600; color: var(--text-1); font-family: 'JetBrains Mono', monospace; }
 .stat-val.blue   { color: var(--blue); }
 .stat-val.green  { color: var(--green); }
 
@@ -236,20 +214,20 @@ body {
   justify-content: space-between;
   margin-top: 28px;
   padding-top: 20px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-1);
 }
 .btn-back {
   padding: 8px 16px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
   border-radius: 8px;
   font-size: 13px;
   font-family: inherit;
-  color: var(--text2);
+  color: var(--text-2);
   cursor: pointer;
   transition: all 0.15s;
 }
-.btn-back:hover { color: var(--text1); }
+.btn-back:hover { color: var(--text-1); }
 .btn-primary {
   display: flex;
   align-items: center;
@@ -277,7 +255,9 @@ body {
 <div class="page-nav">
   <a onclick="window.location.href='IndustryInsights_list.html'">行业洞察</a>
   <span class="sep">›</span>
-  <a onclick="window.location.href='IndustryInsights_setting.html'">洞察配置</a>
+  <a onclick="window.location.href='IndustryInsights_setting.html'">上传文献</a>
+  <span class="sep">›</span>
+  <a onclick="window.location.href='IndustryInsights_config.html'">洞察配置</a>
   <span class="sep">›</span>
   <span class="current">执行进度</span>
 </div>
@@ -296,6 +276,11 @@ body {
   <div class="step-line"></div>
   <div class="step done">
     <div class="step-dot">✓</div>
+    <span>上传文献</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step done">
+    <div class="step-dot">✓</div>
     <span>洞察配置</span>
   </div>
   <div class="step-line"></div>
@@ -307,7 +292,7 @@ body {
   </div>
   <div class="step-line"></div>
   <div class="step">
-    <div class="step-dot">4</div>
+    <div class="step-dot">5</div>
     <span>查看结果</span>
   </div>
 </div>
@@ -419,7 +404,7 @@ body {
 
 <!-- 操作栏 -->
 <div class="action-bar">
-  <button class="btn-back" onclick="window.location.href='IndustryInsights_setting.html'">← 返回配置</button>
+  <button class="btn-back" onclick="window.location.href='IndustryInsights_config.html'">← 返回配置</button>
   <button class="btn-primary" id="btn-view" onclick="window.location.href='IndustryInsights_detail.html'">
     查看结果 →
   </button>
