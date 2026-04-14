@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 模板详情</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
+<style>
+body {
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 主内容区（占满剩余空间） */
+.page-content {
+  flex: 1;
+}
+
+/* 底部操作栏 */
+.action-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px; padding-top: 20px;
+  border-top: 1px solid var(--border-1);
+  margin-top: 24px;
+}
+.btn-cancel {
+  padding: 8px 20px; background: transparent;
+  border: 1px solid var(--border-2); border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: var(--text-2);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-cancel:hover { border-color: var(--blue); color: var(--blue); }
+.btn-confirm {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 20px; background: var(--blue);
+  color: #fff; border: none; border-radius: 8px;
+  font-size: 13px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-confirm:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<!-- 主内容区（暂置空） -->
+<div class="page-content"></div>
+
+<!-- 底部操作栏 -->
+<div class="action-bar">
+  <button class="btn-cancel" onclick="goBack()">← 返回</button>
+  <button class="btn-confirm" onclick="goConfirm()">
+    确认使用
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+  </button>
+</div>
+
+<script>
+function goBack()    { window.location.href = 'IndustryInsights_templatelist.html'; }
+function goConfirm() { window.location.href = 'IndustryInsights_setting.html'; }
+</script>
+</body>
+</html>

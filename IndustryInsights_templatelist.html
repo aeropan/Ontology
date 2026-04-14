@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 洞察模板</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
+<style>
+body {
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* ── 面包屑 ── */
+.breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-3); margin-bottom: 20px;
+}
+.breadcrumb a {
+  color: var(--text-3); text-decoration: none; cursor: pointer; transition: color 0.15s;
+}
+.breadcrumb a:hover { color: var(--blue); }
+.breadcrumb-sep { opacity: 0.4; }
+.breadcrumb-cur { color: var(--text-2); }
+
+/* ── 页头 ── */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-title { font-size: 18px; font-weight: 600; color: var(--text-1); }
+.page-desc  { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+
+/* ── 筛选栏 ── */
+.filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.filter-input {
+  flex: 1; max-width: 320px;
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: 8px; padding: 7px 12px;
+  font-size: 12px; color: var(--text-1); font-family: inherit;
+  outline: none; transition: border-color 0.15s;
+}
+.filter-input::placeholder { color: var(--text-3); }
+.filter-input:focus { border-color: var(--blue); }
+.filter-tag {
+  padding: 5px 12px; border-radius: 6px; font-size: 11px;
+  border: 1px solid var(--border-1); background: var(--bg-2);
+  color: var(--text-2); cursor: pointer; transition: all 0.15s;
+}
+.filter-tag.active { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+
+/* ── 模板卡片网格 ── */
+.tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+/* ── 模板卡片 ── */
+.tpl-card {
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: 12px; padding: 18px 18px 16px;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; flex-direction: column; gap: 10px;
+  /* 左侧彩色竖条通过 border-left 实现 */
+  border-left-width: 4px; border-left-style: solid;
+}
+.tpl-card:hover { background: var(--bg-3); }
+/* 左侧边框色（悬停时保持） */
+.tpl-card[data-color="blue"]   { border-left-color: var(--blue);   }
+.tpl-card[data-color="purple"] { border-left-color: var(--purple); }
+.tpl-card[data-color="green"]  { border-left-color: var(--green);  }
+.tpl-card[data-color="cyan"]   { border-left-color: var(--cyan);   }
+.tpl-card[data-color="amber"]  { border-left-color: var(--amber);  }
+.tpl-card[data-color="rose"]   { border-left-color: var(--rose);   }
+
+/* 卡片顶部：标题 + 更多按钮 */
+.tpl-card-top {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 8px;
+}
+.tpl-card-title {
+  font-size: 14px; font-weight: 600; color: var(--text-1); line-height: 1.4;
+}
+.tpl-more {
+  flex-shrink: 0; width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; border: none; background: transparent;
+  color: var(--text-3); cursor: pointer; font-size: 15px;
+  font-family: inherit; transition: all 0.15s; letter-spacing: 1px;
+  line-height: 1;
+}
+.tpl-more:hover { background: var(--bg-4); color: var(--text-1); }
+
+/* 描述 */
+.tpl-card-desc {
+  font-size: 12px; color: var(--text-2); line-height: 1.7;
+  display: -webkit-box; -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* 底部：日期 + 标签组 */
+.tpl-card-footer {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 8px;
+  padding-top: 10px; border-top: 1px solid var(--border-1);
+}
+.tpl-date {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--text-3);
+}
+.tpl-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.tpl-tag {
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 500;
+}
+/* 标签配色 */
+.tpl-tag-blue   { background: var(--blue-dim);   color: var(--blue);   }
+.tpl-tag-purple { background: var(--purple-dim); color: var(--purple); }
+.tpl-tag-green  { background: var(--green-dim);  color: var(--green);  }
+.tpl-tag-cyan   { background: var(--cyan-dim);   color: var(--cyan);   }
+.tpl-tag-amber  { background: var(--amber-dim);  color: var(--amber);  }
+.tpl-tag-rose   { background: var(--rose-dim);   color: var(--rose);   }
+</style>
+</head>
+<body>
+
+<!-- 面包屑 -->
+<div class="breadcrumb">
+  <a onclick="goBack()">行业洞察</a>
+  <span class="breadcrumb-sep">›</span>
+  <span class="breadcrumb-cur">洞察模板</span>
+</div>
+
+<!-- 页头 -->
+<div class="page-header">
+  <div>
+    <div class="page-title">洞察模板</div>
+    <div class="page-desc">选择预置模板快速配置洞察任务的抽取策略与提示词</div>
+  </div>
+</div>
+
+<!-- 筛选栏 -->
+<div class="filter-bar">
+  <input class="filter-input" placeholder="搜索模板…" oninput="filterCards(this.value)" />
+  <span class="filter-tag active" onclick="setFilter(this,'all')">全部</span>
+  <span class="filter-tag" onclick="setFilter(this,'wind')">风电</span>
+  <span class="filter-tag" onclick="setFilter(this,'disaster')">灾害预测</span>
+  <span class="filter-tag" onclick="setFilter(this,'solar')">光伏</span>
+  <span class="filter-tag" onclick="setFilter(this,'hydro')">水电</span>
+</div>
+
+<!-- 模板卡片 -->
+<div class="tpl-grid" id="tpl-grid">
+
+  <div class="tpl-card" data-color="blue" data-domain="wind" onclick="goDetail()">
+    <div class="tpl-card-top">
+      <div class="tpl-card-title">风电技术方法提取模板</div>
+      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+    </div>
+    <div class="tpl-card-desc">
+      面向风电领域的综合方法提取模板，涵盖功率预测、风速建模、叶片故障检测等核心任务，配置了针对气象数据与SCADA日志的专项抽取策略。
+    </div>
+    <div class="tpl-card-footer">
+      <div class="tpl-date">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v10H2z"/><path d="M5 2v4M11 2v4M2 8h12"/></svg>
+        2026-03-15
+      </div>
+      <div class="tpl-tags">
+        <span class="tpl-tag tpl-tag-blue">风电本体 v2</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tpl-card" data-color="purple" data-domain="disaster" onclick="goDetail()">
+    <div class="tpl-card-top">
+      <div class="tpl-card-title">气象灾害预测方法模板</div>
+      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+    </div>
+    <div class="tpl-card-desc">
+      针对气象灾害预警场景，定义相似度阈值与关键词权重，优先检索高置信度气象事件文献，适配短临预报与极端天气分析需求。
+    </div>
+    <div class="tpl-card-footer">
+      <div class="tpl-date">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v10H2z"/><path d="M5 2v4M11 2v4M2 8h12"/></svg>
+        2026-03-28
+      </div>
+      <div class="tpl-tags">
+        <span class="tpl-tag tpl-tag-purple">灾害预警图谱 v1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tpl-card" data-color="cyan" data-domain="all" onclick="goDetail()">
+    <div class="tpl-card-top">
+      <div class="tpl-card-title">通用文献语义检索模板</div>
+      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+    </div>
+    <div class="tpl-card-desc">
+      不依赖特定本体的通用语义检索规则，适用于探索性查询场景，支持跨领域文献的模糊匹配与聚合，适合无领域本体时的快速启动。
+    </div>
+    <div class="tpl-card-footer">
+      <div class="tpl-date">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v10H2z"/><path d="M5 2v4M11 2v4M2 8h12"/></svg>
+        2026-04-02
+      </div>
+      <div class="tpl-tags">
+        <span class="tpl-tag tpl-tag-cyan">无关联本体</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tpl-card" data-color="green" data-domain="solar" onclick="goDetail()">
+    <div class="tpl-card-top">
+      <div class="tpl-card-title">光伏发电效率分析模板</div>
+      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+    </div>
+    <div class="tpl-card-desc">
+      聚焦光伏电站发电效率评估，涵盖组件衰减模型、辐照量修正、温度系数分析等维度的方法提取，支持多厂商组件对比洞察。
+    </div>
+    <div class="tpl-card-footer">
+      <div class="tpl-date">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v10H2z"/><path d="M5 2v4M11 2v4M2 8h12"/></svg>
+        2026-04-05
+      </div>
+      <div class="tpl-tags">
+        <span class="tpl-tag tpl-tag-green">光伏本体 v1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tpl-card" data-color="amber" data-domain="hydro" onclick="goDetail()">
+    <div class="tpl-card-top">
+      <div class="tpl-card-title">水电调度优化方法模板</div>
+      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+    </div>
+    <div class="tpl-card-desc">
+      面向梯级水电站调度优化场景，提取水库调度规则、径流预测模型与多目标优化算法，兼容水文模型与水情自动测报数据。
+    </div>
+    <div class="tpl-card-footer">
+      <div class="tpl-date">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v10H2z"/><path d="M5 2v4M11 2v4M2 8h12"/></svg>
+        2026-04-08
+      </div>
+      <div class="tpl-tags">
+        <span class="tpl-tag tpl-tag-amber">水电本体 v1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tpl-card" data-color="rose" data-domain="wind" onclick="goDetail()">
+    <div class="tpl-card-top">
+      <div class="tpl-card-title">海上风电运维知识提取模板</div>
+      <button class="tpl-more" onclick="event.stopPropagation()">···</button>
+    </div>
+    <div class="tpl-card-desc">
+      专注海上风电场运维知识库构建，抽取设备故障模式、腐蚀防护措施、台风预案等运维经验，辅助构建运维知识图谱。
+    </div>
+    <div class="tpl-card-footer">
+      <div class="tpl-date">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12v10H2z"/><path d="M5 2v4M11 2v4M2 8h12"/></svg>
+        2026-04-11
+      </div>
+      <div class="tpl-tags">
+        <span class="tpl-tag tpl-tag-blue">风电本体 v2</span>
+        <span class="tpl-tag tpl-tag-rose">运维专项</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════
+   筛选
+════════════════════════════ */
+let currentFilter = 'all';
+
+function setFilter(el, domain) {
+  currentFilter = domain;
+  document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  filterCards(document.querySelector('.filter-input').value);
+}
+
+function filterCards(keyword) {
+  const kw = keyword.toLowerCase();
+  document.querySelectorAll('.tpl-card').forEach(card => {
+    const titleMatch = card.querySelector('.tpl-card-title').textContent.toLowerCase().includes(kw);
+    const descMatch  = card.querySelector('.tpl-card-desc').textContent.toLowerCase().includes(kw);
+    const domainMatch = currentFilter === 'all' || card.dataset.domain === currentFilter || card.dataset.domain === 'all';
+    card.style.display = ((titleMatch || descMatch) && domainMatch) ? '' : 'none';
+  });
+}
+
+/* ════════════════════════════
+   跳转
+════════════════════════════ */
+function goBack()   { window.location.href = 'IndustryInsights_list.html'; }
+function goDetail() { window.location.href = 'IndustryInsights_templatedetail.html'; }
+</script>
+</body>
+</html>
