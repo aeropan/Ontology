@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 模板详情</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
+<style>
+body {
+  min-height: 100vh;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ══════════════════════════════════════
+   面包屑
+══════════════════════════════════════ */
+.breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-3); margin-bottom: 20px;
+  flex-shrink: 0;
+}
+.breadcrumb a { color: var(--text-3); text-decoration: none; cursor: pointer; transition: color 0.15s; }
+.breadcrumb a:hover { color: var(--blue); }
+.breadcrumb-sep { opacity: 0.4; }
+.breadcrumb-cur { color: var(--text-2); }
+
+/* ══════════════════════════════════════
+   顶部信息卡
+══════════════════════════════════════ */
+.info-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+.info-main { flex: 1; min-width: 0; }
+
+/* 可编辑行：名称 */
+.info-name-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.info-name {
+  font-size: 17px; font-weight: 600; color: var(--text-1);
+  cursor: text; border-radius: 6px; padding: 2px 6px;
+  transition: background 0.15s; line-height: 1.4;
+  outline: none;
+}
+.info-name:hover { background: var(--bg-3); }
+.info-name:focus { background: var(--bg-3); box-shadow: 0 0 0 2px var(--blue); }
+.edit-hint {
+  font-size: 11px; color: var(--text-3);
+  display: flex; align-items: center; gap: 3px; opacity: 0;
+  transition: opacity 0.15s; pointer-events: none;
+}
+.info-name-row:hover .edit-hint { opacity: 1; }
+
+/* 可编辑行：描述 */
+.info-desc {
+  font-size: 13px; color: var(--text-2); line-height: 1.7;
+  cursor: text; border-radius: 6px; padding: 2px 6px;
+  transition: background 0.15s; outline: none;
+  min-height: 22px;
+}
+.info-desc:hover  { background: var(--bg-3); }
+.info-desc:focus  { background: var(--bg-3); box-shadow: 0 0 0 2px var(--blue); }
+
+/* 右侧元信息 */
+.info-meta {
+  flex-shrink: 0; display: flex; flex-direction: column;
+  align-items: flex-end; gap: 10px;
+}
+.info-meta-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.btn-cancel {
+  padding: 7px 16px; background: transparent;
+  border: 1px solid var(--border-2); border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: var(--text-2);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-cancel:hover { border-color: var(--blue); color: var(--blue); }
+.btn-confirm {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 16px; background: var(--blue);
+  color: #fff; border: none; border-radius: 8px;
+  font-size: 13px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-confirm:hover { opacity: 0.85; }
+.info-badge {
+  padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 500;
+  background: var(--blue-dim); color: var(--blue);
+}
+.info-time {
+  font-size: 11px; color: var(--text-3);
+  display: flex; align-items: center; gap: 4px;
+}
+.info-save-btn {
+  display: none; align-items: center; gap: 4px;
+  padding: 4px 10px; background: var(--blue); color: #fff;
+  border: none; border-radius: 6px; font-size: 11px;
+  font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+}
+.info-save-btn:hover { opacity: 0.85; }
+.info-save-btn.visible { display: flex; }
+
+/* ══════════════════════════════════════
+   主内容：左右分栏
+══════════════════════════════════════ */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── 左侧规则面板 ── */
+.rules-panel {
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: 12px; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.rules-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+/* 标签页 */
+.tab-bar {
+  display: flex; align-items: center; gap: 2px;
+  background: var(--bg-1); border-radius: 8px; padding: 3px;
+}
+.tab-btn {
+  padding: 5px 14px; border-radius: 6px; font-size: 12px;
+  border: none; font-family: inherit; cursor: pointer;
+  color: var(--text-3); background: transparent; transition: all 0.15s;
+}
+.tab-btn.active { background: var(--bg-3); color: var(--text-1); }
+.tab-btn:not(.active):hover { color: var(--text-2); }
+
+/* 上传/新增下拉 */
+.upload-wrap { position: relative; }
+.btn-upload {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 7px;
+  background: transparent; border: 1px solid var(--border-2);
+  color: var(--text-2); font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+}
+.upload-wrap:hover .btn-upload { border-color: var(--blue); color: var(--blue); }
+.upload-dropdown {
+  display: none; position: absolute; top: calc(100% + 6px); right: 0;
+  background: var(--bg-4); border: 1px solid var(--border-2);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  padding: 5px; min-width: 160px; z-index: 50; flex-direction: column;
+}
+.upload-wrap:hover .upload-dropdown { display: flex; }
+.upload-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 7px; border: none;
+  background: transparent; font-size: 12px; font-family: inherit;
+  color: var(--text-2); cursor: pointer; text-align: left; width: 100%;
+  transition: all 0.12s;
+}
+.upload-option:hover { background: var(--bg-3); color: var(--text-1); }
+
+/* 文件列表 */
+.rules-body {
+  flex: 1; overflow-y: auto; padding: 14px 18px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.file-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-3); border: 1px solid var(--border-1);
+  border-radius: 8px; padding: 10px 14px;
+  transition: border-color 0.15s;
+}
+.file-row:hover { border-color: var(--border-2); }
+.file-icon-wrap {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: var(--blue-dim); display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.file-info { flex: 1; min-width: 0; }
+.file-name {
+  font-size: 13px; color: var(--text-1); font-family: var(--font-mono);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.file-size { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.file-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.file-action-btn {
+  padding: 4px 9px; border-radius: 5px; font-size: 11px;
+  border: none; font-family: inherit; cursor: pointer;
+  background: transparent; color: var(--text-3); transition: all 0.15s;
+}
+.file-action-btn:hover { background: var(--bg-4); color: var(--text-1); }
+.file-action-btn.danger:hover { color: var(--rose); }
+.file-sep { width: 1px; height: 12px; background: var(--border-1); }
+
+/* 空状态 */
+.rules-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--text-3); gap: 8px; padding: 32px 0;
+}
+.rules-empty-icon { font-size: 28px; opacity: 0.4; }
+.rules-empty-text { font-size: 12px; }
+
+/* ══════════════════════════════════════
+   文件查看 / 编辑弹框
+══════════════════════════════════════ */
+.file-modal {
+  background: var(--bg-3); border: 1px solid var(--border-2);
+  border-radius: 14px; width: 680px; max-width: 94vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column;
+  max-height: 82vh; overflow: hidden;
+}
+.file-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+.file-modal-title {
+  display: flex; align-items: center; gap: 10px;
+}
+.file-modal-name {
+  font-size: 14px; font-weight: 600; color: var(--text-1);
+  font-family: var(--font-mono);
+}
+.file-modal-badge {
+  font-size: 10px; font-weight: 500; padding: 2px 8px;
+  border-radius: 4px;
+}
+.badge-view { background: var(--bg-4); color: var(--text-3); }
+.badge-edit { background: var(--blue-dim); color: var(--blue); }
+.file-modal-close {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; color: var(--text-3);
+  background: none; border: none; font-family: inherit; transition: all 0.15s;
+}
+.file-modal-close:hover { background: var(--bg-4); color: var(--text-1); }
+.file-modal-body {
+  flex: 1; overflow: hidden; display: flex; flex-direction: column;
+}
+.file-modal-textarea {
+  flex: 1; width: 100%; background: var(--bg-1);
+  border: none; outline: none; resize: none;
+  padding: 16px 20px; font-size: 12px; font-family: var(--font-mono);
+  color: var(--text-1); line-height: 1.8; tab-size: 2;
+}
+.file-modal-textarea[readonly] { color: var(--text-2); cursor: default; }
+.file-modal-footer {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+.btn-modal-cancel {
+  padding: 7px 18px; background: transparent;
+  border: 1px solid var(--border-2); border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: var(--text-2);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-modal-cancel:hover { color: var(--text-1); border-color: var(--border-2); }
+.btn-modal-save {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 18px; background: var(--blue);
+  color: #fff; border: none; border-radius: 8px;
+  font-size: 13px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-modal-save:hover { opacity: 0.85; }
+
+/* ── 右侧调试面板 ── */
+.debug-panel {
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: 12px; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.debug-header {
+  padding: 14px 18px; border-bottom: 1px solid var(--border-1);
+  font-size: 13px; font-weight: 600; color: var(--text-1);
+  display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+}
+.debug-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-3);
+}
+.debug-dot.ready { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+.debug-body {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* 上传调试文件区 */
+.debug-upload {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-1); flex-shrink: 0;
+}
+.debug-upload-label {
+  font-size: 11px; color: var(--text-3); margin-bottom: 8px;
+  letter-spacing: 0.4px;
+}
+.debug-drop {
+  border: 1px dashed var(--border-2); border-radius: 8px;
+  padding: 14px; text-align: center; cursor: pointer;
+  transition: all 0.15s; background: var(--bg-1);
+}
+.debug-drop:hover { border-color: var(--blue); background: var(--blue-dim); }
+.debug-drop.has-file { border-style: solid; border-color: var(--green); background: var(--green-dim); }
+.debug-drop-text { font-size: 12px; color: var(--text-3); }
+.debug-drop.has-file .debug-drop-text { color: var(--green); }
+.debug-file-name {
+  font-size: 12px; color: var(--green); font-family: var(--font-mono);
+  display: none;
+}
+.debug-drop.has-file .debug-file-name { display: block; }
+.debug-drop.has-file .debug-drop-text { display: none; }
+
+/* 调试结果区 */
+.debug-result {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 14px 18px; overflow: hidden;
+}
+.debug-result-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; flex-shrink: 0;
+}
+.debug-result-label { font-size: 11px; color: var(--text-3); letter-spacing: 0.4px; }
+.btn-run {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 7px;
+  background: var(--blue); color: #fff;
+  border: none; font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.btn-run:hover { opacity: 0.85; }
+.btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-run.running { background: var(--bg-4); color: var(--text-3); cursor: not-allowed; }
+
+.result-box {
+  flex: 1; background: var(--bg-1);
+  border: 1px solid var(--border-1); border-radius: 8px;
+  padding: 0; overflow-y: auto;
+}
+.result-placeholder {
+  padding: 16px; font-size: 12px; color: var(--text-3); opacity: 0.6;
+}
+/* 结构化结果条目 */
+.result-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-1);
+}
+.result-item:last-child { border-bottom: none; }
+.result-field-label {
+  font-size: 10px; color: var(--text-3);
+  letter-spacing: 0.6px; margin-bottom: 5px;
+  text-transform: uppercase;
+}
+.result-field-value {
+  font-size: 13px; color: var(--text-1); line-height: 1.65;
+}
+.result-field-value.mono {
+  font-family: var(--font-mono); color: var(--blue); font-size: 12px;
+}
+.result-field-value.muted { color: var(--text-2); }
+/* 下载按钮 */
+.btn-download {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 7px;
+  background: transparent; border: 1px solid var(--border-2);
+  color: var(--text-3); font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-download:hover { border-color: var(--blue); color: var(--blue); }
+.btn-download:disabled { opacity: 0.3; cursor: not-allowed; }
+
+</style>
+</head>
+<body>
+
+<!-- 面包屑 -->
+<div class="breadcrumb">
+  <a onclick="goList()">行业洞察</a>
+  <span class="breadcrumb-sep">›</span>
+  <a onclick="goBack()">洞察模板</a>
+  <span class="breadcrumb-sep">›</span>
+  <span class="breadcrumb-cur">风电技术方法提取模板</span>
+</div>
+
+<!-- ══ 顶部信息卡 ══ -->
+<div class="info-card">
+  <div class="info-main">
+    <div class="info-name-row">
+      <div
+        class="info-name"
+        id="info-name"
+        contenteditable="true"
+        spellcheck="false"
+        oninput="onInfoEdit()"
+        onblur="onInfoBlur()"
+      >风电技术方法提取模板</div>
+      <span class="edit-hint">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3z"/></svg>
+        点击编辑
+      </span>
+    </div>
+    <div
+      class="info-desc"
+      id="info-desc"
+      contenteditable="true"
+      spellcheck="false"
+      oninput="onInfoEdit()"
+      onblur="onInfoBlur()"
+    >面向风电领域的综合方法提取模板，涵盖功率预测、风速建模、叶片故障检测等核心任务，配置了针对气象数据与 SCADA 日志的专项抽取策略。</div>
+  </div>
+
+  <div class="info-meta">
+    <span class="info-badge">风电本体 v2</span>
+    <div class="info-time" id="info-time">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+      上次编辑：2026-03-15
+    </div>
+    <button class="info-save-btn" id="info-save-btn" onclick="saveInfo()">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9l4 4 8-8"/></svg>
+      保存
+    </button>
+    <div class="info-meta-actions">
+      <button class="btn-cancel" onclick="goBack()">← 返回</button>
+      <button class="btn-confirm" onclick="goConfirm()">
+        确认使用
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 主内容：左右分栏 ══ -->
+<div class="main-layout" style="margin-bottom: 0;">
+
+  <!-- ── 左侧：规则文件 ── -->
+  <div class="rules-panel">
+    <div class="rules-header">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(this,'extract')">文献抽取</button>
+        <button class="tab-btn" onclick="switchTab(this,'mapping')">数据集映射</button>
+      </div>
+      <div class="upload-wrap">
+        <button class="btn-upload">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v8M4 6l4-4 4 4"/><path d="M2 12h12"/></svg>
+          上传 / 新增
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="upload-dropdown">
+          <button class="upload-option" onclick="document.getElementById('input-extract').click()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+            上传文献抽取规则
+          </button>
+          <button class="upload-option" onclick="document.getElementById('input-mapping').click()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h5v6H2zM9 5h5v6H9z"/><path d="M7 8h2"/></svg>
+            数据映射规则
+          </button>
+        </div>
+      </div>
+      <input type="file" id="input-extract" accept=".yaml,.yml,.json" multiple style="display:none" onchange="handleRuleUpload(this,'extract')">
+      <input type="file" id="input-mapping" accept=".yaml,.yml,.json" multiple style="display:none" onchange="handleRuleUpload(this,'mapping')">
+    </div>
+
+    <!-- 文献抽取面板 -->
+    <div class="rules-body" id="panel-extract">
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">wind_power_extract.yaml</div>
+          <div class="file-size">2.4 KB · 最近修改 2026-03-14</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('wind_power_extract.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('wind_power_extract.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'wind_power_extract.yaml')">删除</button>
+        </div>
+      </div>
+
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">wind_speed_model.yaml</div>
+          <div class="file-size">1.8 KB · 最近修改 2026-03-10</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('wind_speed_model.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('wind_speed_model.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'wind_speed_model.yaml')">删除</button>
+        </div>
+      </div>
+
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">fault_detection_rules.yaml</div>
+          <div class="file-size">3.1 KB · 最近修改 2026-03-08</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('fault_detection_rules.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('fault_detection_rules.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'fault_detection_rules.yaml')">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据集映射面板（默认隐藏） -->
+    <div class="rules-body" id="panel-mapping" style="display:none">
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">era5_field_mapping.yaml</div>
+          <div class="file-size">1.2 KB · 最近修改 2026-03-12</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('era5_field_mapping.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('era5_field_mapping.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'era5_field_mapping.yaml')">删除</button>
+        </div>
+      </div>
+
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">scada_column_map.yaml</div>
+          <div class="file-size">0.9 KB · 最近修改 2026-03-09</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('scada_column_map.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('scada_column_map.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'scada_column_map.yaml')">删除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 右侧：调试区 ── -->
+  <div class="debug-panel">
+    <div class="debug-header">
+      <div class="debug-dot" id="debug-dot"></div>
+      调试区
+    </div>
+    <div class="debug-body">
+
+      <!-- 上传调试文件 -->
+      <div class="debug-upload">
+        <div class="debug-upload-label">上传调试文件</div>
+        <div class="debug-drop" id="debug-drop"
+          onclick="triggerDebugUpload()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleDebugDrop(event)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:6px;opacity:0.4;display:block;margin-left:auto;margin-right:auto"><path d="M12 16V8M8 12l4-4 4 4"/><path d="M4 20h16"/></svg>
+          <div class="debug-drop-text">拖拽或点击上传文献 / JSON 文件</div>
+          <div class="debug-file-name" id="debug-file-name"></div>
+        </div>
+        <input type="file" id="debug-file-input" accept=".pdf,.json,.txt" style="display:none" onchange="handleDebugUpload(this)">
+      </div>
+
+      <!-- 调试结果 -->
+      <div class="debug-result">
+        <div class="debug-result-header">
+          <span class="debug-result-label">调试结果</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button class="btn-download" id="btn-download" onclick="downloadResult()" disabled>
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2v8M4 10l4 4 4-4"/><path d="M2 14h12"/></svg>
+              下载
+            </button>
+            <button class="btn-run" id="btn-run" onclick="runDebug()" disabled>
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l9 5-9 5V3z" fill="currentColor" stroke="none"/></svg>
+              执行规则
+            </button>
+          </div>
+        </div>
+        <div class="result-box" id="result-box">
+          <div class="result-placeholder">上传调试文件后执行规则，结果将在此处展示…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══ 文件查看 / 编辑弹框 ══ -->
+<div class="modal-overlay" id="file-modal-mask" onclick="if(event.target===this)closeFileModal()">
+  <div class="file-modal" onclick="event.stopPropagation()">
+    <div class="file-modal-header">
+      <div class="file-modal-title">
+        <span class="file-modal-name" id="file-modal-name"></span>
+        <span class="file-modal-badge" id="file-modal-badge"></span>
+      </div>
+      <button class="file-modal-close" onclick="closeFileModal()">×</button>
+    </div>
+    <div class="file-modal-body">
+      <textarea class="file-modal-textarea" id="file-modal-textarea" spellcheck="false"></textarea>
+    </div>
+    <div class="file-modal-footer" id="file-modal-footer"></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════
+   信息卡：行内编辑
+════════════════════════════ */
+let infoEdited = false;
+function onInfoEdit() {
+  infoEdited = true;
+  document.getElementById('info-save-btn').classList.add('visible');
+}
+function onInfoBlur() {
+  /* 延迟判断：若焦点移到保存按钮则不隐藏 */
+  setTimeout(() => {
+    const active = document.activeElement;
+    if (active && active.id === 'info-save-btn') return;
+    if (!infoEdited) document.getElementById('info-save-btn').classList.remove('visible');
+  }, 150);
+}
+function saveInfo() {
+  infoEdited = false;
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  document.getElementById('info-time').innerHTML =
+    `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg> 上次编辑：${dateStr}`;
+  document.getElementById('info-save-btn').classList.remove('visible');
+}
+
+/* ════════════════════════════
+   规则文件：标签页
+════════════════════════════ */
+function switchTab(el, tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-extract').style.display = tab === 'extract' ? 'flex' : 'none';
+  document.getElementById('panel-mapping').style.display = tab === 'mapping' ? 'flex' : 'none';
+}
+
+/* 规则文件操作（mock） */
+function handleRuleUpload(input, type) {
+  const files = Array.from(input.files);
+  const label = type === 'mapping' ? '数据映射规则' : '文献抽取规则';
+  files.forEach(f => alert(`已上传${label}：${f.name}`));
+  input.value = '';
+}
+/* ════════════════════════════
+   文件查看 / 编辑弹框
+════════════════════════════ */
+const mockFileContent = {
+  'wind_power_extract.yaml': `# 风电功率预测方法抽取规则
+name: wind_power_extract
+version: "1.0"
+description: 针对风电功率预测任务的文献方法抽取配置
+
+fields:
+  - key: method_name
+    label: 方法名称
+    patterns:
+      - "we (propose|present|introduce) (a |an |the )?(?P<value>[\\w\\s\\-]+model)"
+      - "(?P<value>[A-Z]{2,}(?:[\\-/][A-Z]+)*) (is used|was applied|outperforms)"
+    required: true
+
+  - key: input_features
+    label: 输入特征
+    patterns:
+      - "input features? (include|consist of|are) (?P<value>[^.]+)"
+      - "using (?P<value>[\\w,\\s]+) as (input|predictor)"
+    required: false
+
+  - key: prediction_horizon
+    label: 预测时效
+    patterns:
+      - "(?P<value>\\d+[\\-–]\\d+|\\d+)\\s*(hour|h|step)[\\-s]?\\s*ahead"
+      - "(short[\\-]term|day[\\-]ahead|ultra[\\-]short[\\-]term)"
+    required: false
+
+  - key: evaluation_metric
+    label: 评估指标
+    patterns:
+      - "(RMSE|MAE|MAPE|R²|NMAE|NRMSE)[\\s=:]+(?P<value>[\\d.]+)"
+    required: false
+
+filters:
+  min_confidence: 0.75
+  language: ["en", "zh"]
+  year_range: [2015, 2026]`,
+
+  'wind_speed_model.yaml': `# 风速建模方法抽取规则
+name: wind_speed_model
+version: "1.0"
+description: 提取风速预测与建模相关方法信息
+
+fields:
+  - key: model_type
+    label: 模型类型
+    patterns:
+      - "(?P<value>LSTM|GRU|CNN|Transformer|ARIMA|SVM|RF|XGBoost)[\\s\\-]+(based|model|network)"
+      - "(deep learning|machine learning|statistical) (model|method|approach)"
+    required: true
+
+  - key: spatial_resolution
+    label: 空间分辨率
+    patterns:
+      - "(?P<value>[\\d.]+)\\s*(km|m|°)\\s*(resolution|grid|spacing)"
+      - "resolution (of|about|approximately) (?P<value>[\\d.]+\\s*(km|m))"
+    required: false
+
+  - key: data_source
+    label: 数据来源
+    patterns:
+      - "(ERA5|MERRA|NCEP|ECMWF|SCADA|LiDAR)[\\w\\-]*"
+      - "reanalysis (data|dataset) from (?P<value>[\\w\\s]+)"
+    required: false
+
+filters:
+  min_confidence: 0.70`,
+
+  'fault_detection_rules.yaml': `# 风机故障检测方法抽取规则
+name: fault_detection_rules
+version: "2.0"
+description: 面向风机叶片、齿轮箱、发电机的故障诊断方法提取
+
+fields:
+  - key: fault_type
+    label: 故障类型
+    enum:
+      - blade_crack
+      - gearbox_wear
+      - generator_overheat
+      - yaw_misalignment
+      - pitch_fault
+    patterns:
+      - "(blade|gearbox|generator|yaw|pitch)\\s*(fault|failure|defect|damage)"
+    required: true
+
+  - key: detection_method
+    label: 检测方法
+    patterns:
+      - "(?P<value>[\\w\\s]+)\\s+(is used|was proposed) (for|to detect)"
+      - "(vibration|acoustic|thermal|electrical) signal (analysis|processing)"
+    required: true
+
+  - key: dataset
+    label: 实验数据集
+    patterns:
+      - "(CWRU|NREL|OpenFAST|SCADA)[\\w\\-]* (dataset|data|benchmark)"
+    required: false
+
+post_process:
+  normalize_keys: true
+  deduplicate: true`,
+
+  'era5_field_mapping.yaml': `# ERA5 字段映射规则
+name: era5_field_mapping
+version: "1.0"
+description: 将 ERA5 再分析数据字段映射到本体属性
+
+mappings:
+  - era5_var: "10m_u_component_of_wind"
+    short_name: u10
+    ontology_property: "WindSpeed_U10"
+    unit: "m/s"
+    description: 距地面10米高度纬向风速分量
+
+  - era5_var: "10m_v_component_of_wind"
+    short_name: v10
+    ontology_property: "WindSpeed_V10"
+    unit: "m/s"
+    description: 距地面10米高度经向风速分量
+
+  - era5_var: "100m_u_component_of_wind"
+    short_name: u100
+    ontology_property: "WindSpeed_U100"
+    unit: "m/s"
+    description: 轮毂高度（100m）纬向风速
+
+  - era5_var: "100m_v_component_of_wind"
+    short_name: v100
+    ontology_property: "WindSpeed_V100"
+    unit: "m/s"
+    description: 轮毂高度（100m）经向风速
+
+  - era5_var: "surface_pressure"
+    short_name: sp
+    ontology_property: "AtmosphericPressure"
+    unit: "Pa"
+    description: 地面大气压
+
+  - era5_var: "2m_temperature"
+    short_name: t2m
+    ontology_property: "AirTemperature_2m"
+    unit: "K"
+    description: 距地面2米气温
+
+spatial:
+  grid_resolution: 0.25  # degree
+  regrid_method: bilinear`,
+
+  'scada_column_map.yaml': `# SCADA 数据列名映射规则
+name: scada_column_map
+version: "1.0"
+description: 统一不同厂商SCADA数据列名到标准本体字段
+
+mappings:
+  - pattern: ["WindSpeed", "wind_speed", "WS_avg", "WndSpd"]
+    ontology_property: "ActiveWindSpeed"
+    unit: "m/s"
+
+  - pattern: ["ActivePower", "P_avg", "Power", "Pact"]
+    ontology_property: "ActivePower"
+    unit: "kW"
+
+  - pattern: ["RotorSpeed", "RPM", "rotor_rpm", "GenRPM"]
+    ontology_property: "RotorSpeed"
+    unit: "rpm"
+
+  - pattern: ["NacelleDirection", "NacDir", "yaw_pos"]
+    ontology_property: "NacelleYawAngle"
+    unit: "degree"
+
+  - pattern: ["PitchAngle", "PitchPos", "blade_pitch"]
+    ontology_property: "BladePitchAngle"
+    unit: "degree"
+
+  - pattern: ["AmbientTemp", "Temp_amb", "T_out"]
+    ontology_property: "AmbientTemperature"
+    unit: "°C"
+
+validation:
+  drop_na_threshold: 0.3
+  outlier_method: iqr
+  iqr_multiplier: 1.5`,
+};
+
+function openFileModal(name, mode) {
+  const content = mockFileContent[name] || `# ${name}\n# 暂无内容`;
+  const ta = document.getElementById('file-modal-textarea');
+  ta.value = content;
+  ta.readOnly = (mode === 'view');
+
+  document.getElementById('file-modal-name').textContent = name;
+  const badge = document.getElementById('file-modal-badge');
+  badge.textContent = mode === 'view' ? '查看' : '编辑';
+  badge.className = `file-modal-badge ${mode === 'view' ? 'badge-view' : 'badge-edit'}`;
+
+  const footer = document.getElementById('file-modal-footer');
+  if (mode === 'view') {
+    footer.innerHTML = `<button class="btn-modal-cancel" onclick="closeFileModal()">关闭</button>`;
+  } else {
+    footer.innerHTML = `
+      <button class="btn-modal-cancel" onclick="closeFileModal()">取消</button>
+      <button class="btn-modal-save" onclick="saveFileContent('${name}')">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9l4 4 8-8"/></svg>
+        保存
+      </button>`;
+  }
+
+  document.getElementById('file-modal-mask').classList.add('active');
+}
+function closeFileModal() {
+  document.getElementById('file-modal-mask').classList.remove('active');
+}
+function saveFileContent(name) {
+  mockFileContent[name] = document.getElementById('file-modal-textarea').value;
+  closeFileModal();
+}
+
+function viewFile(name) { openFileModal(name, 'view'); }
+function editFile(name) { openFileModal(name, 'edit'); }
+function deleteFile(btn, name) {
+  if (!confirm(`确认删除 ${name}？`)) return;
+  btn.closest('.file-row').remove();
+}
+
+/* ════════════════════════════
+   调试区
+════════════════════════════ */
+let debugFileReady = false;
+
+function triggerDebugUpload() { document.getElementById('debug-file-input').click(); }
+
+function handleDebugUpload(input) {
+  const f = input.files[0];
+  if (!f) return;
+  setDebugFile(f.name);
+  input.value = '';
+}
+function handleDebugDrop(e) {
+  e.preventDefault();
+  document.getElementById('debug-drop').classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) setDebugFile(f.name);
+}
+function setDebugFile(name) {
+  debugFileReady = true;
+  const drop = document.getElementById('debug-drop');
+  drop.classList.add('has-file');
+  document.getElementById('debug-file-name').textContent = name;
+  document.getElementById('btn-run').disabled = false;
+  document.getElementById('debug-dot').classList.add('ready');
+}
+
+const mockResults = [
+  {
+    label: 'DOI',
+    value: '10.3402/tellusa.v65i0.21206',
+    style: 'mono'
+  },
+  {
+    label: '是否使用 ERA5',
+    value: '否',
+    style: ''
+  },
+  {
+    label: '论文题目',
+    value: 'Comparison of non-homogeneous regression models for probabilistic wind speed forecasting',
+    style: ''
+  },
+  {
+    label: '发表年份',
+    value: '2013 年，发表于 Tellus A: Dynamic Meteorology and Oceanography',
+    style: 'muted'
+  },
+  {
+    label: '空间分辨率',
+    value: '混合尺度（注：ECMWF 原始集成预报场具有约 33 km 的水平网格分辨率（horizontal resolution of about 33 km），但研究随后通过双线性插值（bilinear interpolation）将网格输出转化落脚于 228 个具体天气观测站（synoptic observation stations）的单点位置进行评估与预测）',
+    style: 'muted'
+  },
+  {
+    label: '时间分辨率',
+    value: '逐 12 小时（00:00 UTC 与 12:00 UTC 初始化预报）',
+    style: 'muted'
+  },
+  {
+    label: '核心方法',
+    value: 'Non-homogeneous Gaussian Regression (NGR) / EMOS；Ensemble Model Output Statistics',
+    style: ''
+  },
+  {
+    label: '数据来源',
+    value: 'ECMWF EPS 集成预报系统；欧洲 228 个地面气象站观测数据',
+    style: 'muted'
+  },
+];
+
+function runDebug() {
+  const btn = document.getElementById('btn-run');
+  btn.classList.add('running');
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M12 2a10 10 0 0 1 10 10"/></svg> 执行中…`;
+  document.getElementById('result-box').innerHTML = '<div class="result-placeholder">正在执行规则，请稍候…</div>';
+
+  setTimeout(() => {
+    btn.classList.remove('running');
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l9 5-9 5V3z" fill="currentColor" stroke="none"/></svg> 执行规则`;
+
+    const box = document.getElementById('result-box');
+    box.innerHTML = mockResults.map(r => `
+      <div class="result-item">
+        <div class="result-field-label">${r.label}</div>
+        <div class="result-field-value ${r.style}">${r.value}</div>
+      </div>
+    `).join('');
+
+    document.getElementById('btn-download').disabled = false;
+    document.getElementById('debug-dot').classList.add('ready');
+  }, 1800);
+}
+
+function downloadResult() {
+  const lines = mockResults.map(r => `${r.label}\n${r.value}`).join('\n\n');
+  const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'debug_result.txt'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ════════════════════════════
+   跳转
+════════════════════════════ */
+function goList()    { window.location.href = 'IndustryInsights_list.html'; }
+function goBack()    { window.location.href = 'IndustryInsights_templatelist.html'; }
+function goConfirm() { window.location.href = 'IndustryInsights_setting.html'; }
+</script>
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</body>
+</html>
