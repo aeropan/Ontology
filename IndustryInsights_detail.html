@@ -336,22 +336,45 @@ body {
 .upload-modal-title { font-size: 14px; font-weight: 600; }
 .upload-modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
 
-/* 标签切换 */
-.tab-bar {
-  display: flex; gap: 0;
+/* ── 增量洞察下拉按钮 ── */
+.dropdown-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.btn-increment {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  background: var(--bg-2); border: 1px solid var(--border-2);
+  border-radius: 8px; font-size: 12px; font-family: inherit;
+  color: var(--text-2); cursor: pointer; transition: all 0.15s;
+}
+.btn-increment:hover { color: var(--text-1); border-color: var(--blue); }
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
   background: var(--bg-4);
-  border-radius: 8px;
-  padding: 3px;
-  margin-bottom: 18px;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  padding: 6px;
+  min-width: 158px;
+  z-index: 50;
+  flex-direction: column;
+  gap: 2px;
 }
-.tab-btn {
-  flex: 1; padding: 7px 0;
-  font-size: 12px; font-family: inherit;
-  border: none; border-radius: 6px;
-  cursor: pointer; transition: all 0.15s;
-  background: transparent; color: var(--text-3);
+.dropdown-wrap:hover .dropdown-menu { display: flex; }
+.dropdown-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px; font-size: 12px;
+  color: var(--text-2); cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  background: none; border: none; font-family: inherit;
+  text-align: left; width: 100%;
 }
-.tab-btn.active { background: var(--bg-3); color: var(--text-1); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.dropdown-item:hover { background: var(--bg-3); color: var(--text-1); }
 
 /* 上传区 */
 .upload-zone {
@@ -474,14 +497,23 @@ body {
     </div>
   </div>
   <div class="header-actions">
-    <button class="btn-ghost" onclick="openUploadModal('local')">
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M4 6l4-4 4 4"/><path d="M2 12h12v2H2z"/></svg>
-      添加文献
-    </button>
-    <button class="btn-ghost" onclick="openUploadModal('library')">
-      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v10H2z"/><path d="M5 3v10M9 6h4M9 9h4"/></svg>
-      从文献库中添加
-    </button>
+    <div class="dropdown-wrap">
+      <button class="btn-increment">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+        增量洞察
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+      </button>
+      <div class="dropdown-menu">
+        <button class="dropdown-item" onclick="openLocalModal()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v8M4 6l4-4 4 4"/><path d="M2 12h12v2H2z"/></svg>
+          添加文献
+        </button>
+        <button class="dropdown-item" onclick="openLibModal()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v10H2z"/><path d="M5 3v10M9 6h4M9 9h4"/></svg>
+          从文献库中添加
+        </button>
+      </div>
+    </div>
     <button class="btn-primary-sm">
       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h12M8 2v8M4 6l4 4 4-4"/></svg>
       导出报告
@@ -747,55 +779,59 @@ body {
 </div>
 
 <!-- ══════════════════════════════════════════════════
-     文献上传弹窗
+     弹窗①：添加文献（本地上传）
 ══════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="upload-modal-mask" onclick="handleUploadMaskClick(event)">
+<div class="modal-overlay" id="local-modal-mask" onclick="if(event.target===this)closeLocalModal()">
   <div class="upload-modal">
     <div class="upload-modal-header">
-      <div class="upload-modal-title" id="upload-modal-title">添加文献</div>
-      <button class="modal-close" onclick="closeUploadModal()">×</button>
+      <div class="upload-modal-title">添加文献</div>
+      <button class="modal-close" onclick="closeLocalModal()">×</button>
     </div>
     <div class="upload-modal-body">
-
-      <!-- 标签切换 -->
-      <div class="tab-bar">
-        <button class="tab-btn active" id="tab-local" onclick="switchTab('local')">本地上传</button>
-        <button class="tab-btn" id="tab-library" onclick="switchTab('library')">从文献库中添加</button>
-      </div>
-
-      <!-- 本地上传面板 -->
-      <div id="panel-local">
-        <div class="upload-zone" id="upload-zone"
-             ondragover="event.preventDefault();this.classList.add('drag-over')"
-             ondragleave="this.classList.remove('drag-over')"
-             ondrop="handleDrop(event)"
-             onclick="document.getElementById('file-input').click()">
-          <div class="upload-zone-icon">📄</div>
-          <div class="upload-zone-title">拖拽文件到此处，或点击选择文件</div>
-          <div class="upload-zone-hint">
-            支持 <strong>PDF / Word</strong> 格式&emsp;单文件 ≤ 50 MB&emsp;单次 ≤ 20 个
-          </div>
-        </div>
-        <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx" style="display:none" onchange="handleFileSelect(event)"/>
-        <div class="file-list" id="file-list"></div>
-      </div>
-
-      <!-- 文献库面板 -->
-      <div id="panel-library" style="display:none">
-        <div class="lib-search">
-          <input class="search-input" placeholder="搜索文献库…" oninput="filterLib(this.value)" />
-        </div>
-        <div class="lib-list" id="lib-list">
-          <!-- 示例数据 -->
+      <div class="upload-zone" id="upload-zone"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="handleDrop(event)"
+           onclick="document.getElementById('file-input').click()">
+        <div class="upload-zone-icon">📄</div>
+        <div class="upload-zone-title">拖拽文件到此处，或点击选择文件</div>
+        <div class="upload-zone-hint">
+          支持 <strong>PDF / Word</strong> 格式&emsp;单文件 ≤ 50 MB&emsp;单次 ≤ 20 个
         </div>
       </div>
-
+      <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx" style="display:none" onchange="handleFileSelect(event)"/>
+      <div class="file-list" id="file-list"></div>
     </div>
     <div class="upload-modal-footer">
-      <div class="footer-selected" id="upload-footer-note">未选择文件</div>
+      <div class="footer-selected" id="local-footer-note">未选择文件</div>
       <div class="footer-actions">
-        <button class="btn-cancel" onclick="closeUploadModal()">取消</button>
-        <button class="btn-confirm" onclick="confirmUpload()">确认添加</button>
+        <button class="btn-cancel" onclick="closeLocalModal()">取消</button>
+        <button class="btn-confirm" onclick="confirmLocalUpload()">确认添加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     弹窗②：从文献库中添加
+══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="lib-modal-mask" onclick="if(event.target===this)closeLibModal()">
+  <div class="upload-modal">
+    <div class="upload-modal-header">
+      <div class="upload-modal-title">从文献库中添加</div>
+      <button class="modal-close" onclick="closeLibModal()">×</button>
+    </div>
+    <div class="upload-modal-body">
+      <div class="lib-search">
+        <input class="search-input" placeholder="搜索文献库…" oninput="filterLib(this.value)" />
+      </div>
+      <div class="lib-list" id="lib-list"></div>
+    </div>
+    <div class="upload-modal-footer">
+      <div class="footer-selected" id="lib-footer-note">未选择文献</div>
+      <div class="footer-actions">
+        <button class="btn-cancel" onclick="closeLibModal()">取消</button>
+        <button class="btn-confirm" onclick="confirmLibUpload()">确认添加</button>
       </div>
     </div>
   </div>
@@ -912,28 +948,41 @@ const libData = [
   { id: 5, title: 'Ensemble methods for short-term wind power forecasting', meta: 'Chen et al. · 2024 · Energy Conversion and Management' },
 ];
 
-function openUploadModal(tab) {
+/* ═══ 弹窗① 本地上传 ═══ */
+function openLocalModal() {
   selectedFiles = [];
-  selectedLibIds = new Set();
   renderFileList();
+  document.getElementById('local-modal-mask').classList.add('active');
+}
+function closeLocalModal() {
+  document.getElementById('local-modal-mask').classList.remove('active');
+}
+function handleLocalMaskClick(e) {
+  if (e.target === document.getElementById('local-modal-mask')) closeLocalModal();
+}
+function confirmLocalUpload() {
+  if (!selectedFiles.length) { alert('请先选择要上传的文件'); return; }
+  alert(`已添加 ${selectedFiles.length} 个文件，正在解析中…`);
+  closeLocalModal();
+}
+
+/* ═══ 弹窗② 文献库 ═══ */
+function openLibModal() {
+  selectedLibIds = new Set();
   renderLibList(libData);
-  switchTab(tab);
-  document.getElementById('upload-modal-mask').classList.add('active');
+  updateLibFooter();
+  document.getElementById('lib-modal-mask').classList.add('active');
 }
-
-function closeUploadModal() {
-  document.getElementById('upload-modal-mask').classList.remove('active');
+function closeLibModal() {
+  document.getElementById('lib-modal-mask').classList.remove('active');
 }
-function handleUploadMaskClick(e) {
-  if (e.target === document.getElementById('upload-modal-mask')) closeUploadModal();
+function handleLibMaskClick(e) {
+  if (e.target === document.getElementById('lib-modal-mask')) closeLibModal();
 }
-
-function switchTab(tab) {
-  document.getElementById('tab-local').classList.toggle('active', tab === 'local');
-  document.getElementById('tab-library').classList.toggle('active', tab === 'library');
-  document.getElementById('panel-local').style.display = tab === 'local' ? '' : 'none';
-  document.getElementById('panel-library').style.display = tab === 'library' ? '' : 'none';
-  updateFooterNote();
+function confirmLibUpload() {
+  if (!selectedLibIds.size) { alert('请先选择要添加的文献'); return; }
+  alert(`已添加 ${selectedLibIds.size} 篇文献，正在解析中…`);
+  closeLibModal();
 }
 
 function handleFileSelect(e) {
@@ -966,7 +1015,7 @@ function renderFileList() {
       <button class="file-remove" onclick="removeFile(${i})">×</button>
     </div>
   `).join('');
-  updateFooterNote();
+  updateLocalFooter();
 }
 
 function renderLibList(data) {
@@ -989,27 +1038,19 @@ function toggleLib(id, el) {
   el.classList.toggle('selected');
   const cb = el.querySelector('.lib-checkbox');
   cb.innerHTML = selectedLibIds.has(id) ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg>' : '';
-  updateFooterNote();
+  updateLibFooter();
 }
 function filterLib(kw) {
   const filtered = libData.filter(d => d.title.toLowerCase().includes(kw.toLowerCase()));
   renderLibList(filtered);
 }
-function updateFooterNote() {
-  const isLocal = document.getElementById('tab-local').classList.contains('active');
-  const note = document.getElementById('upload-footer-note');
-  if (isLocal) {
-    note.innerHTML = selectedFiles.length ? `已选择 <strong>${selectedFiles.length}</strong> 个文件` : '未选择文件';
-  } else {
-    note.innerHTML = selectedLibIds.size ? `已选择 <strong>${selectedLibIds.size}</strong> 篇文献` : '未选择文献';
-  }
+function updateLocalFooter() {
+  const note = document.getElementById('local-footer-note');
+  if (note) note.innerHTML = selectedFiles.length ? `已选择 <strong>${selectedFiles.length}</strong> 个文件` : '未选择文件';
 }
-function confirmUpload() {
-  const isLocal = document.getElementById('tab-local').classList.contains('active');
-  const count = isLocal ? selectedFiles.length : selectedLibIds.size;
-  if (!count) { alert('请先选择要添加的文献'); return; }
-  alert(`已添加 ${count} 篇文献，正在解析中…`);
-  closeUploadModal();
+function updateLibFooter() {
+  const note = document.getElementById('lib-footer-note');
+  if (note) note.innerHTML = selectedLibIds.size ? `已选择 <strong>${selectedLibIds.size}</strong> 篇文献` : '未选择文献';
 }
 </script>
 </body>
