@@ -216,6 +216,71 @@ body {
 .rules-empty-icon { font-size: 28px; opacity: 0.4; }
 .rules-empty-text { font-size: 12px; }
 
+/* ══════════════════════════════════════
+   文件查看 / 编辑弹框
+══════════════════════════════════════ */
+.file-modal {
+  background: var(--bg-3); border: 1px solid var(--border-2);
+  border-radius: 14px; width: 680px; max-width: 94vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  display: flex; flex-direction: column;
+  max-height: 82vh; overflow: hidden;
+}
+.file-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+.file-modal-title {
+  display: flex; align-items: center; gap: 10px;
+}
+.file-modal-name {
+  font-size: 14px; font-weight: 600; color: var(--text-1);
+  font-family: var(--font-mono);
+}
+.file-modal-badge {
+  font-size: 10px; font-weight: 500; padding: 2px 8px;
+  border-radius: 4px;
+}
+.badge-view { background: var(--bg-4); color: var(--text-3); }
+.badge-edit { background: var(--blue-dim); color: var(--blue); }
+.file-modal-close {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; color: var(--text-3);
+  background: none; border: none; font-family: inherit; transition: all 0.15s;
+}
+.file-modal-close:hover { background: var(--bg-4); color: var(--text-1); }
+.file-modal-body {
+  flex: 1; overflow: hidden; display: flex; flex-direction: column;
+}
+.file-modal-textarea {
+  flex: 1; width: 100%; background: var(--bg-1);
+  border: none; outline: none; resize: none;
+  padding: 16px 20px; font-size: 12px; font-family: var(--font-mono);
+  color: var(--text-1); line-height: 1.8; tab-size: 2;
+}
+.file-modal-textarea[readonly] { color: var(--text-2); cursor: default; }
+.file-modal-footer {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+.btn-modal-cancel {
+  padding: 7px 18px; background: transparent;
+  border: 1px solid var(--border-2); border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: var(--text-2);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-modal-cancel:hover { color: var(--text-1); border-color: var(--border-2); }
+.btn-modal-save {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 18px; background: var(--blue);
+  color: #fff; border: none; border-radius: 8px;
+  font-size: 13px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-modal-save:hover { opacity: 0.85; }
+
 /* ── 右侧调试面板 ── */
 .debug-panel {
   background: var(--bg-2); border: 1px solid var(--border-1);
@@ -553,6 +618,23 @@ body {
 </div>
 
 
+<!-- ══ 文件查看 / 编辑弹框 ══ -->
+<div class="modal-overlay" id="file-modal-mask" onclick="if(event.target===this)closeFileModal()">
+  <div class="file-modal" onclick="event.stopPropagation()">
+    <div class="file-modal-header">
+      <div class="file-modal-title">
+        <span class="file-modal-name" id="file-modal-name"></span>
+        <span class="file-modal-badge" id="file-modal-badge"></span>
+      </div>
+      <button class="file-modal-close" onclick="closeFileModal()">×</button>
+    </div>
+    <div class="file-modal-body">
+      <textarea class="file-modal-textarea" id="file-modal-textarea" spellcheck="false"></textarea>
+    </div>
+    <div class="file-modal-footer" id="file-modal-footer"></div>
+  </div>
+</div>
+
 <script>
 /* ════════════════════════════
    信息卡：行内编辑
@@ -596,8 +678,230 @@ function handleRuleUpload(input, type) {
   files.forEach(f => alert(`已上传${label}：${f.name}`));
   input.value = '';
 }
-function viewFile(name)   { alert(`查看：${name}`); }
-function editFile(name)   { alert(`编辑：${name}`); }
+/* ════════════════════════════
+   文件查看 / 编辑弹框
+════════════════════════════ */
+const mockFileContent = {
+  'wind_power_extract.yaml': `# 风电功率预测方法抽取规则
+name: wind_power_extract
+version: "1.0"
+description: 针对风电功率预测任务的文献方法抽取配置
+
+fields:
+  - key: method_name
+    label: 方法名称
+    patterns:
+      - "we (propose|present|introduce) (a |an |the )?(?P<value>[\\w\\s\\-]+model)"
+      - "(?P<value>[A-Z]{2,}(?:[\\-/][A-Z]+)*) (is used|was applied|outperforms)"
+    required: true
+
+  - key: input_features
+    label: 输入特征
+    patterns:
+      - "input features? (include|consist of|are) (?P<value>[^.]+)"
+      - "using (?P<value>[\\w,\\s]+) as (input|predictor)"
+    required: false
+
+  - key: prediction_horizon
+    label: 预测时效
+    patterns:
+      - "(?P<value>\\d+[\\-–]\\d+|\\d+)\\s*(hour|h|step)[\\-s]?\\s*ahead"
+      - "(short[\\-]term|day[\\-]ahead|ultra[\\-]short[\\-]term)"
+    required: false
+
+  - key: evaluation_metric
+    label: 评估指标
+    patterns:
+      - "(RMSE|MAE|MAPE|R²|NMAE|NRMSE)[\\s=:]+(?P<value>[\\d.]+)"
+    required: false
+
+filters:
+  min_confidence: 0.75
+  language: ["en", "zh"]
+  year_range: [2015, 2026]`,
+
+  'wind_speed_model.yaml': `# 风速建模方法抽取规则
+name: wind_speed_model
+version: "1.0"
+description: 提取风速预测与建模相关方法信息
+
+fields:
+  - key: model_type
+    label: 模型类型
+    patterns:
+      - "(?P<value>LSTM|GRU|CNN|Transformer|ARIMA|SVM|RF|XGBoost)[\\s\\-]+(based|model|network)"
+      - "(deep learning|machine learning|statistical) (model|method|approach)"
+    required: true
+
+  - key: spatial_resolution
+    label: 空间分辨率
+    patterns:
+      - "(?P<value>[\\d.]+)\\s*(km|m|°)\\s*(resolution|grid|spacing)"
+      - "resolution (of|about|approximately) (?P<value>[\\d.]+\\s*(km|m))"
+    required: false
+
+  - key: data_source
+    label: 数据来源
+    patterns:
+      - "(ERA5|MERRA|NCEP|ECMWF|SCADA|LiDAR)[\\w\\-]*"
+      - "reanalysis (data|dataset) from (?P<value>[\\w\\s]+)"
+    required: false
+
+filters:
+  min_confidence: 0.70`,
+
+  'fault_detection_rules.yaml': `# 风机故障检测方法抽取规则
+name: fault_detection_rules
+version: "2.0"
+description: 面向风机叶片、齿轮箱、发电机的故障诊断方法提取
+
+fields:
+  - key: fault_type
+    label: 故障类型
+    enum:
+      - blade_crack
+      - gearbox_wear
+      - generator_overheat
+      - yaw_misalignment
+      - pitch_fault
+    patterns:
+      - "(blade|gearbox|generator|yaw|pitch)\\s*(fault|failure|defect|damage)"
+    required: true
+
+  - key: detection_method
+    label: 检测方法
+    patterns:
+      - "(?P<value>[\\w\\s]+)\\s+(is used|was proposed) (for|to detect)"
+      - "(vibration|acoustic|thermal|electrical) signal (analysis|processing)"
+    required: true
+
+  - key: dataset
+    label: 实验数据集
+    patterns:
+      - "(CWRU|NREL|OpenFAST|SCADA)[\\w\\-]* (dataset|data|benchmark)"
+    required: false
+
+post_process:
+  normalize_keys: true
+  deduplicate: true`,
+
+  'era5_field_mapping.yaml': `# ERA5 字段映射规则
+name: era5_field_mapping
+version: "1.0"
+description: 将 ERA5 再分析数据字段映射到本体属性
+
+mappings:
+  - era5_var: "10m_u_component_of_wind"
+    short_name: u10
+    ontology_property: "WindSpeed_U10"
+    unit: "m/s"
+    description: 距地面10米高度纬向风速分量
+
+  - era5_var: "10m_v_component_of_wind"
+    short_name: v10
+    ontology_property: "WindSpeed_V10"
+    unit: "m/s"
+    description: 距地面10米高度经向风速分量
+
+  - era5_var: "100m_u_component_of_wind"
+    short_name: u100
+    ontology_property: "WindSpeed_U100"
+    unit: "m/s"
+    description: 轮毂高度（100m）纬向风速
+
+  - era5_var: "100m_v_component_of_wind"
+    short_name: v100
+    ontology_property: "WindSpeed_V100"
+    unit: "m/s"
+    description: 轮毂高度（100m）经向风速
+
+  - era5_var: "surface_pressure"
+    short_name: sp
+    ontology_property: "AtmosphericPressure"
+    unit: "Pa"
+    description: 地面大气压
+
+  - era5_var: "2m_temperature"
+    short_name: t2m
+    ontology_property: "AirTemperature_2m"
+    unit: "K"
+    description: 距地面2米气温
+
+spatial:
+  grid_resolution: 0.25  # degree
+  regrid_method: bilinear`,
+
+  'scada_column_map.yaml': `# SCADA 数据列名映射规则
+name: scada_column_map
+version: "1.0"
+description: 统一不同厂商SCADA数据列名到标准本体字段
+
+mappings:
+  - pattern: ["WindSpeed", "wind_speed", "WS_avg", "WndSpd"]
+    ontology_property: "ActiveWindSpeed"
+    unit: "m/s"
+
+  - pattern: ["ActivePower", "P_avg", "Power", "Pact"]
+    ontology_property: "ActivePower"
+    unit: "kW"
+
+  - pattern: ["RotorSpeed", "RPM", "rotor_rpm", "GenRPM"]
+    ontology_property: "RotorSpeed"
+    unit: "rpm"
+
+  - pattern: ["NacelleDirection", "NacDir", "yaw_pos"]
+    ontology_property: "NacelleYawAngle"
+    unit: "degree"
+
+  - pattern: ["PitchAngle", "PitchPos", "blade_pitch"]
+    ontology_property: "BladePitchAngle"
+    unit: "degree"
+
+  - pattern: ["AmbientTemp", "Temp_amb", "T_out"]
+    ontology_property: "AmbientTemperature"
+    unit: "°C"
+
+validation:
+  drop_na_threshold: 0.3
+  outlier_method: iqr
+  iqr_multiplier: 1.5`,
+};
+
+function openFileModal(name, mode) {
+  const content = mockFileContent[name] || `# ${name}\n# 暂无内容`;
+  const ta = document.getElementById('file-modal-textarea');
+  ta.value = content;
+  ta.readOnly = (mode === 'view');
+
+  document.getElementById('file-modal-name').textContent = name;
+  const badge = document.getElementById('file-modal-badge');
+  badge.textContent = mode === 'view' ? '查看' : '编辑';
+  badge.className = `file-modal-badge ${mode === 'view' ? 'badge-view' : 'badge-edit'}`;
+
+  const footer = document.getElementById('file-modal-footer');
+  if (mode === 'view') {
+    footer.innerHTML = `<button class="btn-modal-cancel" onclick="closeFileModal()">关闭</button>`;
+  } else {
+    footer.innerHTML = `
+      <button class="btn-modal-cancel" onclick="closeFileModal()">取消</button>
+      <button class="btn-modal-save" onclick="saveFileContent('${name}')">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9l4 4 8-8"/></svg>
+        保存
+      </button>`;
+  }
+
+  document.getElementById('file-modal-mask').classList.add('active');
+}
+function closeFileModal() {
+  document.getElementById('file-modal-mask').classList.remove('active');
+}
+function saveFileContent(name) {
+  mockFileContent[name] = document.getElementById('file-modal-textarea').value;
+  closeFileModal();
+}
+
+function viewFile(name) { openFileModal(name, 'view'); }
+function editFile(name) { openFileModal(name, 'edit'); }
 function deleteFile(btn, name) {
   if (!confirm(`确认删除 ${name}？`)) return;
   btn.closest('.file-row').remove();
