@@ -148,7 +148,8 @@ body {
 .tab-btn.active { background: var(--bg-3); color: var(--text-1); }
 .tab-btn:not(.active):hover { color: var(--text-2); }
 
-/* 上传/新增按钮 */
+/* 上传/新增下拉 */
+.upload-wrap { position: relative; }
 .btn-upload {
   display: flex; align-items: center; gap: 5px;
   padding: 6px 12px; border-radius: 7px;
@@ -156,7 +157,22 @@ body {
   color: var(--text-2); font-size: 12px; font-family: inherit;
   cursor: pointer; transition: all 0.15s;
 }
-.btn-upload:hover { border-color: var(--blue); color: var(--blue); }
+.upload-wrap:hover .btn-upload { border-color: var(--blue); color: var(--blue); }
+.upload-dropdown {
+  display: none; position: absolute; top: calc(100% + 6px); right: 0;
+  background: var(--bg-4); border: 1px solid var(--border-2);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  padding: 5px; min-width: 160px; z-index: 50; flex-direction: column;
+}
+.upload-wrap:hover .upload-dropdown { display: flex; }
+.upload-option {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 7px; border: none;
+  background: transparent; font-size: 12px; font-family: inherit;
+  color: var(--text-2); cursor: pointer; text-align: left; width: 100%;
+  transition: all 0.12s;
+}
+.upload-option:hover { background: var(--bg-3); color: var(--text-1); }
 
 /* 文件列表 */
 .rules-body {
@@ -348,11 +364,25 @@ body {
         <button class="tab-btn active" onclick="switchTab(this,'extract')">文献抽取</button>
         <button class="tab-btn" onclick="switchTab(this,'mapping')">数据集映射</button>
       </div>
-      <button class="btn-upload" onclick="triggerFileUpload()">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v8M4 6l4-4 4 4"/><path d="M2 12h12"/></svg>
-        上传 / 新增
-      </button>
-      <input type="file" id="rule-file-input" accept=".yaml,.yml,.json" multiple style="display:none" onchange="handleRuleUpload(this)">
+      <div class="upload-wrap">
+        <button class="btn-upload">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v8M4 6l4-4 4 4"/><path d="M2 12h12"/></svg>
+          上传 / 新增
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </button>
+        <div class="upload-dropdown">
+          <button class="upload-option" onclick="document.getElementById('input-extract').click()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+            上传文献抽取规则
+          </button>
+          <button class="upload-option" onclick="document.getElementById('input-mapping').click()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h5v6H2zM9 5h5v6H9z"/><path d="M7 8h2"/></svg>
+            数据映射规则
+          </button>
+        </div>
+      </div>
+      <input type="file" id="input-extract" accept=".yaml,.yml,.json" multiple style="display:none" onchange="handleRuleUpload(this,'extract')">
+      <input type="file" id="input-mapping" accept=".yaml,.yml,.json" multiple style="display:none" onchange="handleRuleUpload(this,'mapping')">
     </div>
 
     <!-- 文献抽取面板 -->
@@ -527,10 +557,10 @@ function switchTab(el, tab) {
 }
 
 /* 规则文件操作（mock） */
-function triggerFileUpload() { document.getElementById('rule-file-input').click(); }
-function handleRuleUpload(input) {
+function handleRuleUpload(input, type) {
   const files = Array.from(input.files);
-  files.forEach(f => alert(`已上传规则文件：${f.name}`));
+  const label = type === 'mapping' ? '数据映射规则' : '文献抽取规则';
+  files.forEach(f => alert(`已上传${label}：${f.name}`));
   input.value = '';
 }
 function viewFile(name)   { alert(`查看：${name}`); }
