@@ -14,27 +14,273 @@ body {
   padding: 24px;
   display: flex;
   flex-direction: column;
+  gap: 0;
 }
 
-/* 主内容区（占满剩余空间） */
-.page-content {
+/* ══════════════════════════════════════
+   面包屑
+══════════════════════════════════════ */
+.breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-3); margin-bottom: 20px;
+  flex-shrink: 0;
+}
+.breadcrumb a { color: var(--text-3); text-decoration: none; cursor: pointer; transition: color 0.15s; }
+.breadcrumb a:hover { color: var(--blue); }
+.breadcrumb-sep { opacity: 0.4; }
+.breadcrumb-cur { color: var(--text-2); }
+
+/* ══════════════════════════════════════
+   顶部信息卡
+══════════════════════════════════════ */
+.info-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+.info-main { flex: 1; min-width: 0; }
+
+/* 可编辑行：名称 */
+.info-name-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.info-name {
+  font-size: 17px; font-weight: 600; color: var(--text-1);
+  cursor: text; border-radius: 6px; padding: 2px 6px;
+  transition: background 0.15s; line-height: 1.4;
+  outline: none;
+}
+.info-name:hover { background: var(--bg-3); }
+.info-name:focus { background: var(--bg-3); box-shadow: 0 0 0 2px var(--blue); }
+.edit-hint {
+  font-size: 11px; color: var(--text-3);
+  display: flex; align-items: center; gap: 3px; opacity: 0;
+  transition: opacity 0.15s; pointer-events: none;
+}
+.info-name-row:hover .edit-hint { opacity: 1; }
+
+/* 可编辑行：描述 */
+.info-desc {
+  font-size: 13px; color: var(--text-2); line-height: 1.7;
+  cursor: text; border-radius: 6px; padding: 2px 6px;
+  transition: background 0.15s; outline: none;
+  min-height: 22px;
+}
+.info-desc:hover  { background: var(--bg-3); }
+.info-desc:focus  { background: var(--bg-3); box-shadow: 0 0 0 2px var(--blue); }
+
+/* 右侧元信息 */
+.info-meta {
+  flex-shrink: 0; display: flex; flex-direction: column;
+  align-items: flex-end; gap: 8px;
+}
+.info-badge {
+  padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 500;
+  background: var(--blue-dim); color: var(--blue);
+}
+.info-time {
+  font-size: 11px; color: var(--text-3);
+  display: flex; align-items: center; gap: 4px;
+}
+.info-save-btn {
+  display: none; align-items: center; gap: 4px;
+  padding: 4px 10px; background: var(--blue); color: #fff;
+  border: none; border-radius: 6px; font-size: 11px;
+  font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+}
+.info-save-btn:hover { opacity: 0.85; }
+.info-save-btn.visible { display: flex; }
+
+/* ══════════════════════════════════════
+   主内容：左右分栏
+══════════════════════════════════════ */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 16px;
   flex: 1;
+  min-height: 0;
 }
 
-/* 底部操作栏 */
-.action-bar {
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: 10px; padding-top: 20px;
-  border-top: 1px solid var(--border-1);
-  margin-top: 24px;
+/* ── 左侧规则面板 ── */
+.rules-panel {
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: 12px; display: flex; flex-direction: column;
+  overflow: hidden;
 }
+.rules-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+/* 标签页 */
+.tab-bar {
+  display: flex; align-items: center; gap: 2px;
+  background: var(--bg-1); border-radius: 8px; padding: 3px;
+}
+.tab-btn {
+  padding: 5px 14px; border-radius: 6px; font-size: 12px;
+  border: none; font-family: inherit; cursor: pointer;
+  color: var(--text-3); background: transparent; transition: all 0.15s;
+}
+.tab-btn.active { background: var(--bg-3); color: var(--text-1); }
+.tab-btn:not(.active):hover { color: var(--text-2); }
+
+/* 上传/新增按钮 */
+.btn-upload {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 7px;
+  background: transparent; border: 1px solid var(--border-2);
+  color: var(--text-2); font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-upload:hover { border-color: var(--blue); color: var(--blue); }
+
+/* 文件列表 */
+.rules-body {
+  flex: 1; overflow-y: auto; padding: 14px 18px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.file-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-3); border: 1px solid var(--border-1);
+  border-radius: 8px; padding: 10px 14px;
+  transition: border-color 0.15s;
+}
+.file-row:hover { border-color: var(--border-2); }
+.file-icon-wrap {
+  width: 30px; height: 30px; border-radius: 7px;
+  background: var(--blue-dim); display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+}
+.file-info { flex: 1; min-width: 0; }
+.file-name {
+  font-size: 13px; color: var(--text-1); font-family: var(--font-mono);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.file-size { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.file-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.file-action-btn {
+  padding: 4px 9px; border-radius: 5px; font-size: 11px;
+  border: none; font-family: inherit; cursor: pointer;
+  background: transparent; color: var(--text-3); transition: all 0.15s;
+}
+.file-action-btn:hover { background: var(--bg-4); color: var(--text-1); }
+.file-action-btn.danger:hover { color: var(--rose); }
+.file-sep { width: 1px; height: 12px; background: var(--border-1); }
+
+/* 空状态 */
+.rules-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--text-3); gap: 8px; padding: 32px 0;
+}
+.rules-empty-icon { font-size: 28px; opacity: 0.4; }
+.rules-empty-text { font-size: 12px; }
+
+/* ── 右侧调试面板 ── */
+.debug-panel {
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: 12px; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.debug-header {
+  padding: 14px 18px; border-bottom: 1px solid var(--border-1);
+  font-size: 13px; font-weight: 600; color: var(--text-1);
+  display: flex; align-items: center; gap: 7px; flex-shrink: 0;
+}
+.debug-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-3);
+}
+.debug-dot.ready { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+.debug-body {
+  flex: 1; display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* 上传调试文件区 */
+.debug-upload {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-1); flex-shrink: 0;
+}
+.debug-upload-label {
+  font-size: 11px; color: var(--text-3); margin-bottom: 8px;
+  letter-spacing: 0.4px;
+}
+.debug-drop {
+  border: 1px dashed var(--border-2); border-radius: 8px;
+  padding: 14px; text-align: center; cursor: pointer;
+  transition: all 0.15s; background: var(--bg-1);
+}
+.debug-drop:hover { border-color: var(--blue); background: var(--blue-dim); }
+.debug-drop.has-file { border-style: solid; border-color: var(--green); background: var(--green-dim); }
+.debug-drop-text { font-size: 12px; color: var(--text-3); }
+.debug-drop.has-file .debug-drop-text { color: var(--green); }
+.debug-file-name {
+  font-size: 12px; color: var(--green); font-family: var(--font-mono);
+  display: none;
+}
+.debug-drop.has-file .debug-file-name { display: block; }
+.debug-drop.has-file .debug-drop-text { display: none; }
+
+/* 调试结果区 */
+.debug-result {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 14px 18px; overflow: hidden;
+}
+.debug-result-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; flex-shrink: 0;
+}
+.debug-result-label { font-size: 11px; color: var(--text-3); letter-spacing: 0.4px; }
+.btn-run {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 7px;
+  background: var(--blue); color: #fff;
+  border: none; font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: opacity 0.15s;
+}
+.btn-run:hover { opacity: 0.85; }
+.btn-run:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-run.running { background: var(--bg-4); color: var(--text-3); cursor: not-allowed; }
+
+.result-box {
+  flex: 1; background: var(--bg-1);
+  border: 1px solid var(--border-1); border-radius: 8px;
+  padding: 12px 14px; font-size: 12px; font-family: var(--font-mono);
+  color: var(--text-3); overflow-y: auto; line-height: 1.7;
+  white-space: pre-wrap; word-break: break-all;
+}
+.result-box.has-result { color: var(--text-2); }
+.result-placeholder { opacity: 0.5; }
+
+/* ══════════════════════════════════════
+   底部操作栏
+══════════════════════════════════════ */
+.action-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 16px; margin-top: 16px;
+  border-top: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+.action-bar-left { font-size: 12px; color: var(--text-3); }
+.action-bar-right { display: flex; align-items: center; gap: 10px; }
 .btn-cancel {
   padding: 8px 20px; background: transparent;
   border: 1px solid var(--border-2); border-radius: 8px;
   font-size: 13px; font-family: inherit; color: var(--text-2);
   cursor: pointer; transition: all 0.15s;
 }
-.btn-cancel:hover { border-color: var(--blue); color: var(--blue); }
+.btn-cancel:hover { border-color: var(--border-2); color: var(--text-1); }
 .btn-confirm {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 20px; background: var(--blue);
@@ -46,21 +292,328 @@ body {
 </head>
 <body>
 
-<!-- 主内容区（暂置空） -->
-<div class="page-content"></div>
+<!-- 面包屑 -->
+<div class="breadcrumb">
+  <a onclick="goList()">行业洞察</a>
+  <span class="breadcrumb-sep">›</span>
+  <a onclick="goBack()">洞察模板</a>
+  <span class="breadcrumb-sep">›</span>
+  <span class="breadcrumb-cur">风电技术方法提取模板</span>
+</div>
 
-<!-- 底部操作栏 -->
+<!-- ══ 顶部信息卡 ══ -->
+<div class="info-card">
+  <div class="info-main">
+    <div class="info-name-row">
+      <div
+        class="info-name"
+        id="info-name"
+        contenteditable="true"
+        spellcheck="false"
+        oninput="onInfoEdit()"
+        onblur="onInfoBlur()"
+      >风电技术方法提取模板</div>
+      <span class="edit-hint">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 2l3 3-8 8H3v-3z"/></svg>
+        点击编辑
+      </span>
+    </div>
+    <div
+      class="info-desc"
+      id="info-desc"
+      contenteditable="true"
+      spellcheck="false"
+      oninput="onInfoEdit()"
+      onblur="onInfoBlur()"
+    >面向风电领域的综合方法提取模板，涵盖功率预测、风速建模、叶片故障检测等核心任务，配置了针对气象数据与 SCADA 日志的专项抽取策略。</div>
+  </div>
+
+  <div class="info-meta">
+    <span class="info-badge">风电本体 v2</span>
+    <div class="info-time" id="info-time">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+      上次编辑：2026-03-15
+    </div>
+    <button class="info-save-btn" id="info-save-btn" onclick="saveInfo()">
+      <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9l4 4 8-8"/></svg>
+      保存
+    </button>
+  </div>
+</div>
+
+<!-- ══ 主内容：左右分栏 ══ -->
+<div class="main-layout" style="margin-bottom: 0;">
+
+  <!-- ── 左侧：规则文件 ── -->
+  <div class="rules-panel">
+    <div class="rules-header">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(this,'extract')">文献抽取</button>
+        <button class="tab-btn" onclick="switchTab(this,'mapping')">数据集映射</button>
+      </div>
+      <button class="btn-upload" onclick="triggerFileUpload()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v8M4 6l4-4 4 4"/><path d="M2 12h12"/></svg>
+        上传 / 新增
+      </button>
+      <input type="file" id="rule-file-input" accept=".yaml,.yml,.json" multiple style="display:none" onchange="handleRuleUpload(this)">
+    </div>
+
+    <!-- 文献抽取面板 -->
+    <div class="rules-body" id="panel-extract">
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">wind_power_extract.yaml</div>
+          <div class="file-size">2.4 KB · 最近修改 2026-03-14</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('wind_power_extract.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('wind_power_extract.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'wind_power_extract.yaml')">删除</button>
+        </div>
+      </div>
+
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">wind_speed_model.yaml</div>
+          <div class="file-size">1.8 KB · 最近修改 2026-03-10</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('wind_speed_model.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('wind_speed_model.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'wind_speed_model.yaml')">删除</button>
+        </div>
+      </div>
+
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">fault_detection_rules.yaml</div>
+          <div class="file-size">3.1 KB · 最近修改 2026-03-08</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('fault_detection_rules.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('fault_detection_rules.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'fault_detection_rules.yaml')">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据集映射面板（默认隐藏） -->
+    <div class="rules-body" id="panel-mapping" style="display:none">
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">era5_field_mapping.yaml</div>
+          <div class="file-size">1.2 KB · 最近修改 2026-03-12</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('era5_field_mapping.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('era5_field_mapping.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'era5_field_mapping.yaml')">删除</button>
+        </div>
+      </div>
+
+      <div class="file-row">
+        <div class="file-icon-wrap">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name">scada_column_map.yaml</div>
+          <div class="file-size">0.9 KB · 最近修改 2026-03-09</div>
+        </div>
+        <div class="file-actions">
+          <button class="file-action-btn" onclick="viewFile('scada_column_map.yaml')">查看</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn" onclick="editFile('scada_column_map.yaml')">编辑</button>
+          <div class="file-sep"></div>
+          <button class="file-action-btn danger" onclick="deleteFile(this,'scada_column_map.yaml')">删除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 右侧：调试区 ── -->
+  <div class="debug-panel">
+    <div class="debug-header">
+      <div class="debug-dot" id="debug-dot"></div>
+      调试区
+    </div>
+    <div class="debug-body">
+
+      <!-- 上传调试文件 -->
+      <div class="debug-upload">
+        <div class="debug-upload-label">上传调试文件</div>
+        <div class="debug-drop" id="debug-drop"
+          onclick="triggerDebugUpload()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleDebugDrop(event)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:6px;opacity:0.4;display:block;margin-left:auto;margin-right:auto"><path d="M12 16V8M8 12l4-4 4 4"/><path d="M4 20h16"/></svg>
+          <div class="debug-drop-text">拖拽或点击上传文献 / JSON 文件</div>
+          <div class="debug-file-name" id="debug-file-name"></div>
+        </div>
+        <input type="file" id="debug-file-input" accept=".pdf,.json,.txt" style="display:none" onchange="handleDebugUpload(this)">
+      </div>
+
+      <!-- 调试结果 -->
+      <div class="debug-result">
+        <div class="debug-result-header">
+          <span class="debug-result-label">调试结果</span>
+          <button class="btn-run" id="btn-run" onclick="runDebug()" disabled>
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l9 5-9 5V3z" fill="currentColor" stroke="none"/></svg>
+            执行规则
+          </button>
+        </div>
+        <div class="result-box" id="result-box">
+          <span class="result-placeholder">上传调试文件后执行规则，结果将在此处展示…</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ 底部操作栏 ══ -->
 <div class="action-bar">
-  <button class="btn-cancel" onclick="goBack()">← 返回</button>
-  <button class="btn-confirm" onclick="goConfirm()">
-    确认使用
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-  </button>
+  <div class="action-bar-left">选择此模板后将自动填充抽取配置</div>
+  <div class="action-bar-right">
+    <button class="btn-cancel" onclick="goBack()">← 返回</button>
+    <button class="btn-confirm" onclick="goConfirm()">
+      确认使用
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </button>
+  </div>
 </div>
 
 <script>
+/* ════════════════════════════
+   信息卡：行内编辑
+════════════════════════════ */
+let infoEdited = false;
+function onInfoEdit() {
+  infoEdited = true;
+  document.getElementById('info-save-btn').classList.add('visible');
+}
+function onInfoBlur() {
+  /* 延迟判断：若焦点移到保存按钮则不隐藏 */
+  setTimeout(() => {
+    const active = document.activeElement;
+    if (active && active.id === 'info-save-btn') return;
+    if (!infoEdited) document.getElementById('info-save-btn').classList.remove('visible');
+  }, 150);
+}
+function saveInfo() {
+  infoEdited = false;
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  document.getElementById('info-time').innerHTML =
+    `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg> 上次编辑：${dateStr}`;
+  document.getElementById('info-save-btn').classList.remove('visible');
+}
+
+/* ════════════════════════════
+   规则文件：标签页
+════════════════════════════ */
+function switchTab(el, tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-extract').style.display = tab === 'extract' ? 'flex' : 'none';
+  document.getElementById('panel-mapping').style.display = tab === 'mapping' ? 'flex' : 'none';
+}
+
+/* 规则文件操作（mock） */
+function triggerFileUpload() { document.getElementById('rule-file-input').click(); }
+function handleRuleUpload(input) {
+  const files = Array.from(input.files);
+  files.forEach(f => alert(`已上传规则文件：${f.name}`));
+  input.value = '';
+}
+function viewFile(name)   { alert(`查看：${name}`); }
+function editFile(name)   { alert(`编辑：${name}`); }
+function deleteFile(btn, name) {
+  if (!confirm(`确认删除 ${name}？`)) return;
+  btn.closest('.file-row').remove();
+}
+
+/* ════════════════════════════
+   调试区
+════════════════════════════ */
+let debugFileReady = false;
+
+function triggerDebugUpload() { document.getElementById('debug-file-input').click(); }
+
+function handleDebugUpload(input) {
+  const f = input.files[0];
+  if (!f) return;
+  setDebugFile(f.name);
+  input.value = '';
+}
+function handleDebugDrop(e) {
+  e.preventDefault();
+  document.getElementById('debug-drop').classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) setDebugFile(f.name);
+}
+function setDebugFile(name) {
+  debugFileReady = true;
+  const drop = document.getElementById('debug-drop');
+  drop.classList.add('has-file');
+  document.getElementById('debug-file-name').textContent = name;
+  document.getElementById('btn-run').disabled = false;
+  document.getElementById('debug-dot').classList.add('ready');
+}
+
+function runDebug() {
+  const btn = document.getElementById('btn-run');
+  btn.classList.add('running');
+  btn.disabled = true;
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M12 2a10 10 0 0 1 10 10"/></svg> 执行中…`;
+  document.getElementById('result-box').innerHTML = '<span class="result-placeholder">正在执行规则，请稍候…</span>';
+
+  setTimeout(() => {
+    btn.classList.remove('running');
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l9 5-9 5V3z" fill="currentColor" stroke="none"/></svg> 执行规则`;
+    const box = document.getElementById('result-box');
+    box.classList.add('has-result');
+    box.textContent =
+`[2026-04-14 12:00:01] 规则加载完成，共 3 条抽取规则
+[2026-04-14 12:00:02] 开始处理文献…
+[2026-04-14 12:00:03] ✓ 命中规则: wind_power_extract — 找到 12 个方法节点
+[2026-04-14 12:00:03] ✓ 命中规则: wind_speed_model   — 找到 8 个方法节点
+[2026-04-14 12:00:04] ✓ 命中规则: fault_detection    — 找到 5 个方法节点
+[2026-04-14 12:00:04] 抽取完成，共 25 个方法节点，置信度 ≥ 0.85`;
+  }, 1800);
+}
+
+/* ════════════════════════════
+   跳转
+════════════════════════════ */
+function goList()    { window.location.href = 'IndustryInsights_list.html'; }
 function goBack()    { window.location.href = 'IndustryInsights_templatelist.html'; }
 function goConfirm() { window.location.href = 'IndustryInsights_setting.html'; }
 </script>
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
 </body>
 </html>
