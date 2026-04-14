@@ -159,12 +159,17 @@ body {
 }
 .upload-wrap:hover .btn-upload { border-color: var(--blue); color: var(--blue); }
 .upload-dropdown {
-  display: none; position: absolute; top: calc(100% + 6px); right: 0;
+  display: none; position: absolute; top: 100%; right: 0;
+  padding-top: 6px;
+  background: transparent;
+  z-index: 50;
+}
+.upload-wrap:hover .upload-dropdown { display: flex; flex-direction: column; }
+.upload-dropdown-inner {
   background: var(--bg-4); border: 1px solid var(--border-2);
   border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  padding: 5px; min-width: 160px; z-index: 50; flex-direction: column;
+  padding: 5px; min-width: 160px; display: flex; flex-direction: column;
 }
-.upload-wrap:hover .upload-dropdown { display: flex; }
 .upload-option {
   display: flex; align-items: center; gap: 8px;
   padding: 8px 10px; border-radius: 7px; border: none;
@@ -463,14 +468,16 @@ body {
           <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
         </button>
         <div class="upload-dropdown">
-          <button class="upload-option" onclick="document.getElementById('input-extract').click()">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
-            上传文献抽取规则
-          </button>
-          <button class="upload-option" onclick="document.getElementById('input-mapping').click()">
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h5v6H2zM9 5h5v6H9z"/><path d="M7 8h2"/></svg>
-            数据映射规则
-          </button>
+          <div class="upload-dropdown-inner">
+            <button class="upload-option" onclick="document.getElementById('input-extract').click()">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h8l3 3v9H3z"/><path d="M11 2v4h3"/><path d="M5 8h6M5 11h4"/></svg>
+              上传文献抽取规则
+            </button>
+            <button class="upload-option" onclick="document.getElementById('input-mapping').click()">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h5v6H2zM9 5h5v6H9z"/><path d="M7 8h2"/></svg>
+              数据映射规则
+            </button>
+          </div>
         </div>
       </div>
       <input type="file" id="input-extract" accept=".yaml,.yml,.json" multiple style="display:none" onchange="handleRuleUpload(this,'extract')">
