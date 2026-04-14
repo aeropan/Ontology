@@ -388,8 +388,32 @@ body {
   font-family: var(--font-mono); color: var(--blue); font-size: 12px;
 }
 .result-field-value.muted { color: var(--text-2); }
-/* 下载按钮 */
-.btn-download {
+/* 全屏按钮 */
+.btn-expand {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px;
+  background: transparent; border: 1px solid var(--border-2);
+  color: var(--text-3); cursor: pointer; transition: all 0.15s;
+}
+.btn-expand:hover { border-color: var(--blue); color: var(--blue); }
+.btn-expand:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* 全屏结果弹框（复用 file-modal 尺寸/样式） */
+.result-modal-body {
+  flex: 1; overflow-y: auto; background: var(--bg-1);
+}
+.result-modal-body::-webkit-scrollbar { width: 4px; }
+.result-modal-body::-webkit-scrollbar-track { background: transparent; }
+.result-modal-body::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+.result-modal-body::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+/* 结果标签（无源码） */
+.result-tag-row { padding: 14px 20px 0; display: flex; gap: 8px; }
+.result-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 5px; font-size: 11px; font-weight: 500;
+  background: var(--rose-dim); color: var(--rose);
+  border: 1px solid rgba(244,63,94,0.25);
+}
   display: flex; align-items: center; gap: 5px;
   padding: 5px 11px; border-radius: 7px;
   background: transparent; border: 1px solid var(--border-2);
@@ -616,6 +640,9 @@ body {
               <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2v8M4 10l4 4 4-4"/><path d="M2 14h12"/></svg>
               下载
             </button>
+            <button class="btn-expand" id="btn-expand" onclick="openResultModal()" disabled title="全屏查看">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+            </button>
             <button class="btn-run" id="btn-run" onclick="runDebug()" disabled>
               <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l9 5-9 5V3z" fill="currentColor" stroke="none"/></svg>
               执行规则
@@ -632,6 +659,28 @@ body {
 
 </div>
 
+
+<!-- ══ 调试结果全屏弹框 ══ -->
+<div class="modal-overlay" id="result-modal-mask" onclick="if(event.target===this)closeResultModal()">
+  <div class="file-modal" onclick="event.stopPropagation()">
+    <div class="file-modal-header">
+      <div class="file-modal-title">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" style="flex-shrink:0"><circle cx="6" cy="6" r="4"/><path d="M10 10l3 3"/></svg>
+        <span class="file-modal-name">调试结果</span>
+        <span class="file-modal-badge badge-view">文献详情</span>
+      </div>
+      <button class="file-modal-close" onclick="closeResultModal()">×</button>
+    </div>
+    <div class="result-modal-body" id="result-modal-body"></div>
+    <div class="file-modal-footer">
+      <button class="btn-modal-cancel" onclick="downloadResult()">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-right:4px"><path d="M8 2v8M4 10l4 4 4-4"/><path d="M2 14h12"/></svg>
+        下载
+      </button>
+      <button class="btn-modal-save" onclick="closeResultModal()" style="background:var(--bg-4);border:1px solid var(--border-2);color:var(--text-2);">关闭</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ 文件查看 / 编辑弹框 ══ -->
 <div class="modal-overlay" id="file-modal-mask" onclick="if(event.target===this)closeFileModal()">
@@ -931,43 +980,28 @@ function setDebugFile(name) {
 
 const mockResults = [
   {
-    label: 'DOI',
-    value: '10.3402/tellusa.v65i0.21206',
-    style: 'mono'
-  },
-  {
-    label: '是否使用 ERA5',
-    value: '否',
-    style: ''
-  },
-  {
     label: '论文题目',
-    value: 'Comparison of non-homogeneous regression models for probabilistic wind speed forecasting',
+    value: 'High-resolution wind speed forecast system coupling numerical weather prediction and machine learning for agricultural studies — a case study from South Korea',
     style: ''
   },
   {
     label: '发表年份',
-    value: '2013 年，发表于 Tellus A: Dynamic Meteorology and Oceanography',
+    value: '2022 年，发表于 International Journal of Biometeorology',
     style: 'muted'
   },
   {
     label: '空间分辨率',
-    value: '混合尺度（注：ECMWF 原始集成预报场具有约 33 km 的水平网格分辨率（horizontal resolution of about 33 km），但研究随后通过双线性插值（bilinear interpolation）将网格输出转化落脚于 228 个具体天气观测站（synoptic observation stations）的单点位置进行评估与预测）',
+    value: '单机级预测 点尺度（注：文献使用了 100m × 100m 的高分辨率网格预报场，但最终落脚于对 104 个农业气象站单点位置的风速进行精确降尺度预测）',
     style: 'muted'
   },
   {
     label: '时间分辨率',
-    value: '逐 12 小时（00:00 UTC 与 12:00 UTC 初始化预报）',
+    value: '短期（预测未来 48 小时，逐小时分辨率）',
     style: 'muted'
   },
   {
-    label: '核心方法',
-    value: 'Non-homogeneous Gaussian Regression (NGR) / EMOS；Ensemble Model Output Statistics',
-    style: ''
-  },
-  {
-    label: '数据来源',
-    value: 'ECMWF EPS 集成预报系统；欧洲 228 个地面气象站观测数据',
+    label: '风场高度 / 离地',
+    value: '10m（注：文献的核心任务是将数值模式 10m 高度的风速，降尺度预测到离地 3m 高度的近地面微风速）',
     style: 'muted'
   },
 ];
@@ -993,8 +1027,29 @@ function runDebug() {
     `).join('');
 
     document.getElementById('btn-download').disabled = false;
+    document.getElementById('btn-expand').disabled = false;
     document.getElementById('debug-dot').classList.add('ready');
   }, 1800);
+}
+
+function openResultModal() {
+  const inner = `
+    <div class="result-tag-row">
+      <span class="result-tag">
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M3 4h10M3 12h6"/></svg>
+        无源码
+      </span>
+    </div>
+    ${mockResults.map(r => `
+      <div class="result-item">
+        <div class="result-field-label">${r.label}</div>
+        <div class="result-field-value ${r.style}">${r.value}</div>
+      </div>`).join('')}`;
+  document.getElementById('result-modal-body').innerHTML = inner;
+  document.getElementById('result-modal-mask').classList.add('active');
+}
+function closeResultModal() {
+  document.getElementById('result-modal-mask').classList.remove('active');
 }
 
 function downloadResult() {
