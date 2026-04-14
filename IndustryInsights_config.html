@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 洞察配置</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
+<style>
+body {
+  min-height: 100vh;
+  padding: 24px 28px;
+}
+
+/* ── 面包屑 ── */
+.page-nav {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-3); margin-bottom: 18px;
+}
+.page-nav a { color: var(--text-2); text-decoration: none; cursor: pointer; }
+.page-nav a:hover { color: var(--blue); }
+.page-nav .sep { color: var(--text-3); }
+.page-nav .current { color: var(--text-1); }
+
+/* ── 步骤条 ── */
+.steps { display: flex; align-items: center; margin-bottom: 28px; }
+.step { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); }
+.step-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; flex-shrink: 0;
+}
+.step.active .step-dot { border-color: var(--blue); color: var(--blue); }
+.step.active { color: var(--text-1); }
+.step.done .step-dot { background: var(--green); border-color: var(--green); color: #fff; }
+.step-line { flex: 1; height: 1px; background: var(--border-1); margin: 0 8px; min-width: 40px; }
+
+/* ── 页头 ── */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 20px; gap: 16px;
+}
+.header-left .page-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.header-left .page-subtitle { font-size: 12px; color: var(--text-3); }
+.header-left .page-subtitle strong { color: var(--text-2); }
+.header-actions { display: flex; gap: 10px; align-items: center; }
+
+/* ── 按钮 ── */
+.btn-back {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  background: var(--bg-2); border: 1px solid var(--border-2);
+  border-radius: 8px; font-size: 13px; font-family: inherit;
+  color: var(--text-2); cursor: pointer; transition: all 0.15s;
+}
+.btn-back:hover { color: var(--text-1); }
+.btn-start {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 20px;
+  background: var(--blue); border: none;
+  border-radius: 8px; font-size: 13px; font-family: inherit;
+  color: #fff; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-start:hover { opacity: 0.85; }
+
+/* ── 摘要卡片 ── */
+.summary-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 0;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.summary-item {
+  flex: 1;
+  padding: 0 20px;
+  border-right: 1px solid var(--border-1);
+}
+.summary-item:first-child { padding-left: 0; }
+.summary-item:last-child { border-right: none; padding-right: 0; }
+.summary-label { font-size: 10px; color: var(--text-3); letter-spacing: 0.5px; margin-bottom: 6px; }
+.summary-value { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.summary-value.accent { color: var(--blue); }
+.summary-link {
+  font-size: 10px; color: var(--blue); cursor: pointer;
+  background: none; border: none; font-family: inherit; padding: 0; margin-top: 4px; display: block;
+}
+.summary-link:hover { text-decoration: underline; }
+
+/* ── 文献选择区 ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.section-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
+.section-count { font-size: 11px; color: var(--text-3); font-family: 'JetBrains Mono', monospace; }
+
+.btn-toggle-all {
+  font-size: 11px; color: var(--blue); cursor: pointer;
+  background: none; border: none; font-family: inherit; padding: 0;
+}
+.btn-toggle-all:hover { text-decoration: underline; }
+
+.table-wrap {
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+}
+.doc-table { width: 100%; border-collapse: collapse; }
+.doc-table thead tr {
+  background: var(--bg-3); border-bottom: 1px solid var(--border-1);
+}
+.doc-table th {
+  padding: 9px 14px; font-size: 11px; font-weight: 500;
+  color: var(--text-3); text-align: left; white-space: nowrap;
+}
+.doc-table th:first-child { width: 40px; }
+.doc-table tbody tr { border-bottom: 1px solid var(--border-1); transition: background 0.12s; }
+.doc-table tbody tr:last-child { border-bottom: none; }
+.doc-table tbody tr:hover { background: var(--bg-3); }
+.doc-table td { padding: 10px 14px; font-size: 12px; color: var(--text-2); vertical-align: middle; }
+.td-title { color: var(--text-1) !important; font-weight: 500; max-width: 480px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.td-mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.status-ok {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--green);
+}
+.status-ok::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; }
+
+/* 自定义复选框 */
+.cb-wrap { display: flex; align-items: center; justify-content: center; }
+input[type="checkbox"].doc-cb {
+  width: 15px; height: 15px; cursor: pointer;
+  accent-color: var(--blue);
+}
+
+/* 展开/折叠 */
+.table-footer {
+  padding: 8px 14px;
+  background: var(--bg-3);
+  border-top: 1px solid var(--border-1);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--text-3);
+}
+.btn-expand {
+  font-size: 11px; color: var(--blue); cursor: pointer;
+  background: none; border: none; font-family: inherit; padding: 0;
+  display: flex; align-items: center; gap: 4px;
+}
+.btn-expand:hover { text-decoration: underline; }
+
+/* ── 抽取参数配置 ── */
+.config-panel {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.config-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-1);
+}
+.config-panel-title { font-size: 13px; font-weight: 600; }
+.config-panel-body { padding: 20px; }
+
+.config-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.config-row.single { grid-template-columns: 1fr; }
+.config-row:last-child { margin-bottom: 0; }
+.config-field { display: flex; flex-direction: column; gap: 6px; }
+.config-label { font-size: 11px; color: var(--text-2); letter-spacing: 0.3px; }
+.config-select {
+  background: var(--bg-3); border: 1px solid var(--border-1);
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 13px; color: var(--text-1); font-family: inherit;
+  outline: none; cursor: pointer; transition: border-color 0.15s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%2394a3b8' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  padding-right: 30px;
+}
+.config-select:focus { border-color: var(--blue); }
+.config-select option { background: var(--bg-3); }
+
+/* curl example */
+.curl-box {
+  background: var(--bg-0);
+  border: 1px solid var(--border-1);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.curl-box-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border-1);
+}
+.curl-box-label { font-size: 10px; color: var(--text-3); letter-spacing: 0.5px; font-family: 'JetBrains Mono', monospace; }
+.btn-copy {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--text-3); cursor: pointer;
+  background: none; border: none; font-family: inherit; padding: 0;
+  transition: color 0.15s;
+}
+.btn-copy:hover { color: var(--text-1); }
+.curl-code {
+  padding: 14px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-2);
+  line-height: 1.85;
+  white-space: pre;
+  overflow-x: auto;
+}
+.curl-code .kw  { color: var(--cyan); }
+.curl-code .str { color: var(--green); }
+.curl-code .var { color: var(--amber); }
+
+/* ── 底部操作栏 ── */
+.action-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 20px; border-top: 1px solid var(--border-1);
+}
+</style>
+</head>
+<body>
+
+<!-- ── 面包屑 ── -->
+<div class="page-nav">
+  <a onclick="window.location.href='IndustryInsights_list.html'">行业洞察</a>
+  <span class="sep">›</span>
+  <a onclick="window.location.href='IndustryInsights_setting.html'">上传文献</a>
+  <span class="sep">›</span>
+  <span class="current">洞察配置</span>
+</div>
+
+<!-- ── 步骤条 ── -->
+<div class="steps">
+  <div class="step done">
+    <div class="step-dot">✓</div>
+    <span>基本信息</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step done">
+    <div class="step-dot">✓</div>
+    <span>上传文献</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step active">
+    <div class="step-dot">3</div>
+    <span>洞察配置</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">4</div>
+    <span>执行抽取</span>
+  </div>
+  <div class="step-line"></div>
+  <div class="step">
+    <div class="step-dot">5</div>
+    <span>查看结果</span>
+  </div>
+</div>
+
+<!-- ── 页头 ── -->
+<div class="page-header">
+  <div class="header-left">
+    <div class="page-title">洞察配置</div>
+    <div class="page-subtitle">配置抽取参数，选择参与抽取的文献后触发抽取任务</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-back" onclick="window.location.href='IndustryInsights_setting.html'">← 返回</button>
+    <button class="btn-start" onclick="startExtract()">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 13,8 5,13"/></svg>
+      开始抽取
+    </button>
+  </div>
+</div>
+
+<!-- ── 摘要卡片 ── -->
+<div class="summary-card">
+  <div class="summary-item">
+    <div class="summary-label">抽取任务名称</div>
+    <div class="summary-value">风电行业技术方法综合洞察</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">行业领域</div>
+    <div class="summary-value">风电</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">已选文献数</div>
+    <div class="summary-value accent" id="selected-count">22</div>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">配置参考</div>
+    <div class="summary-value" id="config-ref">GPT-4o · 基础prompt</div>
+    <button class="summary-link" onclick="document.getElementById('config-panel').scrollIntoView({behavior:'smooth'})">查看配置 ↓</button>
+  </div>
+  <div class="summary-item">
+    <div class="summary-label">预计时长</div>
+    <div class="summary-value accent">3～5 <span style="font-size:11px;font-weight:400;color:var(--text-3)">分钟</span></div>
+  </div>
+</div>
+
+<!-- ── 文献选择 ── -->
+<div class="section-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="section-title">选择参与抽取的文献</span>
+    <button class="btn-toggle-all" onclick="toggleAll()">全选 / 取消全选</button>
+  </div>
+  <span class="section-count" id="sel-label">已选 22 / 24 篇</span>
+</div>
+
+<div class="table-wrap">
+  <table class="doc-table">
+    <thead>
+      <tr>
+        <th><input type="checkbox" class="doc-cb" id="cb-all" checked onchange="toggleAllCb(this.checked)"></th>
+        <th>文献标题</th>
+        <th>年份</th>
+        <th>解析状态</th>
+      </tr>
+    </thead>
+    <tbody id="doc-tbody"></tbody>
+  </table>
+  <div class="table-footer">
+    <span id="footer-count">显示 6 / 24 篇</span>
+    <button class="btn-expand" id="btn-expand" onclick="toggleExpand()">
+      展开全部
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ── 抽取参数配置 ── -->
+<div class="config-panel" id="config-panel">
+  <div class="config-panel-header">
+    <span class="config-panel-title">抽取参数配置</span>
+  </div>
+  <div class="config-panel-body">
+
+    <!-- 抽取模型 -->
+    <div class="config-row">
+      <div class="config-field">
+        <label class="config-label">抽取模型</label>
+        <select class="config-select" id="sel-model" onchange="updateConfigRef()">
+          <option value="gpt4o" selected>GPT-4o（推荐）</option>
+          <option value="gpt4o-mini">GPT-4o mini</option>
+          <option value="gpt35">GPT-3.5 Turbo</option>
+          <option value="claude3">Claude 3.5 Sonnet</option>
+          <option value="qwen">Qwen-Max</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 抽取提示词模板 -->
+    <div class="config-row">
+      <div class="config-field">
+        <label class="config-label">抽取提示词模板</label>
+        <select class="config-select" id="sel-prompt" onchange="updateCurl(); updateConfigRef()">
+          <option value="basic" selected>基础提示词 v1.0</option>
+          <option value="detailed">详细提示词 v2.1</option>
+          <option value="structured">结构化提示词 v1.3</option>
+          <option value="custom">自定义模板</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- curl example -->
+    <div class="config-row single">
+      <div class="config-field">
+        <label class="config-label">curl example</label>
+        <div class="curl-box">
+          <div class="curl-box-header">
+            <span class="curl-box-label">SHELL</span>
+            <button class="btn-copy" onclick="copyCurl()">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="1"/><path d="M3 11H2a1 1 0 01-1-1V2a1 1 0 011-1h8a1 1 0 011 1v1"/></svg>
+              复制
+            </button>
+          </div>
+          <div class="curl-code" id="curl-code"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── 底部操作栏 ── -->
+<div class="action-bar">
+  <button class="btn-back" onclick="window.location.href='IndustryInsights_setting.html'">← 返回上传文献</button>
+  <button class="btn-start" onclick="startExtract()">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 13,8 5,13"/></svg>
+    开始抽取
+  </button>
+</div>
+
+<script>
+/* ════════════════════════════
+   演示数据
+════════════════════════════ */
+const docs = [
+  { title: 'A deep learning-based evolutionary model for short-term wind speed forecasting', year: 2024, selected: true },
+  { title: 'The study and application of a novel hybrid forecasting model', year: 2023, selected: true },
+  { title: 'Forecasting Wind Speed using Artificial Neural Networks', year: 2024, selected: true },
+  { title: 'Wind speed prediction using LSTM and ARIMA time series analysis models', year: 2023, selected: true },
+  { title: 'Hybrid deep learning model for wind power forecasting in complex terrains', year: 2024, selected: true },
+  { title: 'Probabilistic wind power forecasting using deep neural networks', year: 2022, selected: true },
+  { title: 'Short-term wind speed forecasting with stacked autoencoders', year: 2023, selected: true },
+  { title: 'Multivariable LSTM model for offshore wind power prediction', year: 2024, selected: true },
+  { title: 'Data-driven approach for wind turbine performance assessment', year: 2022, selected: true },
+  { title: 'Attention-based CNN-LSTM for wind energy forecasting', year: 2023, selected: true },
+  { title: 'Extreme gradient boosting for wind power prediction', year: 2022, selected: true },
+  { title: 'Ensemble learning methods for renewable energy forecasting', year: 2021, selected: true },
+  { title: 'ERA5 reanalysis data in wind resource assessment', year: 2023, selected: true },
+  { title: 'Physics-informed neural networks for wind simulation', year: 2024, selected: true },
+  { title: 'Graph neural network approach to wind farm optimization', year: 2024, selected: true },
+  { title: 'Transformer-based model for spatio-temporal wind forecasting', year: 2023, selected: true },
+  { title: 'Uncertainty quantification in wind power forecasting', year: 2022, selected: true },
+  { title: 'Bayesian deep learning for wind speed estimation', year: 2021, selected: true },
+  { title: 'Real-time wind forecasting with online learning', year: 2023, selected: true },
+  { title: 'Multi-step ahead wind speed forecasting using wavelet decomposition', year: 2022, selected: true },
+  { title: 'Numerical weather prediction enhanced by machine learning', year: 2023, selected: true },
+  { title: 'Wind power curtailment prediction with reinforcement learning', year: 2024, selected: true },
+  { title: 'Seasonal analysis of wind energy potential in coastal regions', year: 2022, selected: false },
+  { title: 'Review of wake effect models for wind farm layout optimization', year: 2021, selected: false },
+];
+
+const PREVIEW_COUNT = 6;
+let expanded = false;
+
+function renderTable() {
+  const tbody = document.getElementById('doc-tbody');
+  const rows = expanded ? docs : docs.slice(0, PREVIEW_COUNT);
+  tbody.innerHTML = rows.map((d, i) => `
+    <tr>
+      <td class="cb-wrap"><input type="checkbox" class="doc-cb" ${d.selected ? 'checked' : ''}
+          onchange="toggleDoc(${i}, this.checked)"></td>
+      <td class="td-title">${d.title}</td>
+      <td class="td-mono">${d.year}</td>
+      <td><span class="status-ok">可用</span></td>
+    </tr>
+  `).join('');
+  updateCount();
+}
+
+function toggleDoc(idx, checked) {
+  docs[idx].selected = checked;
+  updateCount();
+}
+
+function toggleAllCb(checked) {
+  docs.forEach(d => d.selected = checked);
+  renderTable();
+}
+
+function toggleAll() {
+  const allSelected = docs.every(d => d.selected);
+  docs.forEach(d => d.selected = !allSelected);
+  document.getElementById('cb-all').checked = !allSelected;
+  renderTable();
+}
+
+function toggleExpand() {
+  expanded = !expanded;
+  const btn = document.getElementById('btn-expand');
+  const footer = document.getElementById('footer-count');
+  btn.innerHTML = expanded
+    ? `折叠 <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 10l-4-4-4 4"/></svg>`
+    : `展开全部 <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>`;
+  renderTable();
+}
+
+function updateCount() {
+  const sel = docs.filter(d => d.selected).length;
+  document.getElementById('selected-count').textContent = sel;
+  document.getElementById('sel-label').textContent = `已选 ${sel} / ${docs.length} 篇`;
+  document.getElementById('footer-count').textContent =
+    `显示 ${Math.min(expanded ? docs.length : PREVIEW_COUNT, docs.length)} / ${docs.length} 篇`;
+}
+
+/* ════════════════════════════
+   curl 示例
+════════════════════════════ */
+const curlTemplates = {
+  basic: `curl -X POST /v1/chat/completions \\
+  -H <span class="str">"Authorization: Bearer $API_KEY"</span> \\
+  -H <span class="str">"Content-Type: application/json"</span> \\
+  -d <span class="str">'{
+    "model": "<span class="var">gpt-4o</span>",
+    "messages": [
+      {"role": "system", "content": "<span class="var">[基础提示词 v1.0]</span>"},
+      {"role": "user", "content": "<span class="var">{{文献内容}}</span>"}
+    ]
+  }'</span>`,
+  detailed: `curl -X POST /v1/chat/completions \\
+  -H <span class="str">"Authorization: Bearer $API_KEY"</span> \\
+  -H <span class="str">"Content-Type: application/json"</span> \\
+  -d <span class="str">'{
+    "model": "<span class="var">gpt-4o</span>",
+    "messages": [
+      {"role": "system", "content": "<span class="var">[详细提示词 v2.1]</span>"},
+      {"role": "user", "content": "<span class="var">{{文献内容}}</span>"}
+    ],
+    "temperature": 0.2
+  }'</span>`,
+  structured: `curl -X POST /v1/chat/completions \\
+  -H <span class="str">"Authorization: Bearer $API_KEY"</span> \\
+  -H <span class="str">"Content-Type: application/json"</span> \\
+  -d <span class="str">'{
+    "model": "<span class="var">gpt-4o</span>",
+    "response_format": {"type": "json_object"},
+    "messages": [
+      {"role": "system", "content": "<span class="var">[结构化提示词 v1.3]</span>"},
+      {"role": "user", "content": "<span class="var">{{文献内容}}</span>"}
+    ]
+  }'</span>`,
+  custom: `curl -X POST /v1/chat/completions \\
+  -H <span class="str">"Authorization: Bearer $API_KEY"</span> \\
+  -H <span class="str">"Content-Type: application/json"</span> \\
+  -d <span class="str">'{
+    "model": "<span class="var">gpt-4o</span>",
+    "messages": [
+      {"role": "system", "content": "<span class="var">[自定义模板]</span>"},
+      {"role": "user", "content": "<span class="var">{{文献内容}}</span>"}
+    ]
+  }'</span>`,
+};
+
+function updateCurl() {
+  const prompt = document.getElementById('sel-prompt').value;
+  document.getElementById('curl-code').innerHTML = curlTemplates[prompt] || curlTemplates.basic;
+}
+
+function updateConfigRef() {
+  const modelEl = document.getElementById('sel-model');
+  const promptEl = document.getElementById('sel-prompt');
+  const modelText = modelEl.options[modelEl.selectedIndex].text.replace('（推荐）', '');
+  const promptText = promptEl.options[promptEl.selectedIndex].text;
+  document.getElementById('config-ref').textContent = `${modelText} · ${promptText}`;
+}
+
+function copyCurl() {
+  const code = document.getElementById('curl-code').innerText;
+  navigator.clipboard.writeText(code).catch(() => {});
+}
+
+function startExtract() {
+  const sel = docs.filter(d => d.selected).length;
+  if (sel === 0) {
+    alert('请至少选择一篇文献');
+    return;
+  }
+  window.location.href = 'IndustryInsights_progress.html';
+}
+
+/* ── 初始化 ── */
+renderTable();
+updateCurl();
+</script>
+</body>
+</html>
