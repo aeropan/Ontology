@@ -79,8 +79,23 @@ body {
 /* 右侧元信息 */
 .info-meta {
   flex-shrink: 0; display: flex; flex-direction: column;
-  align-items: flex-end; gap: 8px;
+  align-items: flex-end; gap: 10px;
 }
+.info-meta-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.btn-cancel {
+  padding: 7px 16px; background: transparent;
+  border: 1px solid var(--border-2); border-radius: 8px;
+  font-size: 13px; font-family: inherit; color: var(--text-2);
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-cancel:hover { border-color: var(--blue); color: var(--blue); }
+.btn-confirm {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 16px; background: var(--blue);
+  color: #fff; border: none; border-radius: 8px;
+  font-size: 13px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-confirm:hover { opacity: 0.85; }
 .info-badge {
   padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 500;
   background: var(--blue-dim); color: var(--blue);
@@ -263,31 +278,6 @@ body {
 .result-box.has-result { color: var(--text-2); }
 .result-placeholder { opacity: 0.5; }
 
-/* ══════════════════════════════════════
-   底部操作栏
-══════════════════════════════════════ */
-.action-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding-top: 16px; margin-top: 16px;
-  border-top: 1px solid var(--border-1);
-  flex-shrink: 0;
-}
-.action-bar-left { font-size: 12px; color: var(--text-3); }
-.action-bar-right { display: flex; align-items: center; gap: 10px; }
-.btn-cancel {
-  padding: 8px 20px; background: transparent;
-  border: 1px solid var(--border-2); border-radius: 8px;
-  font-size: 13px; font-family: inherit; color: var(--text-2);
-  cursor: pointer; transition: all 0.15s;
-}
-.btn-cancel:hover { border-color: var(--border-2); color: var(--text-1); }
-.btn-confirm {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 20px; background: var(--blue);
-  color: #fff; border: none; border-radius: 8px;
-  font-size: 13px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
-}
-.btn-confirm:hover { opacity: 0.85; }
 </style>
 </head>
 <body>
@@ -338,6 +328,13 @@ body {
       <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9l4 4 8-8"/></svg>
       保存
     </button>
+    <div class="info-meta-actions">
+      <button class="btn-cancel" onclick="goBack()">← 返回</button>
+      <button class="btn-confirm" onclick="goConfirm()">
+        确认使用
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -492,17 +489,6 @@ body {
 
 </div>
 
-<!-- ══ 底部操作栏 ══ -->
-<div class="action-bar">
-  <div class="action-bar-left">选择此模板后将自动填充抽取配置</div>
-  <div class="action-bar-right">
-    <button class="btn-cancel" onclick="goBack()">← 返回</button>
-    <button class="btn-confirm" onclick="goConfirm()">
-      确认使用
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-    </button>
-  </div>
-</div>
 
 <script>
 /* ════════════════════════════
