@@ -226,10 +226,10 @@ body {
 ══════════════════════════════════════ */
 .file-modal {
   background: var(--bg-3); border: 1px solid var(--border-2);
-  border-radius: 14px; width: 680px; max-width: 94vw;
+  border-radius: 14px; width: 860px; max-width: 94vw;
   box-shadow: 0 24px 64px rgba(0,0,0,0.6);
   display: flex; flex-direction: column;
-  max-height: 82vh; overflow: hidden;
+  max-height: 88vh; overflow: hidden;
 }
 .file-modal-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -266,6 +266,14 @@ body {
   color: var(--text-1); line-height: 1.8; tab-size: 2;
 }
 .file-modal-textarea[readonly] { color: var(--text-2); cursor: default; }
+/* 弹框内 textarea 滚动条 */
+.file-modal-textarea::-webkit-scrollbar { width: 4px; }
+.file-modal-textarea::-webkit-scrollbar-track { background: transparent; }
+.file-modal-textarea::-webkit-scrollbar-thumb {
+  background: var(--border-2);
+  border-radius: 2px;
+}
+.file-modal-textarea::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
 .file-modal-footer {
   display: flex; align-items: center; justify-content: flex-end;
   gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-1);
