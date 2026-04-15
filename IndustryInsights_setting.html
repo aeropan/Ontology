@@ -229,7 +229,126 @@ body {
 .act-retry:hover { text-decoration: underline; }
 .act-sep { color: var(--border-2); margin: 0 6px; user-select: none; }
 
-/* 空状态 */
+/* ══════════════════════════════════
+   过滤配置面板
+══════════════════════════════════ */
+.filter-config-wrap {
+  margin-bottom: 16px;
+  border: 1px solid var(--border-1);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-2);
+}
+.filter-config-toggle {
+  width: 100%; display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px; background: var(--bg-3);
+  border: none; font-family: inherit; cursor: pointer;
+  color: var(--text-2); transition: background 0.15s;
+}
+.filter-config-toggle:hover { background: var(--bg-4); color: var(--text-1); }
+.filter-config-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: var(--text-1);
+}
+.filter-config-right {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-3);
+}
+.config-chevron { transition: transform 0.2s; }
+.config-chevron.open { transform: rotate(180deg); }
+
+.filter-config-panel {
+  display: none; padding: 18px 20px;
+  border-top: 1px solid var(--border-1);
+  display: none; flex-direction: column; gap: 16px;
+}
+.filter-config-panel.open { display: flex; }
+
+/* 配置行 */
+.config-row { display: flex; gap: 16px; align-items: flex-start; }
+.config-row.two-col > .config-item { flex: 1; }
+.config-item { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.config-label {
+  font-size: 11px; color: var(--text-3);
+  letter-spacing: 0.4px; display: flex;
+  align-items: center; justify-content: space-between;
+}
+.config-label-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--blue); font-weight: 600;
+}
+.config-select {
+  background: var(--bg-1); border: 1px solid var(--border-2);
+  border-radius: 8px; padding: 8px 32px 8px 12px;
+  font-size: 12px; color: var(--text-1); font-family: inherit;
+  outline: none; cursor: pointer; transition: border-color 0.15s;
+  appearance: none; width: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%23475569' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.config-select:focus { border-color: var(--blue); }
+.config-select option { background: var(--bg-3); }
+
+/* 滑动条 */
+.config-slider {
+  width: 100%; height: 4px; appearance: none;
+  background: var(--border-2); border-radius: 2px;
+  outline: none; cursor: pointer; accent-color: var(--blue);
+}
+.config-slider::-webkit-slider-thumb {
+  appearance: none; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--blue);
+  border: 2px solid var(--bg-1);
+  box-shadow: 0 0 0 2px var(--blue);
+  cursor: pointer; transition: transform 0.1s;
+}
+.config-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.config-slider::-moz-range-thumb {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--blue); border: 2px solid var(--bg-1);
+  cursor: pointer;
+}
+
+/* 提示词窗口 */
+.prompt-window-wrap {
+  background: var(--bg-1); border: 1px solid var(--border-2);
+  border-radius: 8px; overflow: hidden;
+}
+.prompt-window-bar {
+  padding: 7px 14px; font-size: 10px; color: var(--text-3);
+  border-bottom: 1px solid var(--border-1);
+  background: var(--bg-3); letter-spacing: 0.5px;
+}
+.prompt-window {
+  padding: 14px 16px; font-size: 12px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text-2); line-height: 1.8; max-height: 180px;
+  overflow-y: auto; margin: 0; white-space: pre-wrap; word-break: break-word;
+}
+.prompt-window::-webkit-scrollbar { width: 4px; }
+.prompt-window::-webkit-scrollbar-track { background: transparent; }
+.prompt-window::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+
+/* ══════════════════════════════════
+   分页条
+══════════════════════════════════ */
+.pagination-bar {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 4px; padding: 12px 4px 0;
+}
+.page-btn {
+  min-width: 30px; height: 30px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  font-size: 12px; color: var(--text-2); cursor: pointer;
+  font-family: inherit; padding: 0 6px; transition: all 0.15s;
+}
+.page-btn:hover { border-color: var(--blue); color: var(--blue); }
+.page-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.page-info { font-size: 11px; color: var(--text-3); padding: 0 8px; }
+
+/* ── 空状态 ── */
 .empty-row td {
   text-align: center; padding: 48px 0 !important;
   color: var(--text-3); font-size: 12px;
@@ -487,6 +606,74 @@ body {
   <button class="btn-select-file" onclick="event.stopPropagation();document.getElementById('file-input-main').click()">选择文件</button>
 </div>
 
+<!-- ══ 过滤配置面板 ══ -->
+<div class="filter-config-wrap">
+  <button class="filter-config-toggle" onclick="toggleConfig()">
+    <span class="filter-config-label">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M4 8h8M6 12h4"/></svg>
+      过滤配置
+    </span>
+    <span class="filter-config-right">
+      <span id="config-toggle-text">展开</span>
+      <svg class="config-chevron" id="config-chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+    </span>
+  </button>
+  <div class="filter-config-panel" id="filter-config-panel">
+    <!-- 过滤模型 -->
+    <div class="config-row">
+      <div class="config-item" style="max-width:340px">
+        <div class="config-label">过滤模型</div>
+        <select class="config-select" id="cfg-model">
+          <option value="gpt4o">GPT-4o（推荐）</option>
+          <option value="gpt4t">GPT-4 Turbo</option>
+          <option value="claude">Claude 3.5 Sonnet</option>
+          <option value="qwen">Qwen-Max</option>
+        </select>
+      </div>
+    </div>
+    <!-- 采纳系数 + 警告系数 -->
+    <div class="config-row two-col">
+      <div class="config-item">
+        <div class="config-label">
+          采纳系数
+          <span class="config-label-val" id="accept-val">75%</span>
+        </div>
+        <input type="range" class="config-slider" min="0" max="100" value="75"
+               oninput="document.getElementById('accept-val').textContent=this.value+'%'">
+      </div>
+      <div class="config-item">
+        <div class="config-label">
+          警告系数
+          <span class="config-label-val" id="warn-val">40%</span>
+        </div>
+        <input type="range" class="config-slider" min="0" max="100" value="40"
+               oninput="document.getElementById('warn-val').textContent=this.value+'%'">
+      </div>
+    </div>
+    <!-- 提示词模板 -->
+    <div class="config-row">
+      <div class="config-item" style="max-width:280px">
+        <div class="config-label">提示词模板</div>
+        <select class="config-select" id="cfg-prompt" onchange="updatePromptWindow(this.value)">
+          <option value="basic">基础提示词 v1.0</option>
+          <option value="wind">风电专项提示词 v2.0</option>
+          <option value="general">通用语义提示词 v1.5</option>
+        </select>
+      </div>
+    </div>
+    <!-- 提示词窗口 -->
+    <div class="config-row">
+      <div class="config-item" style="flex:1">
+        <div class="config-label">提示词窗口</div>
+        <div class="prompt-window-wrap">
+          <div class="prompt-window-bar">prompt preview</div>
+          <pre class="prompt-window" id="prompt-window"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── 已上传文献 ── -->
 <div class="section-header">
   <div style="display:flex;align-items:center;gap:16px;">
@@ -522,6 +709,9 @@ body {
     <tbody id="lit-tbody"></tbody>
   </table>
 </div>
+
+<!-- ── 分页条 ── -->
+<div class="pagination-bar" id="pagination-bar"></div>
 
 <!-- ── 底部操作栏 ── -->
 <div class="action-bar">
@@ -652,22 +842,30 @@ let selectedLibIds = new Set();
 let deleteTargetId = null;
 let filterKw = '';
 let filterStatus = '';
+const PAGE_SIZE = 10;
+let currentPage = 1;
 
 /* ════════════════════════════
-   渲染表格
+   渲染表格（含分页）
 ════════════════════════════ */
 function renderTable() {
   const tbody = document.getElementById('lit-tbody');
-  const rows = litData.filter(d => {
+  const filtered = litData.filter(d => {
     const kwMatch = !filterKw || d.title.toLowerCase().includes(filterKw) || d.source.toLowerCase().includes(filterKw);
     const stMatch = !filterStatus || d.status === filterStatus;
     return kwMatch && stMatch;
   });
 
-  if (!rows.length) {
+  if (!filtered.length) {
     tbody.innerHTML = `<tr class="empty-row"><td colspan="7">暂无匹配文献</td></tr>`;
+    renderPagination(0);
     return;
   }
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const rows = filtered.slice(start, start + PAGE_SIZE);
 
   tbody.innerHTML = rows.map(d => `
     <tr data-id="${d.id}">
@@ -697,7 +895,23 @@ function renderTable() {
   `).join('');
 
   updateStats();
+  renderPagination(filtered.length);
 }
+
+function renderPagination(total) {
+  const bar = document.getElementById('pagination-bar');
+  if (total <= PAGE_SIZE) { bar.innerHTML = ''; return; }
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+  html += `<span class="page-info">${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE,total)} / ${total}</span>`;
+  bar.innerHTML = html;
+}
+
+function goPage(n) { currentPage = n; renderTable(); }
 
 function updateStats() {
   const ok   = litData.filter(d => d.status === 'ok').length;
@@ -707,8 +921,70 @@ function updateStats() {
     `${litData.length} 篇 &nbsp;·&nbsp; 解析成功 <span class="ok">${ok}</span> &nbsp;·&nbsp; 失败 <span class="err">${fail}</span>`;
 }
 
-function filterTable(kw) { filterKw = kw.toLowerCase(); renderTable(); }
-function filterByStatus(v) { filterStatus = v; renderTable(); }
+function filterTable(kw) { filterKw = kw.toLowerCase(); currentPage = 1; renderTable(); }
+function filterByStatus(v) { filterStatus = v; currentPage = 1; renderTable(); }
+
+/* ════════════════════════════
+   过滤配置面板
+════════════════════════════ */
+const promptTemplates = {
+  basic: `【角色】你是一位文献信息提取专家。
+【任务】从以下文献内容中，提取关键方法信息。
+
+【提取字段】
+- 方法名称：研究使用的核心算法或模型名称
+- 数据来源：输入数据集或数据类型
+- 评估指标：论文使用的性能评估指标
+- 预测目标：模型的输出变量
+
+【输出格式】
+以 JSON 格式返回，字段缺失时填 "未提及"。`,
+
+  wind: `【角色】你是一位专注于风电领域的文献分析专家。
+【任务】提取风电相关文献中的核心技术要素。
+
+【提取字段】
+- 风速预测方法：使用的预测模型或算法
+- 预测时效：预测的时间跨度（短期/中期/长期）
+- 空间分辨率：预测的空间尺度
+- 数据来源：ERA5 / SCADA / 观测站等
+- 特征工程：使用的输入特征变量
+- 模型评估：RMSE / MAE / MAPE 等指标及数值
+
+【过滤规则】
+- 采纳系数阈值内的结果视为有效提取
+- 警告系数以下的结果标注低置信度`,
+
+  general: `【角色】你是一位通用科学文献信息提取助手。
+【任务】对文献进行语义理解，提取通用研究信息。
+
+【提取字段】
+- 研究问题：核心研究目标
+- 方法论：使用的技术路线或方法体系
+- 数据集：实验数据集名称与规模
+- 主要结论：研究的核心发现
+- 创新点：相比已有工作的改进之处
+
+【注意】严格基于原文内容，不进行推断或补充。`,
+};
+
+function toggleConfig() {
+  const panel = document.getElementById('filter-config-panel');
+  const chevron = document.getElementById('config-chevron');
+  const text = document.getElementById('config-toggle-text');
+  const isOpen = panel.classList.toggle('open');
+  chevron.classList.toggle('open', isOpen);
+  text.textContent = isOpen ? '折叠' : '展开';
+}
+
+function updatePromptWindow(val) {
+  document.getElementById('prompt-window').textContent = promptTemplates[val] || '';
+}
+
+/* 初始化提示词窗口 */
+function initPromptWindow() {
+  updatePromptWindow(document.getElementById('cfg-prompt').value);
+}
 function previewPaper(id) { alert('预览功能即将上线'); }
 function retryParse(id) {
   const d = litData.find(x => x.id === id);
@@ -867,6 +1143,7 @@ function handleMaskClick(e, maskId) {
    初始化
 ════════════════════════════ */
 renderTable();
+initPromptWindow();
 </script>
 </body>
 </html>
