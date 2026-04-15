@@ -3778,6 +3778,175 @@
       justify-content: center;
       overflow: hidden;
     }
+
+    /* ── ke 文献管理 / 抽取配置 扩展样式 ── */
+    .ke-score-cell { display: flex; align-items: center; gap: 8px; }
+    .ke-score-bar  { width: 60px; height: 4px; background: var(--bg); border-radius: 2px; flex-shrink: 0; }
+    .ke-score-fill { height: 100%; border-radius: 2px; }
+    .ke-score-num  { font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 600; min-width: 24px; }
+
+    .ke-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 20px;
+      font-size: 10px; font-weight: 500; white-space: nowrap;
+    }
+    .ke-badge-pass   { background: rgba(16,185,129,0.12); color: var(--green); }
+    .ke-badge-review { background: rgba(245,158,11,0.12);  color: var(--amber); }
+    .ke-badge-reject { background: rgba(244,63,94,0.12);   color: var(--rose);  }
+
+    .ke-btn-detail {
+      padding: 3px 10px; border-radius: 5px;
+      background: var(--surface2); border: 1px solid var(--border);
+      font-size: 11px; color: var(--text2); cursor: pointer;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .ke-btn-detail:hover { color: var(--blue); border-color: var(--blue); }
+
+    .ke-btn-quality {
+      font-size: 11px; cursor: pointer;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 5px; padding: 3px 10px;
+      color: var(--text2); font-family: inherit; transition: all 0.15s;
+    }
+    .ke-btn-quality:hover { color: var(--text1); border-color: var(--border2); }
+
+    /* 分页 */
+    .ke-pagination { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 10px 0 4px; }
+    .ke-page-btn {
+      min-width: 28px; height: 28px; padding: 0 6px; border-radius: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      font-size: 11px; color: var(--text2); cursor: pointer;
+      font-family: 'JetBrains Mono', monospace; transition: all 0.15s;
+    }
+    .ke-page-btn:hover  { color: var(--text1); border-color: var(--border2); }
+    .ke-page-btn.active { background: var(--blue-dim); color: var(--blue); border-color: var(--blue); }
+    .ke-page-btn:disabled { opacity: 0.35; cursor: default; }
+
+    /* 详情抽屉 */
+    .ke-drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 800; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .ke-drawer-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .ke-detail-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 400px; background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 801;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column;
+    }
+    .ke-detail-drawer.active { transform: translateX(0); }
+
+    .ke-drawer-head {
+      padding: 18px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .ke-drawer-head-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px; margin-bottom: 14px;
+    }
+    .ke-drawer-doc-title {
+      font-size: 13px; font-weight: 600; color: var(--text1);
+      line-height: 1.55; flex: 1;
+    }
+    .ke-drawer-close {
+      width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text3); transition: all 0.15s; font-size: 16px;
+    }
+    .ke-drawer-close:hover { color: var(--text1); }
+
+    .ke-drawer-score-row { display: flex; align-items: flex-end; justify-content: space-between; }
+    .ke-drawer-score-big {
+      font-size: 34px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace; line-height: 1;
+    }
+    .ke-drawer-score-caption { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+    .ke-drawer-body {
+      flex: 1; overflow-y: auto; padding: 20px;
+      scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+    }
+    .ke-drawer-body::-webkit-scrollbar { width: 4px; }
+    .ke-drawer-body::-webkit-scrollbar-track { background: transparent; }
+    .ke-drawer-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .ke-drawer-section { margin-bottom: 20px; }
+    .ke-drawer-section:last-child { margin-bottom: 0; }
+    .ke-drawer-section-title {
+      font-size: 10px; font-weight: 600; color: var(--text3);
+      letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .ke-dim-item { margin-bottom: 10px; }
+    .ke-dim-item:last-child { margin-bottom: 0; }
+    .ke-dim-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .ke-dim-label { font-size: 12px; color: var(--text2); }
+    .ke-dim-value { font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .ke-dim-bar  { height: 5px; background: var(--bg); border-radius: 3px; }
+    .ke-dim-fill { height: 100%; border-radius: 3px; }
+    .ke-drawer-text-block {
+      font-size: 12px; color: var(--text2); line-height: 1.75;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+    }
+    .ke-drawer-foot {
+      padding: 14px 20px; border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+    .ke-btn-toggle-select {
+      width: 100%; padding: 10px 16px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .ke-btn-toggle-select.selected { background: var(--blue); color: #fff; border: none; }
+    .ke-btn-toggle-select.selected:hover { opacity: 0.85; }
+    .ke-btn-toggle-select.unselected {
+      background: var(--surface2); color: var(--text3); border: 1px solid var(--border);
+    }
+    .ke-btn-toggle-select.unselected:hover { color: var(--text2); border-color: var(--border2); }
+
+    /* 文献过滤配置面板 */
+    .ke-filter-config {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden; margin-bottom: 14px;
+    }
+    .ke-filter-config-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; cursor: pointer; user-select: none;
+    }
+    .ke-filter-config-body {
+      padding: 16px; border-top: 1px solid var(--border);
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .ke-filter-field { display: flex; flex-direction: column; gap: 6px; }
+    .ke-filter-label { font-size: 11px; color: var(--text2); }
+    .ke-filter-select {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 7px 10px;
+      font-size: 12px; color: var(--text1); font-family: inherit;
+      outline: none; cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%2394a3b8' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    }
+    .ke-filter-select:focus { border-color: var(--blue); }
+    .ke-filter-select option { background: var(--surface2); }
+
+    .ke-filter-slider-row { display: flex; align-items: center; gap: 10px; }
+    .ke-filter-slider {
+      flex: 1; accent-color: var(--blue);
+      -webkit-appearance: none; height: 4px; border-radius: 2px;
+      background: var(--surface3); outline: none; cursor: pointer;
+    }
+    .ke-filter-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--blue); border: 2px solid var(--surface); cursor: pointer;
+    }
   </style>
 </head>
 
@@ -5505,13 +5674,59 @@
       </div>
     </div>
 
+    <!-- 文献过滤配置 -->
+    <div class="ke-filter-config" id="ke-lib-filter-wrap">
+      <div class="ke-filter-config-header" onclick="keToggleFilterConfig()">
+        <span style="font-size:12px;font-weight:600;color:var(--text1)">文献过滤配置</span>
+        <span id="ke-filter-toggle-icon" style="font-size:11px;color:var(--text3)">展开 ▼</span>
+      </div>
+      <div id="ke-lib-filter-body" style="display:none">
+        <div class="ke-filter-config-body">
+          <div class="ke-filter-field">
+            <label class="ke-filter-label">最低综合评分</label>
+            <div class="ke-filter-slider-row">
+              <input type="range" class="ke-filter-slider" id="ke-score-min" min="0" max="100" value="0"
+                oninput="document.getElementById('ke-score-min-val').textContent=this.value;keLibRenderTable()">
+              <span id="ke-score-min-val" style="font-size:11px;color:var(--blue);font-family:'JetBrains Mono',monospace;width:30px">0</span>
+            </div>
+          </div>
+          <div class="ke-filter-field">
+            <label class="ke-filter-label">质量状态筛选</label>
+            <select class="ke-filter-select" id="ke-status-filter" onchange="keLibRenderTable()">
+              <option value="all">全部状态</option>
+              <option value="pass">仅显示 已通过</option>
+              <option value="review">仅显示 建议复审</option>
+              <option value="reject">仅显示 不建议使用</option>
+            </select>
+          </div>
+          <div class="ke-filter-field">
+            <label class="ke-filter-label">年份范围</label>
+            <select class="ke-filter-select" id="ke-year-filter" onchange="keLibRenderTable()">
+              <option value="all">全部年份</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
+              <option value="2020">2020 及以前</option>
+            </select>
+          </div>
+          <div class="ke-filter-field">
+            <label class="ke-filter-label">上传方式</label>
+            <select class="ke-filter-select" id="ke-way-filter" onchange="keLibRenderTable()">
+              <option value="all">全部方式</option>
+              <option value="上传">上传</option>
+              <option value="文献库">文献库</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Table -->
     <div class="table-card" style="margin-bottom:16px">
       <div class="table-header">
         <div class="table-header-title">已上传文献</div>
-        <div class="search-input">🔍 搜索文献标题...</div>
-        <div class="filter-btn">解析状态 ▾</div>
-        <div style="margin-left:auto;font-size:11px;color:var(--text2)">24 篇 · 解析成功 22 · 失败 2</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--text2)" id="ke-lib-count-label">—</div>
       </div>
       <table>
         <thead>
@@ -5521,74 +5736,15 @@
             <th>方式</th>
             <th>年份</th>
             <th>大小</th>
+            <th>综合评分</th>
+            <th>质量状态</th>
             <th>解析状态</th>
             <th>操作</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>
-              <div style="font-weight:500;font-size:12px">A deep learning-based evolutionary model for short-term wind speed forecasting</div>
-            </td>
-            <td style="font-size:11px;color:var(--text2)">Energy Conversion</td>
-            <td>上传</td>
-            <td>2024</td>
-            <td style="font-size:11px;color:var(--text2)">2.4MB</td>
-            <td><span class="badge badge-green"><span class="dot"></span>解析成功</span></td>
-            <td><span class="action-link">预览</span> <span style="color:var(--text3);margin:0 4px">|</span> <span
-                class="action-link danger">删除</span></td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:500;font-size:12px">The study and application of a novel hybrid forecasting model</div>
-            </td>
-            <td style="font-size:11px;color:var(--text2)">Applied Energy</td>
-            <td>文献库</td>
-            <td>2023</td>
-            <td style="font-size:11px;color:var(--text2)">1.8MB</td>
-            <td><span class="badge badge-green"><span class="dot"></span>解析成功</span></td>
-            <td><span class="action-link">预览</span> <span style="color:var(--text3);margin:0 4px">|</span> <span
-                class="action-link danger">删除</span></td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:500;font-size:12px">Forecasting Wind Speed using Artificial Neural Networks</div>
-            </td>
-            <td style="font-size:11px;color:var(--text2)">ICACER 2020</td>
-            <td>上传</td>
-            <td>2020</td>
-            <td style="font-size:11px;color:var(--text2)">3.1MB</td>
-            <td><span class="badge badge-green"><span class="dot"></span>解析成功</span> </td>
-            <td><span class="action-link">预览</span> <span style="color:var(--text3);margin:0 4px">|</span> <span
-                class="action-link danger">删除</span></td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:500;font-size:12px">Wind speed prediction using LSTM and ARIMA time series analysis models</div>
-            </td>
-            <td style="font-size:11px;color:var(--text2)">Turkish Journal</td>
-            <td>文献库</td>
-            <td>2023</td>
-            <td style="font-size:11px;color:var(--text2)">2.7MB</td>
-            <td><span class="badge badge-green"><span class="dot"></span>解析成功</span></td>
-            <td><span class="action-link">预览</span> <span style="color:var(--text3);margin:0 4px">|</span> <span
-                class="action-link danger">删除</span></td>
-          </tr>
-          <tr>
-            <td>
-              <div style="font-weight:500;font-size:12px">Research on a Combined Model Based on Linear and Nonlinear</div>
-            </td>
-            <td style="font-size:11px;color:var(--text2)">Renewable Energy</td>
-            <td>上传</td>
-            <td>2024</td>
-            <td style="font-size:11px;color:var(--text2)">1.5MB</td>
-            <td><span class="badge badge-green"><span class="dot"></span>解析成功</span></td>
-            <td><span class="action-link">预览</span> <span style="color:var(--text3);margin:0 4px">|</span> <span
-                class="action-link danger">删除</span></td>
-            <td>—</td>
-          </tr>
-        </tbody>
+        <tbody id="ke-lib-tbody"></tbody>
       </table>
+      <div id="ke-lib-pagination" class="ke-pagination"></div>
     </div>
 
     <div style="display:flex;justify-content:flex-end;gap:8px">
@@ -9665,6 +9821,136 @@
       });
     });
 
+    // ══════════════════════════════════════════════
+    //  KE-LIBRARY：文献管理
+    // ══════════════════════════════════════════════
+    const keLibDocs = [
+      { title: 'A deep learning-based evolutionary model for short-term wind speed forecasting', src: 'Energy Conversion', way: '上传', year: 2024, size: '2.4MB', score: 92, status: 'pass',   rel: 95, tim: 90, auth: 88, note: '文献内容与风电预测主题高度相关，数据来源权威，方法论完整，建议优先纳入抽取。', preview: 'This paper proposes a novel evolutionary deep learning architecture combining LSTM with genetic algorithms for short-term wind speed forecasting. Experiments on three wind farm datasets demonstrate RMSE reduction of 18% compared to baseline models.' },
+      { title: 'The study and application of a novel hybrid forecasting model – wind speed case study', src: 'Applied Energy', way: '文献库', year: 2023, size: '1.8MB', score: 88, status: 'pass',   rel: 90, tim: 85, auth: 82, note: '案例研究方法清晰，数据集描述详尽，适合作为方法对比基准。', preview: 'A hybrid model combining EMD decomposition with deep learning is applied to real-world wind speed data. Dataset spans 5 years of 10-minute resolution measurements from coastal stations.' },
+      { title: 'Forecasting Wind Speed using Artificial Neural Networks', src: 'ICACER 2024', way: '上传', year: 2024, size: '3.1MB', score: 85, status: 'pass',   rel: 88, tim: 92, auth: 79, note: '使用多层神经网络对风速进行预测，实验设计规范，结论可信。', preview: 'Multi-layer artificial neural networks are deployed for wind speed forecasting. The study tests MLP, RBF and ELM variants across 12 meteorological stations.' },
+      { title: 'Wind speed prediction using LSTM and ARIMA time series analysis models', src: 'Turkish Journal', way: '文献库', year: 2023, size: '2.7MB', score: 83, status: 'pass',   rel: 85, tim: 86, auth: 77, note: '融合 LSTM 与 ARIMA，时间序列建模方法成熟，实验结论稳健。', preview: 'LSTM and ARIMA models are compared and combined for wind speed time series prediction with weighted ensemble strategy dynamically adjusting model contributions.' },
+      { title: 'Hybrid deep learning model for wind power forecasting in complex terrains', src: 'Renewable Energy', way: '上传', year: 2024, size: '1.5MB', score: 91, status: 'pass',   rel: 94, tim: 91, auth: 85, note: '复杂地形场景下的风电功率预测，具有较高工程价值和应用前景。', preview: 'A CNN-BiLSTM architecture integrates topographic features as auxiliary inputs for complex terrain wind power forecasting. Tested on two wind farms with 14% improvement in peak-hour accuracy.' },
+      { title: 'Probabilistic wind power forecasting using deep neural networks', src: 'IEEE Trans.', way: '文献库', year: 2022, size: '2.2MB', score: 79, status: 'pass',   rel: 82, tim: 76, auth: 80, note: '概率预测框架完整，不确定性量化方法有创新，数据稍旧但方法仍具参考价值。', preview: 'Deep neural networks generate probabilistic forecasts via quantile regression and Monte Carlo dropout. Evaluated on NREL wind integration datasets.' },
+      { title: 'Short-term wind speed forecasting with stacked autoencoders', src: 'Energy & AI', way: '上传', year: 2023, size: '1.9MB', score: 77, status: 'pass',   rel: 80, tim: 82, auth: 70, note: '堆叠自编码器用于特征提取，方法有一定新颖性，但权威期刊发表信息待确认。', preview: 'Stacked autoencoders extract latent representations from raw wind speed sequences. Reduces input dimensionality by 60% while retaining predictive signal.' },
+      { title: 'Multivariable LSTM model for offshore wind power prediction', src: 'Ocean Eng.', way: '上传', year: 2024, size: '3.3MB', score: 89, status: 'pass',   rel: 92, tim: 90, auth: 83, note: '海上风电场景专项研究，多变量输入设计合理，近期发表，时效性强。', preview: 'Multivariable LSTM ingests wind speed, direction, air pressure, sea temperature and wave height. Sensor fusion adapts to missing inputs via attention masking. Case study on Horns Rev offshore farm.' },
+      { title: 'Data-driven approach for wind turbine performance assessment', src: 'Appl. Energy', way: '文献库', year: 2022, size: '2.1MB', score: 68, status: 'review', rel: 72, tim: 65, auth: 68, note: '数据驱动方法完整，但侧重设备性能评估而非预测，与核心主题相关性一般，建议人工复审。', preview: 'A data-driven framework assesses wind turbine operational performance using SCADA signals. Anomaly detection identifies degradation patterns 4–6 weeks before failure.' },
+      { title: 'Attention-based CNN-LSTM for wind energy forecasting', src: 'Applied Energy', way: '文献库', year: 2023, size: '2.0MB', score: 86, status: 'pass',   rel: 89, tim: 85, auth: 81, note: '注意力机制与 CNN-LSTM 结合，模型设计精良，发表于高影响力期刊。', preview: 'Attention mechanisms are integrated with CNN-LSTM to weight relevant temporal patterns. Multi-head self-attention identifies diurnal and synoptic-scale dependencies. Published in Applied Energy, IF 11.2.' },
+      { title: 'Extreme gradient boosting for wind power prediction', src: 'Energy Rep.', way: '上传', year: 2022, size: '1.3MB', score: 72, status: 'review', rel: 75, tim: 68, auth: 74, note: 'XGBoost 方法成熟，但发表年份较早，在现有基准上的表现有待对比，建议复审。', preview: 'XGBoost is applied to wind power prediction with Bayesian hyperparameter optimisation. Compared against RF and SVR; no deep learning baselines included.' },
+      { title: 'Ensemble learning methods for renewable energy forecasting', src: 'Energies', way: '文献库', year: 2021, size: '1.7MB', score: 63, status: 'review', rel: 65, tim: 58, auth: 70, note: '集成学习综述性内容较多，原创方法贡献有限，2021 年发表时效性下降。', preview: 'Survey and application of ensemble learning methods for renewable energy forecasting. Covers wind and solar domains with comparative table of 34 papers.' },
+      { title: 'ERA5 reanalysis data in wind resource assessment', src: 'Wind Energy', way: '文献库', year: 2023, size: '2.6MB', score: 80, status: 'pass',   rel: 83, tim: 80, auth: 76, note: 'ERA5 数据应用于风资源评估，数据源权威，与平台核心数据来源高度一致。', preview: 'ERA5 reanalysis data is systematically compared against met-mast observations across 120 sites globally. Bias correction methodologies benchmarked, RMSE within 0.8 m/s.' },
+      { title: 'Physics-informed neural networks for wind simulation', src: 'J. Comput.', way: '上传', year: 2024, size: '2.8MB', score: 87, status: 'pass',   rel: 90, tim: 88, auth: 82, note: '物理信息神经网络用于风场仿真，方法融合物理先验，创新性强。', preview: 'Physics-informed neural networks incorporate Navier–Stokes equations as soft constraints. Model learns wind field dynamics with reduced labelled data requirements.' },
+      { title: 'Graph neural network approach to wind farm optimization', src: 'IEEE Trans.', way: '上传', year: 2024, size: '2.3MB', score: 84, status: 'pass',   rel: 87, tim: 90, auth: 78, note: '图神经网络应用于风场优化，拓扑结构建模合理，适合提取空间关系特征。', preview: 'Graph neural networks model wind farm topology for layout optimization and power maximization. Node embeddings encode turbine positions and meteorological inputs.' },
+      { title: 'Transformer-based model for spatio-temporal wind forecasting', src: 'Applied Energy', way: '文献库', year: 2023, size: '2.4MB', score: 90, status: 'pass',   rel: 93, tim: 88, auth: 86, note: 'Transformer 架构用于时空风速预测，模型性能优秀，引用量快速增长。', preview: 'Transformer with spatial attention captures dependencies across wind farm nodes simultaneously. SOTA results on SDWPF benchmark. Model and data splits publicly released.' },
+      { title: 'Bayesian deep learning for wind speed estimation', src: 'Neural Net.', way: '文献库', year: 2021, size: '1.6MB', score: 58, status: 'review', rel: 62, tim: 52, auth: 64, note: '贝叶斯方法理论完整，但发表较早，在大规模数据场景下的性能尚待验证。', preview: 'Bayesian deep learning provides uncertainty-aware wind speed estimates via variational inference. Evaluated on an 18-month dataset; scalability to large wind farms untested.' },
+      { title: 'Real-time wind forecasting with online learning', src: 'Expert Syst.', way: '上传', year: 2023, size: '1.4MB', score: 82, status: 'pass',   rel: 85, tim: 84, auth: 76, note: '在线学习框架适合实时应用场景，工程落地价值较高。', preview: 'Online learning algorithms adapt forecast models in real-time without full retraining. Latency under 50 ms per update enables integration with SCADA control loops.' },
+      { title: 'Multi-step ahead wind speed forecasting using wavelet decomposition', src: 'Energy', way: '文献库', year: 2022, size: '1.8MB', score: 70, status: 'review', rel: 73, tim: 66, auth: 72, note: '小波分解辅助多步预测，思路清晰，但与现有深度学习方法相比竞争力一般。', preview: 'Wavelet decomposition separates wind speed into trend and fluctuation components. Competitive with ARIMA variants but underperforms LSTM on horizons beyond 6 hours.' },
+      { title: 'Numerical weather prediction enhanced by machine learning', src: 'Atmos. Res.', way: '上传', year: 2023, size: '2.9MB', score: 81, status: 'pass',   rel: 84, tim: 82, auth: 78, note: 'NWP 与机器学习融合，数据质量高，方法兼顾物理机制和统计学习。', preview: 'Machine learning post-processing corrects systematic biases in NWP wind forecasts. Skill scores improve across all forecast horizons from 1 h to 48 h.' },
+      { title: 'Seasonal analysis of wind energy potential in coastal regions', src: 'Renew. Sustain.', way: '文献库', year: 2022, size: '1.2MB', score: 42, status: 'reject', rel: 45, tim: 40, auth: 44, note: '内容以描述性统计分析为主，缺乏深度方法论，与抽取目标相关性低，不建议纳入。', preview: 'Seasonal variability of wind energy potential statistically analysed for coastal zones. Rose diagrams and Weibull fitting are primary tools; no forecasting methodology proposed.' },
+      { title: 'Review of wake effect models for wind farm layout optimization', src: 'Energies', way: '文献库', year: 2021, size: '1.5MB', score: 38, status: 'reject', rel: 40, tim: 35, auth: 42, note: '综述性文献，缺乏原创性数据，且时效性较差，不建议使用。', preview: 'Reviews Jensen, Gaussian and dynamic wake models for wind farm layout. Catalogues 28 models but introduces no novel methodology. Citations pre-2019.' },
+      { title: 'Statistical downscaling of wind speed from global climate models', src: 'Clim. Dyn.', way: '上传', year: 2020, size: '2.0MB', score: 35, status: 'reject', rel: 38, tim: 30, auth: 40, note: '2020 年发表，统计降尺度方法已被深度学习大幅超越，时效性严重不足。', preview: 'Statistical downscaling derives local wind speed from GCM outputs using transfer functions. Methodology superseded by recent diffusion-based downscaling.' },
+      { title: 'Adaptive neuro-fuzzy inference for wind power prediction', src: 'Soft Comput.', way: '文献库', year: 2020, size: '1.1MB', score: 48, status: 'reject', rel: 52, tim: 38, auth: 50, note: 'ANFIS 方法发表于 2020 年，已被深度学习取代，不建议纳入。', preview: 'ANFIS combines neural network learning with fuzzy logic for wind power prediction. Performance lags modern deep learning by 30%+ on equivalent datasets.' },
+    ];
+
+    const KE_LIB_PAGE_SIZE = 10;
+    let keLibPage = 1;
+    let keLibFiltered = [...keLibDocs];
+
+    function keLibStatusColor(s) {
+      return s === 'pass' ? 'var(--green)' : s === 'review' ? 'var(--amber)' : 'var(--rose)';
+    }
+    function keLibBadgeClass(s) {
+      return s === 'pass' ? 'ke-badge-pass' : s === 'review' ? 'ke-badge-review' : 'ke-badge-reject';
+    }
+    function keLibStatusLabel(s) {
+      return s === 'pass' ? '✓ 已通过' : s === 'review' ? '△ 建议复审' : '× 不建议使用';
+    }
+
+    function keLibRenderTable() {
+      const scoreMin   = parseInt(document.getElementById('ke-score-min')?.value  || 0);
+      const statusF    = document.getElementById('ke-status-filter')?.value || 'all';
+      const yearF      = document.getElementById('ke-year-filter')?.value   || 'all';
+      const wayF       = document.getElementById('ke-way-filter')?.value    || 'all';
+
+      keLibFiltered = keLibDocs.filter(d => {
+        if (d.score < scoreMin) return false;
+        if (statusF !== 'all' && d.status !== statusF) return false;
+        if (yearF === '2020' && d.year > 2020) return false;
+        if (yearF !== 'all' && yearF !== '2020' && String(d.year) !== yearF) return false;
+        if (wayF !== 'all' && d.way !== wayF) return false;
+        return true;
+      });
+
+      keLibPage = 1;
+      keLibRenderPage();
+    }
+
+    function keLibRenderPage() {
+      const tbody = document.getElementById('ke-lib-tbody');
+      if (!tbody) return;
+
+      const total = keLibFiltered.length;
+      const start = (keLibPage - 1) * KE_LIB_PAGE_SIZE;
+      const rows  = keLibFiltered.slice(start, start + KE_LIB_PAGE_SIZE);
+
+      tbody.innerHTML = rows.map(d => {
+        const color = keLibStatusColor(d.status);
+        const parseOk = d.score >= 50;
+        return `<tr>
+          <td style="font-weight:500;font-size:12px;max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+              title="${d.title}">${d.title}</td>
+          <td style="font-size:11px;color:var(--text2)">${d.src}</td>
+          <td>${d.way}</td>
+          <td>${d.year}</td>
+          <td style="font-size:11px;color:var(--text2)">${d.size}</td>
+          <td>
+            <div class="ke-score-cell">
+              <div class="ke-score-bar"><div class="ke-score-fill" style="width:${d.score}%;background:${color}"></div></div>
+              <span class="ke-score-num" style="color:${color}">${d.score}</span>
+            </div>
+          </td>
+          <td><span class="ke-badge ${keLibBadgeClass(d.status)}">${keLibStatusLabel(d.status)}</span></td>
+          <td><span class="badge ${parseOk?'badge-green':'badge-rose'}"><span class="dot"></span>${parseOk?'解析成功':'解析失败'}</span></td>
+          <td><span class="action-link">预览</span> <span style="color:var(--text3);margin:0 4px">|</span> <span class="action-link danger">删除</span></td>
+        </tr>`;
+      }).join('');
+
+      // 统计
+      const succ = keLibFiltered.filter(d => d.score >= 50).length;
+      const fail = total - succ;
+      const countEl = document.getElementById('ke-lib-count-label');
+      if (countEl) countEl.textContent = `${total} 篇 · 解析成功 ${succ} · 失败 ${fail}`;
+
+      // 分页
+      const totalPages = Math.ceil(total / KE_LIB_PAGE_SIZE);
+      const pagEl = document.getElementById('ke-lib-pagination');
+      if (!pagEl) return;
+      if (totalPages <= 1) { pagEl.innerHTML = ''; return; }
+
+      let html = `<button class="ke-page-btn" onclick="keLibGoPage(${keLibPage-1})" ${keLibPage===1?'disabled':''}>‹</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="ke-page-btn ${i===keLibPage?'active':''}" onclick="keLibGoPage(${i})">${i}</button>`;
+      }
+      html += `<button class="ke-page-btn" onclick="keLibGoPage(${keLibPage+1})" ${keLibPage===totalPages?'disabled':''}>›</button>`;
+      pagEl.innerHTML = html;
+    }
+
+    function keLibGoPage(n) {
+      const total = keLibFiltered.length;
+      const totalPages = Math.ceil(total / KE_LIB_PAGE_SIZE);
+      if (n < 1 || n > totalPages) return;
+      keLibPage = n;
+      keLibRenderPage();
+    }
+
+    function keToggleFilterConfig() {
+      const body = document.getElementById('ke-lib-filter-body');
+      const icon = document.getElementById('ke-filter-toggle-icon');
+      if (!body) return;
+      const hidden = body.style.display === 'none';
+      body.style.display = hidden ? 'grid' : 'none';
+      if (icon) icon.textContent = hidden ? '收起 ▲' : '展开 ▼';
+    }
+
     // ──────────────────────────────────────────────
     //  INIT: start on task center list
     // ──────────────────────────────────────────────
@@ -9672,6 +9958,8 @@
     // 初始化一次抽取配置摘要 / 高级设置默认值
     updateKeConfigSummary();
     renderKeConceptTypes('中粒度（推荐）');
+    // 初始化 ke-library 表格
+    keLibRenderTable();
 
     // ══════════════════════════════════════════════
     //  WORKFLOW ENGINE (scoped, prefixed wf_)
