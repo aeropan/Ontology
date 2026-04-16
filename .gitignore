@@ -1,0 +1,16 @@
+.env
+
+# VSCode 配置
+.vscode/
+
+# 备份文件与目录
+backup/
+data/data_explorer_backup.xlsx
+
+# 脚本与文档（暂不提交）
+update_data.py
+scripts/algo_tag_stats_spec.md
+README.md
+数据更新操作手册.md
+新功能页面融合手册.md
+
