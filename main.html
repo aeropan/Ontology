@@ -5848,11 +5848,16 @@
 
     <!-- ══ 折叠块：选择参与抽取的文献 ══ -->
     <div style="margin-bottom:12px">
-      <div onclick="keToggleSection('ke-lit-panel','ke-lit-icon')"
-        style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 18px;cursor:pointer;user-select:none">
-        <span style="font-size:13px;font-weight:600;color:var(--text1)">选择参与抽取的文献</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 18px;cursor:pointer;user-select:none"
+           onclick="keToggleSection('ke-lit-panel','ke-lit-icon')">
         <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:11px;color:var(--text3)">已选 22 / 24 篇</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text1)">选择参与抽取的文献</span>
+          <button class="ke-btn-quality" onclick="event.stopPropagation();keConfigToggleAll()">全选 / 取消全选</button>
+          <button class="ke-btn-quality" onclick="event.stopPropagation();keConfigSelectByQuality('high')">高质量</button>
+          <button class="ke-btn-quality" onclick="event.stopPropagation();keConfigSelectByQuality('medium')">中等质量</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace" id="ke-cfg-sel-label">已选 — / — 篇</span>
           <span id="ke-lit-icon" style="color:var(--text3);font-size:12px;transition:transform 0.2s">展开/折叠 ▼</span>
         </div>
       </div>
@@ -5861,48 +5866,15 @@
           <table>
             <thead>
               <tr>
-                <th style="width:36px">
-                  <div class="checkbox checked">✓</div>
-                </th>
+                <th style="width:36px"><input type="checkbox" id="ke-cfg-cb-all" style="accent-color:var(--blue);cursor:pointer" onchange="keConfigToggleAllCb(this.checked)"></th>
                 <th>文献标题</th>
-                <th style="width:80px">年份</th>
-                <th style="width:100px">解析状态</th>
+                <th style="width:60px">年份</th>
+                <th style="width:140px">综合评分</th>
+                <th style="width:120px">状态</th>
+                <th style="width:60px">操作</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <div class="checkbox checked">✓</div>
-                </td>
-                <td style="font-size:12px">A deep learning-based evolutionary model for short-term wind speed forecasting</td>
-                <td>2024</td>
-                <td><span class="badge badge-green"><span class="dot"></span>可用</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="checkbox checked">✓</div>
-                </td>
-                <td style="font-size:12px">The study and application of a novel hybrid forecasting model</td>
-                <td>2023</td>
-                <td><span class="badge badge-green"><span class="dot"></span>可用</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="checkbox checked">✓</div>
-                </td>
-                <td style="font-size:12px">Forecasting Wind Speed using Artificial Neural Networks</td>
-                <td>2024</td>
-                <td><span class="badge badge-green"><span class="dot"></span>可用</span></td>
-              </tr>
-              <tr>
-                <td>
-                  <div class="checkbox checked">✓</div>
-                </td>
-                <td style="font-size:12px">Wind speed prediction using LSTM and ARIMA time series analysis models</td>
-                <td>2023</td>
-                <td><span class="badge badge-green"><span class="dot"></span>可用</span></td>
-              </tr>
-            </tbody>
+            <tbody id="ke-cfg-tbody"></tbody>
           </table>
         </div>
       </div>
@@ -9822,6 +9794,156 @@
     });
 
     // ══════════════════════════════════════════════
+    //  KE-CONFIG：抽取配置 · 文献选择
+    // ══════════════════════════════════════════════
+    // 与 keLibDocs 共用同一份数据，增加 selected 字段
+    // （keLibDocs 在后面定义，用 DOMContentLoaded 延迟初始化）
+
+    let keConfigDrawerIdx = -1;
+
+    function keConfigStatusColor(s) {
+      return s === 'pass' ? 'var(--green)' : s === 'review' ? 'var(--amber)' : 'var(--rose)';
+    }
+    function keConfigBadgeClass(s) {
+      return s === 'pass' ? 'ke-badge-pass' : s === 'review' ? 'ke-badge-review' : 'ke-badge-reject';
+    }
+    function keConfigStatusLabel(s) {
+      return s === 'pass' ? '✓ 已通过' : s === 'review' ? '△ 建议复审' : '× 不建议使用';
+    }
+
+    function keConfigRenderTable() {
+      if (typeof keLibDocs === 'undefined') return;
+      const tbody = document.getElementById('ke-cfg-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = keLibDocs.map((d, i) => {
+        const color = keConfigStatusColor(d.status);
+        return `<tr>
+          <td style="text-align:center">
+            <input type="checkbox" id="ke-cfg-cb-${i}" style="accent-color:var(--blue);cursor:pointer"
+              ${d.selected ? 'checked' : ''} onchange="keConfigToggleDoc(${i}, this.checked)">
+          </td>
+          <td style="font-size:12px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+              title="${d.title}">${d.title}</td>
+          <td style="font-size:11px;font-family:'JetBrains Mono',monospace">${d.year}</td>
+          <td>
+            <div class="ke-score-cell">
+              <div class="ke-score-bar"><div class="ke-score-fill" style="width:${d.score}%;background:${color}"></div></div>
+              <span class="ke-score-num" style="color:${color}">${d.score}</span>
+            </div>
+          </td>
+          <td><span class="ke-badge ${keConfigBadgeClass(d.status)}">${keConfigStatusLabel(d.status)}</span></td>
+          <td><button class="ke-btn-detail" onclick="keConfigOpenDrawer(${i})">详情</button></td>
+        </tr>`;
+      }).join('');
+
+      keConfigUpdateCount();
+    }
+
+    function keConfigToggleDoc(idx, checked) {
+      if (typeof keLibDocs === 'undefined') return;
+      keLibDocs[idx].selected = checked;
+      keConfigUpdateCount();
+    }
+
+    function keConfigToggleAllCb(checked) {
+      if (typeof keLibDocs === 'undefined') return;
+      keLibDocs.forEach(d => d.selected = checked);
+      keConfigRenderTable();
+    }
+
+    function keConfigToggleAll() {
+      if (typeof keLibDocs === 'undefined') return;
+      const allSel = keLibDocs.every(d => d.selected);
+      keLibDocs.forEach(d => d.selected = !allSel);
+      const cbAll = document.getElementById('ke-cfg-cb-all');
+      if (cbAll) cbAll.checked = !allSel;
+      keConfigRenderTable();
+    }
+
+    function keConfigSelectByQuality(level) {
+      if (typeof keLibDocs === 'undefined') return;
+      keLibDocs.forEach(d => {
+        if (level === 'high')   d.selected = (d.status === 'pass');
+        if (level === 'medium') d.selected = (d.status !== 'reject');
+      });
+      const cbAll = document.getElementById('ke-cfg-cb-all');
+      if (cbAll) cbAll.checked = false;
+      keConfigRenderTable();
+    }
+
+    function keConfigUpdateCount() {
+      if (typeof keLibDocs === 'undefined') return;
+      const sel = keLibDocs.filter(d => d.selected).length;
+      const total = keLibDocs.length;
+      const el = document.getElementById('ke-cfg-sel-label');
+      if (el) el.textContent = `已选 ${sel} / ${total} 篇`;
+      // 同步摘要卡片
+      const countEl = document.getElementById('ke-config-sel-count');
+      if (countEl) countEl.textContent = sel;
+    }
+
+    /* ── 抽屉 ── */
+    function keConfigOpenDrawer(idx) {
+      if (typeof keLibDocs === 'undefined') return;
+      keConfigDrawerIdx = idx;
+      const d = keLibDocs[idx];
+      const color = keConfigStatusColor(d.status);
+
+      document.getElementById('ke-cfg-drawer-title').textContent = d.title;
+      document.getElementById('ke-cfg-drawer-score-big').textContent  = d.score;
+      document.getElementById('ke-cfg-drawer-score-big').style.color  = color;
+      document.getElementById('ke-cfg-drawer-badge').innerHTML =
+        `<span class="ke-badge ${keConfigBadgeClass(d.status)}">${keConfigStatusLabel(d.status)}</span>`;
+
+      keConfigSetDim('rel',  d.rel,  color);
+      keConfigSetDim('time', d.tim,  color);
+      keConfigSetDim('auth', d.auth, color);
+
+      document.getElementById('ke-cfg-drawer-note').textContent    = d.note;
+      document.getElementById('ke-cfg-drawer-preview').textContent = d.preview;
+
+      keConfigUpdateDrawerBtn(d.selected);
+
+      document.getElementById('ke-cfg-drawer-overlay').classList.add('active');
+      document.getElementById('ke-cfg-detail-drawer').classList.add('active');
+    }
+
+    function keConfigSetDim(key, val, color) {
+      document.getElementById(`ke-dim-${key}-val`).textContent       = val;
+      document.getElementById(`ke-dim-${key}-val`).style.color       = color;
+      document.getElementById(`ke-dim-${key}-fill`).style.width      = val + '%';
+      document.getElementById(`ke-dim-${key}-fill`).style.background = color;
+    }
+
+    function keConfigCloseDrawer() {
+      document.getElementById('ke-cfg-drawer-overlay').classList.remove('active');
+      document.getElementById('ke-cfg-detail-drawer').classList.remove('active');
+      keConfigDrawerIdx = -1;
+    }
+
+    function keConfigToggleDrawerSelect() {
+      if (keConfigDrawerIdx < 0 || typeof keLibDocs === 'undefined') return;
+      keLibDocs[keConfigDrawerIdx].selected = !keLibDocs[keConfigDrawerIdx].selected;
+      keConfigUpdateDrawerBtn(keLibDocs[keConfigDrawerIdx].selected);
+      const cb = document.getElementById(`ke-cfg-cb-${keConfigDrawerIdx}`);
+      if (cb) cb.checked = keLibDocs[keConfigDrawerIdx].selected;
+      keConfigUpdateCount();
+    }
+
+    function keConfigUpdateDrawerBtn(selected) {
+      const btn = document.getElementById('ke-cfg-btn-toggle-select');
+      if (!btn) return;
+      if (selected) {
+        btn.className = 'ke-btn-toggle-select selected';
+        btn.textContent = '✓ 已选择';
+      } else {
+        btn.className = 'ke-btn-toggle-select unselected';
+        btn.textContent = '未选择';
+      }
+    }
+
+    // ══════════════════════════════════════════════
     //  KE-LIBRARY：文献管理
     // ══════════════════════════════════════════════
     const keLibDocs = [
@@ -9850,6 +9972,9 @@
       { title: 'Statistical downscaling of wind speed from global climate models', src: 'Clim. Dyn.', way: '上传', year: 2020, size: '2.0MB', score: 35, status: 'reject', rel: 38, tim: 30, auth: 40, note: '2020 年发表，统计降尺度方法已被深度学习大幅超越，时效性严重不足。', preview: 'Statistical downscaling derives local wind speed from GCM outputs using transfer functions. Methodology superseded by recent diffusion-based downscaling.' },
       { title: 'Adaptive neuro-fuzzy inference for wind power prediction', src: 'Soft Comput.', way: '文献库', year: 2020, size: '1.1MB', score: 48, status: 'reject', rel: 52, tim: 38, auth: 50, note: 'ANFIS 方法发表于 2020 年，已被深度学习取代，不建议纳入。', preview: 'ANFIS combines neural network learning with fuzzy logic for wind power prediction. Performance lags modern deep learning by 30%+ on equivalent datasets.' },
     ];
+
+    // 初始化 selected 字段：pass/review 默认选中，reject 默认不选
+    keLibDocs.forEach(d => { d.selected = (d.status !== 'reject'); });
 
     const KE_LIB_PAGE_SIZE = 10;
     let keLibPage = 1;
@@ -9960,6 +10085,8 @@
     renderKeConceptTypes('中粒度（推荐）');
     // 初始化 ke-library 表格
     keLibRenderTable();
+    // 初始化 ke-config 文献选择表格
+    keConfigRenderTable();
 
     // ══════════════════════════════════════════════
     //  WORKFLOW ENGINE (scoped, prefixed wf_)
@@ -10489,8 +10616,63 @@
         goPage(e.data.page);
       }
     });
-    
+
   </script>
+
+  <!-- ── ke-config 详情抽屉 ── -->
+  <div class="ke-drawer-overlay" id="ke-cfg-drawer-overlay" onclick="keConfigCloseDrawer()"></div>
+  <div class="ke-detail-drawer" id="ke-cfg-detail-drawer">
+    <div class="ke-drawer-head">
+      <div class="ke-drawer-head-top">
+        <div class="ke-drawer-doc-title" id="ke-cfg-drawer-title">—</div>
+        <button class="ke-drawer-close" onclick="keConfigCloseDrawer()">×</button>
+      </div>
+      <div class="ke-drawer-score-row">
+        <div id="ke-cfg-drawer-badge"></div>
+        <div>
+          <div class="ke-drawer-score-big" id="ke-cfg-drawer-score-big">—</div>
+          <div class="ke-drawer-score-caption">综合评分</div>
+        </div>
+      </div>
+    </div>
+    <div class="ke-drawer-body">
+      <div class="ke-drawer-section">
+        <div class="ke-drawer-section-title">三维评估</div>
+        <div class="ke-dim-item">
+          <div class="ke-dim-label-row">
+            <span class="ke-dim-label">相关性</span>
+            <span class="ke-dim-value" id="ke-dim-rel-val">—</span>
+          </div>
+          <div class="ke-dim-bar"><div class="ke-dim-fill" id="ke-dim-rel-fill"></div></div>
+        </div>
+        <div class="ke-dim-item">
+          <div class="ke-dim-label-row">
+            <span class="ke-dim-label">时效性</span>
+            <span class="ke-dim-value" id="ke-dim-time-val">—</span>
+          </div>
+          <div class="ke-dim-bar"><div class="ke-dim-fill" id="ke-dim-time-fill"></div></div>
+        </div>
+        <div class="ke-dim-item">
+          <div class="ke-dim-label-row">
+            <span class="ke-dim-label">权威度</span>
+            <span class="ke-dim-value" id="ke-dim-auth-val">—</span>
+          </div>
+          <div class="ke-dim-bar"><div class="ke-dim-fill" id="ke-dim-auth-fill"></div></div>
+        </div>
+      </div>
+      <div class="ke-drawer-section">
+        <div class="ke-drawer-section-title">质检说明</div>
+        <div class="ke-drawer-text-block" id="ke-cfg-drawer-note">—</div>
+      </div>
+      <div class="ke-drawer-section">
+        <div class="ke-drawer-section-title">采样内容预览（前 3 页）</div>
+        <div class="ke-drawer-text-block" id="ke-cfg-drawer-preview">—</div>
+      </div>
+    </div>
+    <div class="ke-drawer-foot">
+      <button class="ke-btn-toggle-select" id="ke-cfg-btn-toggle-select" onclick="keConfigToggleDrawerSelect()">—</button>
+    </div>
+  </div>
 </body>
 
 </html>
