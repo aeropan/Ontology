@@ -481,15 +481,51 @@
       margin-top: 3px;
     }
 
-    /* ── RIGHT PANEL ── */
-    .wf-right-panel {
-      width: 210px; flex-shrink: 0;
+    /* ── DRAWER (overlay right panel) ── */
+    .wf-drawer {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 280px;
+      z-index: 20;
       background: var(--panel);
       border-left: 1px solid var(--border);
       backdrop-filter: blur(20px);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform .25s ease;
+    }
+
+    .wf-drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .drawer-title {
+      font-size: 11px; color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+
+    .drawer-close {
+      width: 22px; height: 22px; border-radius: 5px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; cursor: pointer; transition: all .15s;
+    }
+
+    .drawer-close:hover { background: rgba(255,255,255,.12); color: var(--text); }
+
+    .drawer-body {
+      flex: 1; min-height: 0;
+      overflow-y: auto;
       padding: 14px;
       display: flex; flex-direction: column; gap: 12px;
-      overflow-y: auto;
     }
 
     .prop-title {
@@ -540,10 +576,10 @@
       color: #e2e8f0;
     }
 
-    /* 右侧面板滚动条 */
-    .wf-right-panel::-webkit-scrollbar { width: 3px; }
-    .wf-right-panel::-webkit-scrollbar-track { background: transparent; }
-    .wf-right-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    /* 抽屉滚动条 */
+    .drawer-body::-webkit-scrollbar { width: 3px; }
+    .drawer-body::-webkit-scrollbar-track { background: transparent; }
+    .drawer-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
@@ -624,6 +660,117 @@
       background: rgba(245,158,11,.15);
       border-color: var(--accent-amber);
       box-shadow: 0 0 14px rgba(245,158,11,.2);
+    }
+
+    /* ── ASSET LINK ROW ── */
+    .asset-link-row {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 8px;
+      background: rgba(6,182,212,.06);
+      border: 1px solid rgba(6,182,212,.2);
+      border-radius: 6px;
+      font-size: 10px; color: var(--accent-cyan); cursor: pointer;
+    }
+    .asset-link-row:hover { background: rgba(6,182,212,.12); }
+
+    /* ── SYNC TABLE ── */
+    .sync-table { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .sync-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 8px; font-size: 10px; background: rgba(255,255,255,.02);
+    }
+    .sync-row + .sync-row { border-top: 1px solid var(--border); }
+    .sync-row-lbl { color: var(--text-muted); }
+    .sync-row-val { color: var(--text-dim); font-family: 'Space Mono', monospace; font-size: 9px; }
+    .sync-row.highlight .sync-row-lbl { color: var(--accent-cyan); }
+    .sync-row.highlight .sync-row-val { color: var(--accent-cyan); }
+
+    /* ── CHECK GROUP ── */
+    .check-group { display: flex; flex-direction: column; gap: 6px; }
+    .check-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 8px;
+      background: rgba(255,255,255,.02);
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 11px; color: var(--text-dim); cursor: pointer;
+    }
+    .check-item input[type=checkbox] { accent-color: var(--accent-cyan); }
+
+    /* ── SEMANTIC PREVIEW ── */
+    .semantic-preview {
+      background: rgba(139,92,246,.06);
+      border: 1px solid rgba(139,92,246,.2);
+      border-radius: 8px; padding: 10px;
+    }
+    .semantic-preview-title {
+      font-size: 9px; color: var(--accent-purple);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+    }
+    .semantic-quote {
+      font-size: 11px; color: var(--text-dim); line-height: 1.6;
+      border-left: 2px solid var(--accent-purple); padding-left: 8px;
+    }
+
+    /* ── DIFF TABLE ── */
+    .diff-table { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .diff-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 8px; font-size: 10px; background: rgba(255,255,255,.02);
+    }
+    .diff-row + .diff-row { border-top: 1px solid var(--border); }
+    .diff-row-key { color: var(--text-muted); }
+    .diff-badge { padding: 1px 7px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+    .diff-badge-warn { background: rgba(245,158,11,.15); color: var(--accent-amber); }
+    .diff-badge-ok   { background: rgba(16,185,129,.15);  color: var(--accent-green); }
+    .diff-note {
+      font-size: 10px; color: var(--text-muted); line-height: 1.6;
+      padding: 6px 8px; background: rgba(255,255,255,.02);
+      border: 1px solid var(--border); border-radius: 6px;
+    }
+
+    /* ── AUDIT BOX ── */
+    .audit-box {
+      background: rgba(245,158,11,.06);
+      border: 1px solid rgba(245,158,11,.2);
+      border-radius: 8px; padding: 10px;
+    }
+    .audit-box-title {
+      font-size: 9px; color: var(--accent-amber);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+    }
+    .audit-box-text { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+    /* ── DOC PREVIEW ── */
+    .doc-preview {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px;
+    }
+    .doc-preview-title {
+      font-size: 9px; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
+    }
+    .doc-page {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 4px; padding: 8px;
+      font-size: 9.5px; color: var(--text-dim); line-height: 1.7;
+    }
+    .doc-highlight {
+      background: rgba(245,158,11,.25); color: var(--accent-amber);
+      padding: 0 2px; border-radius: 2px;
+    }
+    .export-pdf-btn {
+      width: 100%; padding: 8px;
+      background: rgba(16,185,129,.08);
+      border: 1px solid rgba(16,185,129,.25); border-radius: 7px;
+      color: var(--accent-green); font-size: 11px; font-weight: 600;
+      font-family: 'Noto Sans SC', sans-serif; cursor: pointer;
+      transition: all .2s; letter-spacing: .04em;
+    }
+    .export-pdf-btn:hover {
+      background: rgba(16,185,129,.15); border-color: var(--accent-green);
+      box-shadow: 0 0 12px rgba(16,185,129,.2);
     }
 
     /* ── ANIMATIONS ── */
@@ -772,15 +919,15 @@
             <rect width="100%" height="100%" fill="url(#wf-grid)"/>
           </svg>
 
-          <!-- scaleWrap: 980×560 design space -->
-          <div id="wf-scaleWrap" style="position:absolute;top:0;left:0;width:980px;height:560px;transform-origin:top left;">
+          <!-- scaleWrap: 980×780 design space -->
+          <div id="wf-scaleWrap" style="position:absolute;top:0;left:0;width:980px;height:780px;transform-origin:top left;">
 
             <svg id="wf-svgLayer"
                  style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;"></svg>
             <canvas id="wf-glowCanvas"
-                    style="position:absolute;inset:0;pointer-events:none;z-index:1;width:980px;height:560px;"></canvas>
+                    style="position:absolute;inset:0;pointer-events:none;z-index:1;width:980px;height:780px;"></canvas>
             <canvas id="wf-pCanvas"
-                    style="position:absolute;inset:0;pointer-events:none;z-index:2;width:980px;height:560px;"></canvas>
+                    style="position:absolute;inset:0;pointer-events:none;z-index:2;width:980px;height:780px;"></canvas>
 
             <!--
               Layout (design 980×560):
@@ -872,16 +1019,60 @@
               <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
             </div>
 
+            <!-- n9: 输入节点模板 -->
+            <div class="node node-purple" id="wf-n9"
+                 style="left:55px;top:630px;animation-delay:.80s"
+                 onclick="wf_selectNode('wf-n9','输入节点模板','api_input','数据输入节点模板，支持多类气象数据集接入，配置再分析与预报数据，作为下游检索的标准化数据源。')">
+              <div class="node-icon icon-purple">🔌</div>
+              <div class="node-name">输入节点模板</div>
+              <div class="node-type">api_input</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+              <div style="font-size:9px;color:var(--accent-purple);margin-top:3px;opacity:0.7">点击查看</div>
+            </div>
+
+            <!-- n10: 知识检索节点 -->
+            <div class="node node-cyan" id="wf-n10"
+                 style="left:270px;top:630px;animation-delay:.88s"
+                 onclick="wf_selectNode('wf-n10','知识检索节点','rag_target','基于语义向量的知识检索节点，在配置的知识库范围内执行语义解析与文献匹配。')">
+              <div class="node-icon icon-cyan">📚</div>
+              <div class="node-name">知识检索节点</div>
+              <div class="node-type">rag_target</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+              <div style="font-size:9px;color:var(--accent-cyan);margin-top:3px;opacity:0.7">点击查看</div>
+            </div>
+
+            <!-- n11: 推理对比节点 -->
+            <div class="node node-amber" id="wf-n11"
+                 style="left:490px;top:630px;animation-delay:.96s"
+                 onclick="wf_selectNode('wf-n11','推理对比节点','inference_compare','对多模型推理结果进行差分比对，识别异常属性值并输出置信度评分，支持超标预警标注。')">
+              <div class="node-icon icon-amber">⚖️</div>
+              <div class="node-name">推理对比节点</div>
+              <div class="node-type">inference_compare</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+              <div style="font-size:9px;color:var(--accent-amber);margin-top:3px;opacity:0.7">点击查看</div>
+            </div>
+
+            <!-- n12: 文献结果输出 -->
+            <div class="node node-green" id="wf-n12"
+                 style="left:700px;top:630px;animation-delay:1.04s"
+                 onclick="wf_selectNode('wf-n12','文献结果输出','doc_output_confirm','汇总推理比对结果，输出带原文溯源的审计报告，支持导出为 PDF 格式供决策使用。')">
+              <div class="node-icon icon-green">📋</div>
+              <div class="node-name">文献结果输出</div>
+              <div class="node-type">doc_output_confirm</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+              <div style="font-size:9px;color:var(--accent-green);margin-top:3px;opacity:0.7">点击查看</div>
+            </div>
+
           </div><!-- /wf-scaleWrap -->
 
           <!-- 画布顶部流程基础信息 -->
           <div class="wf-canvas-infobar">
             <div class="ib-stat">
-              <div class="ib-val val-cyan">8</div>
+              <div class="ib-val val-cyan">12</div>
               <div class="ib-lbl">节点</div>
             </div>
             <div class="ib-stat">
-              <div class="ib-val val-amber">7</div>
+              <div class="ib-val val-amber">10</div>
               <div class="ib-lbl">连线</div>
             </div>
             <div class="ib-stat">
@@ -896,14 +1087,14 @@
 
         </div><!-- /wf-canvas -->
 
-        <!-- RIGHT PANEL -->
-        <div class="wf-right-panel">
-          <div class="prop-title">⚙ 属性配置</div>
-          <div id="wf-propContent">
-            <div class="empty-prop">
-              <div class="icon">☲</div>
-              <div>选择一个节点<br>以编辑属性</div>
-            </div>
+        <!-- DRAWER (overlay right panel) -->
+        <div class="wf-drawer" id="wf-drawer">
+          <div class="drawer-header">
+            <div class="drawer-title" id="wf-drawerTitle">⚙ 属性配置</div>
+            <div class="drawer-close" onclick="wf_closeDrawer()">×</div>
+          </div>
+          <div class="drawer-body" id="wf-propContent">
+            <!-- content injected by wf_selectNode -->
           </div>
         </div>
 
@@ -1018,12 +1209,30 @@
     // ── Node select ──
     // 节点分组：datasource / llm / model(默认)
     const WF_NODE_GROUP = {
-      'wf-n1': 'datasource',  // 协议
-      'wf-n2': 'datasource',  // 规范
-      'wf-n3': 'datasource',  // 因果链路
-      'wf-n5': 'datasource',  // 多源数据接入
-      'wf-n7': 'llm',         // 星阙大模型
+      'wf-n1': 'datasource',         // 协议
+      'wf-n2': 'datasource',         // 规范
+      'wf-n3': 'datasource',         // 因果链路
+      'wf-n5': 'datasource',         // 多源数据接入
+      'wf-n7': 'llm',                // 星阙大模型
+      'wf-n9':  'api_input',         // 输入节点模板
+      'wf-n10': 'rag_target',        // 知识检索节点
+      'wf-n11': 'inference_compare', // 推理对比节点
+      'wf-n12': 'doc_output',        // 文献结果输出
     };
+
+    // 两级联动数据集映射
+    const WF_DATASET_MAP = {
+      '再分析数据': ['ERA5-single levels-40years', 'ERA5-pressure-levels-40years'],
+      '预报数据':   ['NCEP GFS 全球预报历史存档', 'ECMWF HRES 全球数值预报数据（0.25°）', 'GFS'],
+    };
+
+    function wf_updateDataset() {
+      const type  = document.getElementById('wf-ds-type')?.value;
+      const setEl = document.getElementById('wf-ds-set');
+      if (!setEl || !type) return;
+      const opts = WF_DATASET_MAP[type] || [];
+      setEl.innerHTML = opts.map(o => `<option>${o}</option>`).join('');
+    }
 
     function wf_nodeExtraHTML(id) {
       const g = WF_NODE_GROUP[id] || 'model';
@@ -1077,6 +1286,115 @@
         </div>`;
       }
 
+      if (g === 'api_input') {
+        return `
+        <div class="prop-group">
+          <div class="prop-label" style="margin-bottom:6px">数据接入配置</div>
+          <div class="node-extra-box">
+            <div>
+              <div class="prop-label">数据类型</div>
+              <select class="prop-select" id="wf-ds-type" style="margin-top:4px" onchange="wf_updateDataset()">
+                <option>再分析数据</option>
+                <option>预报数据</option>
+              </select>
+            </div>
+            <div>
+              <div class="prop-label">数据集</div>
+              <select class="prop-select" id="wf-ds-set" style="margin-top:4px">
+                <option>ERA5-single levels-40years</option>
+                <option>ERA5-pressure-levels-40years</option>
+              </select>
+            </div>
+          </div>
+          <div class="asset-link-row" style="margin-top:6px" onclick="showToast('跳转至资产平台...')">
+            🔗 <span>关联资产平台</span>
+            <span style="margin-left:auto;opacity:0.6">→</span>
+          </div>
+          <div class="prop-label" style="margin-top:10px;margin-bottom:4px">已同步标准化属性</div>
+          <div class="sync-table">
+            <div class="sync-row">
+              <span class="sync-row-lbl">额定功率</span>
+              <span class="sync-row-val">2000 kW</span>
+            </div>
+            <div class="sync-row highlight">
+              <span class="sync-row-lbl">切出风速</span>
+              <span class="sync-row-val">25 m/s</span>
+            </div>
+            <div class="sync-row">
+              <span class="sync-row-lbl">工作温度</span>
+              <span class="sync-row-val">-20 ~ 40 °C</span>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      if (g === 'rag_target') {
+        return `
+        <div class="prop-group">
+          <div class="prop-label" style="margin-bottom:6px">检索库范围</div>
+          <div class="check-group">
+            <label class="check-item"><input type="checkbox" checked> 风力发电领域知识库</label>
+            <label class="check-item"><input type="checkbox" checked> ERA5气象数据文档库</label>
+            <label class="check-item"><input type="checkbox"> 工业设备规范文档库</label>
+          </div>
+          <div class="semantic-preview" style="margin-top:8px">
+            <div class="semantic-preview-title">语义解析预览</div>
+            <div class="semantic-quote">
+              已提取关键实体：风速、切出风速阈值、山地地形修正系数，语义相似度 0.87
+            </div>
+          </div>
+        </div>`;
+      }
+
+      if (g === 'inference_compare') {
+        return `
+        <div class="prop-group">
+          <div class="prop-label">分析模式</div>
+          <select class="prop-select" style="margin-top:4px">
+            <option>差分比对</option>
+            <option>多模型融合</option>
+            <option>置信区间分析</option>
+          </select>
+          <div class="prop-label" style="margin-top:10px;margin-bottom:4px">差分比对结果</div>
+          <div class="diff-table">
+            <div class="diff-row">
+              <span class="diff-row-key">切出风速</span>
+              <span class="diff-badge diff-badge-warn">超标</span>
+            </div>
+            <div class="diff-row">
+              <span class="diff-row-key">环境温度</span>
+              <span class="diff-badge diff-badge-ok">通过</span>
+            </div>
+          </div>
+          <div class="diff-note" style="margin-top:6px">
+            切出风速偏差 +3.2 m/s，超出标准阈值 12.8%，建议复核山地地形修正系数。
+          </div>
+        </div>`;
+      }
+
+      if (g === 'doc_output') {
+        return `
+        <div class="prop-group">
+          <div class="audit-box">
+            <div class="audit-box-title">⚠ 审计结论</div>
+            <div class="audit-box-text">
+              检测到 1 项超标属性，建议在导出报告前确认修正意见。
+            </div>
+          </div>
+          <div class="doc-preview" style="margin-top:8px">
+            <div class="doc-preview-title">原文溯源</div>
+            <div class="doc-page">
+              …风速预测误差在山地地形条件下，受地形遮蔽影响，
+              <span class="doc-highlight">切出风速阈值应上调至 25~28 m/s</span>
+              区间，以降低非预期停机概率…
+            </div>
+          </div>
+          <button class="export-pdf-btn" style="margin-top:8px" onclick="showToast('正在生成 PDF 报告…')">
+            ↓ 导出 PDF 报告
+          </button>
+        </div>`;
+      }
+
       // 其他节点：模型选择下拉
       return `
         <div class="prop-group">
@@ -1090,6 +1408,24 @@
     }
 
     let wf_selectedNode = null;
+
+    function wf_openDrawer(name) {
+      const d = document.getElementById('wf-drawer');
+      const t = document.getElementById('wf-drawerTitle');
+      if (t) t.textContent = '⚙ ' + name;
+      if (d) d.classList.add('open');
+    }
+
+    function wf_closeDrawer() {
+      const d = document.getElementById('wf-drawer');
+      if (d) d.classList.remove('open');
+      if (wf_selectedNode) {
+        const prev = document.getElementById(wf_selectedNode);
+        if (prev) prev.classList.remove('active');
+        wf_selectedNode = null;
+      }
+    }
+
     function wf_selectNode(id, name, type, desc) {
       if (wf_selectedNode) {
         const prev = document.getElementById(wf_selectedNode);
@@ -1098,6 +1434,7 @@
       wf_selectedNode = id;
       const el = document.getElementById(id);
       if (el) el.classList.add('active');
+      wf_openDrawer(name);
       document.getElementById('wf-propContent').innerHTML = `
         <div class="prop-group"><div class="prop-label">节点名称</div>
           <input class="prop-input" value="${name}"/></div>
@@ -1121,7 +1458,7 @@
     }
 
     // ── Node status ──
-    const WF_NODE_ORDER = ['wf-n1','wf-n2','wf-n3','wf-n4','wf-n5','wf-n6','wf-n7','wf-n8'];
+    const WF_NODE_ORDER = ['wf-n1','wf-n2','wf-n3','wf-n4','wf-n5','wf-n6','wf-n7','wf-n8','wf-n9','wf-n10','wf-n11','wf-n12'];
     let wf_runCount = 0;
 
     function wf_setNodeStatus(id, status) {
@@ -1204,6 +1541,10 @@
       { from: 'wf-n4', to: 'wf-n6', color: '#06b6d4' },
       { from: 'wf-n6', to: 'wf-n7', color: '#8b5cf6' },
       { from: 'wf-n7', to: 'wf-n8', color: '#10b981' },
+      // 新增链路（独立，不连接上方节点）
+      { from: 'wf-n9',  to: 'wf-n10', color: '#8b5cf6' },
+      { from: 'wf-n10', to: 'wf-n11', color: '#06b6d4' },
+      { from: 'wf-n11', to: 'wf-n12', color: '#10b981' },
     ];
 
     const wf_svgEl      = document.getElementById('wf-svgLayer');
@@ -1236,7 +1577,7 @@
       wf_svgEl.innerHTML = '';
       wf_builtConns = [];
 
-      const W = 980, H = 560;
+      const W = 980, H = 780;
       wf_svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
       wf_svgEl.setAttribute('width',  W);
       wf_svgEl.setAttribute('height', H);
@@ -1416,7 +1757,7 @@
     function wf_scaleCanvas() {
       const wrap = document.getElementById('wf-canvasWrap');
       if (!wrap) return;
-      const DESIGN_W = 980, DESIGN_H = 560;
+      const DESIGN_W = 980, DESIGN_H = 780;
       const availW = wrap.clientWidth, availH = wrap.clientHeight;
       if (!availW || !availH) return;
       VP.scale = Math.min(availW / DESIGN_W, availH / DESIGN_H, 1);
