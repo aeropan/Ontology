@@ -3911,42 +3911,97 @@
     .ke-btn-toggle-select.unselected:hover { color: var(--text2); border-color: var(--border2); }
 
     /* 文献过滤配置面板 */
-    .ke-filter-config {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; overflow: hidden; margin-bottom: 14px;
+    /* ── ke-library 过滤配置面板（参考 IndustryInsights_setting 风格） ── */
+    .ke-flt-wrap {
+      margin-bottom: 14px; border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; background: var(--surface);
     }
-    .ke-filter-config-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 16px; cursor: pointer; user-select: none;
+    .ke-flt-toggle {
+      width: 100%; display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 11px 18px; background: var(--surface2);
+      border: none; font-family: inherit; cursor: pointer;
+      color: var(--text2); transition: background 0.15s;
     }
-    .ke-filter-config-body {
-      padding: 16px; border-top: 1px solid var(--border);
-      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    .ke-flt-toggle:hover { background: var(--surface3); color: var(--text1); }
+    .ke-flt-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600; color: var(--text1);
     }
-    .ke-filter-field { display: flex; flex-direction: column; gap: 6px; }
-    .ke-filter-label { font-size: 11px; color: var(--text2); }
-    .ke-filter-select {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 6px; padding: 7px 10px;
-      font-size: 12px; color: var(--text1); font-family: inherit;
-      outline: none; cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%2394a3b8' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    .ke-flt-right {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text3);
     }
-    .ke-filter-select:focus { border-color: var(--blue); }
-    .ke-filter-select option { background: var(--surface2); }
+    .ke-flt-chevron { transition: transform 0.2s; }
+    .ke-flt-chevron.open { transform: rotate(180deg); }
 
-    .ke-filter-slider-row { display: flex; align-items: center; gap: 10px; }
-    .ke-filter-slider {
-      flex: 1; accent-color: var(--blue);
-      -webkit-appearance: none; height: 4px; border-radius: 2px;
-      background: var(--surface3); outline: none; cursor: pointer;
+    .ke-flt-panel {
+      display: none; padding: 18px 20px;
+      border-top: 1px solid var(--border);
+      flex-direction: column; gap: 16px;
     }
-    .ke-filter-slider::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
-      background: var(--blue); border: 2px solid var(--surface); cursor: pointer;
+    .ke-flt-panel.open { display: flex; }
+
+    .ke-flt-row { display: flex; gap: 16px; align-items: flex-start; }
+    .ke-flt-row.two-col > .ke-flt-item { flex: 1; }
+    .ke-flt-item { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .ke-flt-item-label {
+      font-size: 11px; color: var(--text3); letter-spacing: 0.4px;
+      display: flex; align-items: center; justify-content: space-between;
     }
+    .ke-flt-item-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--blue); font-weight: 600;
+    }
+    .ke-flt-select {
+      background: var(--bg); border: 1px solid var(--border2);
+      border-radius: 8px; padding: 8px 32px 8px 12px;
+      font-size: 12px; color: var(--text1); font-family: inherit;
+      outline: none; cursor: pointer; transition: border-color 0.15s;
+      appearance: none; width: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%23475569' stroke-width='1.5'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+    .ke-flt-select:focus { border-color: var(--blue); }
+    .ke-flt-select option { background: var(--surface2); }
+
+    .ke-flt-slider {
+      width: 100%; height: 4px; -webkit-appearance: none; appearance: none;
+      background: var(--border2); border-radius: 2px;
+      outline: none; cursor: pointer;
+    }
+    .ke-flt-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px;
+      border-radius: 50%; background: var(--blue);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--blue);
+      cursor: pointer; transition: transform 0.1s;
+    }
+    .ke-flt-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    .ke-flt-slider::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--blue); border: 2px solid var(--bg); cursor: pointer;
+    }
+
+    .ke-flt-prompt-wrap {
+      background: var(--bg); border: 1px solid var(--border2);
+      border-radius: 8px; overflow: hidden;
+    }
+    .ke-flt-prompt-bar {
+      padding: 7px 14px; font-size: 10px; color: var(--text3);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2); letter-spacing: 0.5px;
+    }
+    .ke-flt-prompt-pre {
+      padding: 14px 16px; font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text2); line-height: 1.8; max-height: 180px;
+      overflow-y: auto; margin: 0; white-space: pre-wrap; word-break: break-word;
+      scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+    }
+    .ke-flt-prompt-pre::-webkit-scrollbar { width: 4px; }
+    .ke-flt-prompt-pre::-webkit-scrollbar-track { background: transparent; }
+    .ke-flt-prompt-pre::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
   </style>
 </head>
 
@@ -5675,50 +5730,75 @@
     </div>
 
     <!-- 文献过滤配置 -->
-    <div class="ke-filter-config" id="ke-lib-filter-wrap">
-      <div class="ke-filter-config-header" onclick="keToggleFilterConfig()">
-        <span style="font-size:12px;font-weight:600;color:var(--text1)">文献过滤配置</span>
-        <span id="ke-filter-toggle-icon" style="font-size:11px;color:var(--text3)">展开 ▼</span>
-      </div>
-      <div id="ke-lib-filter-body" style="display:none">
-        <div class="ke-filter-config-body">
-          <div class="ke-filter-field">
-            <label class="ke-filter-label">最低综合评分</label>
-            <div class="ke-filter-slider-row">
-              <input type="range" class="ke-filter-slider" id="ke-score-min" min="0" max="100" value="0"
-                oninput="document.getElementById('ke-score-min-val').textContent=this.value;keLibRenderTable()">
-              <span id="ke-score-min-val" style="font-size:11px;color:var(--blue);font-family:'JetBrains Mono',monospace;width:30px">0</span>
-            </div>
-          </div>
-          <div class="ke-filter-field">
-            <label class="ke-filter-label">质量状态筛选</label>
-            <select class="ke-filter-select" id="ke-status-filter" onchange="keLibRenderTable()">
-              <option value="all">全部状态</option>
-              <option value="pass">仅显示 已通过</option>
-              <option value="review">仅显示 建议复审</option>
-              <option value="reject">仅显示 不建议使用</option>
-            </select>
-          </div>
-          <div class="ke-filter-field">
-            <label class="ke-filter-label">年份范围</label>
-            <select class="ke-filter-select" id="ke-year-filter" onchange="keLibRenderTable()">
-              <option value="all">全部年份</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-              <option value="2021">2021</option>
-              <option value="2020">2020 及以前</option>
-            </select>
-          </div>
-          <div class="ke-filter-field">
-            <label class="ke-filter-label">上传方式</label>
-            <select class="ke-filter-select" id="ke-way-filter" onchange="keLibRenderTable()">
-              <option value="all">全部方式</option>
-              <option value="上传">上传</option>
-              <option value="文献库">文献库</option>
+    <div class="ke-flt-wrap">
+      <button class="ke-flt-toggle" onclick="keToggleFilterConfig()">
+        <span class="ke-flt-title">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M4 8h8M6 12h4"/></svg>
+          过滤配置
+        </span>
+        <span class="ke-flt-right">
+          <span id="ke-flt-toggle-text">展开</span>
+          <svg class="ke-flt-chevron" id="ke-flt-chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6l4 4 4-4"/></svg>
+        </span>
+      </button>
+      <div class="ke-flt-panel" id="ke-flt-panel">
+
+        <!-- 过滤模型 -->
+        <div class="ke-flt-row">
+          <div class="ke-flt-item" style="max-width:320px">
+            <div class="ke-flt-item-label">过滤模型</div>
+            <select class="ke-flt-select" id="ke-flt-model">
+              <option value="gpt4o">GPT-4o（推荐）</option>
+              <option value="gpt4t">GPT-4 Turbo</option>
+              <option value="claude">Claude 3.5 Sonnet</option>
+              <option value="qwen">Qwen-Max</option>
             </select>
           </div>
         </div>
+
+        <!-- 采纳系数 + 警告系数 -->
+        <div class="ke-flt-row two-col">
+          <div class="ke-flt-item">
+            <div class="ke-flt-item-label">
+              采纳系数
+              <span class="ke-flt-item-val" id="ke-flt-accept-val">75%</span>
+            </div>
+            <input type="range" class="ke-flt-slider" min="0" max="100" value="75"
+              oninput="document.getElementById('ke-flt-accept-val').textContent=this.value+'%'">
+          </div>
+          <div class="ke-flt-item">
+            <div class="ke-flt-item-label">
+              警告系数
+              <span class="ke-flt-item-val" id="ke-flt-warn-val">40%</span>
+            </div>
+            <input type="range" class="ke-flt-slider" min="0" max="100" value="40"
+              oninput="document.getElementById('ke-flt-warn-val').textContent=this.value+'%'">
+          </div>
+        </div>
+
+        <!-- 提示词模板 -->
+        <div class="ke-flt-row">
+          <div class="ke-flt-item" style="max-width:280px">
+            <div class="ke-flt-item-label">提示词模板</div>
+            <select class="ke-flt-select" id="ke-flt-prompt" onchange="keLibUpdatePrompt(this.value)">
+              <option value="basic">基础提示词 v1.0</option>
+              <option value="wind">风电专项提示词 v2.0</option>
+              <option value="general">通用语义提示词 v1.5</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 提示词窗口 -->
+        <div class="ke-flt-row">
+          <div class="ke-flt-item" style="flex:1">
+            <div class="ke-flt-item-label">提示词窗口</div>
+            <div class="ke-flt-prompt-wrap">
+              <div class="ke-flt-prompt-bar">prompt preview</div>
+              <pre class="ke-flt-prompt-pre" id="ke-flt-prompt-preview"></pre>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -10067,13 +10147,61 @@
       keLibRenderPage();
     }
 
+    const keLibPromptTemplates = {
+      basic: `【角色】你是一位文献信息提取专家。
+【任务】从以下文献内容中，提取关键方法信息。
+
+【提取字段】
+- 方法名称：研究使用的核心算法或模型名称
+- 数据来源：输入数据集或数据类型
+- 评估指标：论文使用的性能评估指标
+- 预测目标：模型的输出变量
+- 时间分辨率：数据的时间粒度
+- 空间范围：研究覆盖的地理区域
+
+【输出格式】JSON 结构化输出，字段缺失时填写 null。`,
+
+      wind: `【角色】你是一位风电领域文献分析专家。
+【任务】从风电相关文献中精准提取技术方法信息。
+
+【提取字段】
+- 预测模型：所使用的深度学习或机器学习模型
+- 风场数据：使用的气象数据来源（ERA5/观测站/数值天气预报）
+- 预测时长：短期/中期/长期预测
+- 风速/功率：区分风速预测还是功率预测
+- 模型改进点：相对基准模型的核心创新
+- 实验场景：陆上/海上，单点/多点
+
+【质量要求】置信度低于警告系数的字段标注 ⚠。`,
+
+      general: `【角色】你是一位通用科研文献信息提取助手。
+【任务】识别文献的研究问题、方法体系和实验结论。
+
+【提取维度】
+- 研究问题：核心科学问题
+- 方法体系：使用的算法/模型/框架
+- 数据集：训练和测试使用的数据
+- 对比基准：与哪些方法进行了比较
+- 主要结论：实验得出的关键结论
+- 局限性：作者指出的研究局限
+
+【输出】Markdown 结构化摘要。`,
+    };
+
     function keToggleFilterConfig() {
-      const body = document.getElementById('ke-lib-filter-body');
-      const icon = document.getElementById('ke-filter-toggle-icon');
-      if (!body) return;
-      const hidden = body.style.display === 'none';
-      body.style.display = hidden ? 'grid' : 'none';
-      if (icon) icon.textContent = hidden ? '收起 ▲' : '展开 ▼';
+      const panel  = document.getElementById('ke-flt-panel');
+      const text   = document.getElementById('ke-flt-toggle-text');
+      const chev   = document.getElementById('ke-flt-chevron');
+      if (!panel) return;
+      const isOpen = panel.classList.contains('open');
+      panel.classList.toggle('open', !isOpen);
+      if (text) text.textContent = isOpen ? '展开' : '折叠';
+      if (chev) chev.classList.toggle('open', !isOpen);
+    }
+
+    function keLibUpdatePrompt(val) {
+      const pre = document.getElementById('ke-flt-prompt-preview');
+      if (pre) pre.textContent = keLibPromptTemplates[val] || '';
     }
 
     // ──────────────────────────────────────────────
@@ -10085,6 +10213,8 @@
     renderKeConceptTypes('中粒度（推荐）');
     // 初始化 ke-library 表格
     keLibRenderTable();
+    // 初始化过滤配置提示词窗口
+    keLibUpdatePrompt('basic');
     // 初始化 ke-config 文献选择表格
     keConfigRenderTable();
 
