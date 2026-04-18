@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>跨流程对比 — 本体智见平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
+  <style>
+    /* ── 页面布局 ── */
+    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* 顶部导航栏 */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; height: 52px; flex-shrink: 0;
+      background: var(--bg-1); border-bottom: 1px solid var(--border-1);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-logo { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .topbar-logo .logo-icon { width: 26px; height: 26px; border-radius: 6px; background: var(--grad-2); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
+    .breadcrumb a { color: var(--text-2); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--cyan); }
+    .breadcrumb .sep { color: var(--text-3); }
+    .breadcrumb .current { color: var(--text-1); font-weight: 500; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+
+    /* 主内容区：三行布局（流程配置栏 + 主体 + 底部抽屉） */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── 区域A：顶部流程配置栏 ── */
+    .flow-config-bar {
+      flex-shrink: 0; padding: 16px 24px;
+      background: var(--bg-1); border-bottom: 1px solid var(--border-1);
+    }
+    .flow-config-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+    }
+    .flow-config-title { font-size: 12px; color: var(--text-2); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+    .flow-cards { display: flex; gap: 12px; align-items: stretch; }
+
+    .flow-card {
+      background: var(--bg-2); border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg); padding: 12px 14px;
+      min-width: 200px; max-width: 240px; cursor: pointer;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      position: relative;
+    }
+    .flow-card:hover { border-color: var(--border-2); }
+    .flow-card.active { border-color: var(--cyan); box-shadow: 0 0 0 1px var(--cyan-dim), inset 0 0 20px var(--cyan-dim); }
+    .flow-card-remove {
+      position: absolute; top: 8px; right: 8px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--bg-4); border: none; color: var(--text-3);
+      font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity var(--transition);
+    }
+    .flow-card:hover .flow-card-remove { opacity: 1; }
+    .flow-card-remove:hover { background: var(--rose-dim); color: var(--rose); }
+
+    .flow-card-name { font-size: 12px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; padding-right: 20px; }
+    .flow-card-meta { font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
+    .flow-card-version {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--bg-3); border: 1px solid var(--border-1);
+      border-radius: var(--radius-sm); padding: 4px 8px;
+      font-size: 11px; color: var(--text-2); cursor: pointer;
+      transition: border-color var(--transition);
+    }
+    .flow-card-version:hover { border-color: var(--cyan); color: var(--cyan); }
+    .flow-card-version .version-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .flow-card-version .version-dot.failed { background: var(--rose); }
+    .flow-card-version span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .flow-card-version .arrow { margin-left: auto; font-size: 9px; color: var(--text-3); }
+
+    .flow-card-add {
+      min-width: 120px; border: 1px dashed var(--border-2);
+      background: transparent; border-radius: var(--radius-lg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 6px; cursor: pointer; color: var(--text-3); font-size: 12px;
+      transition: border-color var(--transition), color var(--transition), background var(--transition);
+      padding: 12px;
+    }
+    .flow-card-add:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+    .flow-card-add .add-icon { font-size: 20px; }
+
+    /* 流程卡片颜色标记 */
+    .flow-card-tag { width: 3px; height: 100%; position: absolute; left: 0; top: 0; border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+    .tag-cyan  { background: var(--cyan); }
+    .tag-purple { background: var(--purple); }
+    .tag-amber { background: var(--amber); }
+    .tag-green { background: var(--green); }
+
+    /* ── 区域B+C：主体左右分栏 ── */
+    .main-body {
+      flex: 1; display: flex; overflow: hidden;
+      transition: height 0.3s ease;
+    }
+
+    /* 区域B：左侧结构差异图 */
+    .panel-left {
+      width: 55%; border-right: 1px solid var(--border-1);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .panel-header {
+      padding: 14px 20px 10px; border-bottom: 1px solid var(--border-1); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title { font-size: 13px; font-weight: 600; color: var(--text-1); display: flex; align-items: center; gap: 8px; }
+    .panel-title .icon { font-size: 14px; }
+    .panel-subtitle { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .panel-actions { display: flex; gap: 6px; }
+
+    .diff-table-wrap { flex: 1; overflow-y: auto; padding: 0; }
+    .diff-table { width: 100%; border-collapse: collapse; }
+    .diff-table thead th {
+      padding: 10px 16px; font-size: 11px; font-weight: 600; color: var(--text-3);
+      text-align: center; border-bottom: 1px solid var(--border-1);
+      background: var(--bg-1); position: sticky; top: 0; z-index: 1;
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .diff-table thead th.col-node { text-align: left; min-width: 140px; }
+
+    /* 流程列头颜色 */
+    .diff-table thead th.col-flow { min-width: 90px; }
+    .th-cyan   { color: var(--cyan)   !important; }
+    .th-purple { color: var(--purple) !important; }
+    .th-amber  { color: var(--amber)  !important; }
+
+    .diff-table tbody tr {
+      border-bottom: 1px solid var(--border-1);
+      cursor: pointer; transition: background var(--transition);
+    }
+    .diff-table tbody tr:hover { background: var(--bg-3); }
+    .diff-table tbody tr.selected { background: var(--cyan-dim); }
+    .diff-table tbody tr.has-diff { border-left: 3px solid var(--amber); }
+
+    .diff-table td { padding: 10px 16px; font-size: 12px; vertical-align: middle; }
+    .td-node { display: flex; align-items: center; gap: 8px; }
+    .node-icon { width: 24px; height: 24px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+    .node-icon.rag    { background: var(--cyan-dim);   color: var(--cyan); }
+    .node-icon.model  { background: var(--purple-dim); color: var(--purple); }
+    .node-icon.data   { background: var(--blue-dim);   color: var(--blue); }
+    .node-icon.doc    { background: var(--amber-dim);  color: var(--amber); }
+    .node-icon.output { background: var(--green-dim);  color: var(--green); }
+    .node-name { font-size: 12px; color: var(--text-1); font-weight: 500; }
+    .node-id   { font-size: 10px; color: var(--text-3); font-family: var(--font-mono); }
+
+    .diff-cell { text-align: center; }
+    .diff-present { color: var(--green);  font-size: 14px; }
+    .diff-missing  { color: var(--text-3); font-size: 14px; }
+    .diff-unique   { color: var(--amber);  font-size: 14px; }
+    .diff-legend { display: flex; gap: 12px; align-items: center; font-size: 11px; color: var(--text-3); }
+    .diff-legend span { display: flex; align-items: center; gap: 4px; }
+
+    /* 分组标题行 */
+    .group-row td {
+      padding: 6px 16px; font-size: 10px; font-weight: 600; color: var(--text-3);
+      background: var(--bg-0); letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ── 区域C：右侧指标与参数对比 ── */
+    .panel-right {
+      width: 45%; display: flex; flex-direction: column; overflow: hidden;
+    }
+
+    /* Tab 切换 */
+    .tab-bar {
+      display: flex; border-bottom: 1px solid var(--border-1); flex-shrink: 0;
+      padding: 0 20px; background: var(--bg-1);
+    }
+    .tab-item {
+      padding: 12px 16px; font-size: 12px; font-weight: 500; color: var(--text-3);
+      cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color var(--transition), border-color var(--transition);
+      white-space: nowrap;
+    }
+    .tab-item:hover { color: var(--text-2); }
+    .tab-item.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+    .tab-content { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* 指标对比卡片 */
+    .metric-section { margin-bottom: 20px; }
+    .metric-section-title { font-size: 11px; color: var(--text-3); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+    .metric-row {
+      display: flex; align-items: center; gap: 0;
+      border: 1px solid var(--border-1); border-radius: var(--radius-md);
+      overflow: hidden; margin-bottom: 6px;
+      background: var(--bg-2);
+    }
+    .metric-label { flex: 0 0 110px; padding: 9px 12px; font-size: 12px; color: var(--text-2); background: var(--bg-1); border-right: 1px solid var(--border-1); }
+    .metric-values { flex: 1; display: flex; }
+    .metric-val {
+      flex: 1; padding: 9px 10px; font-size: 12px; font-family: var(--font-mono);
+      text-align: center; border-right: 1px solid var(--border-1); color: var(--text-1);
+      transition: background var(--transition);
+    }
+    .metric-val:last-child { border-right: none; }
+    .metric-val.best  { background: var(--green-dim);  color: var(--green); }
+    .metric-val.worst { background: var(--rose-dim);   color: var(--rose); }
+    .metric-val.empty { color: var(--text-3); font-size: 11px; }
+    .metric-val .delta { font-size: 10px; color: var(--text-3); display: block; margin-top: 1px; }
+    .metric-val .delta.pos { color: var(--green); }
+    .metric-val .delta.neg { color: var(--rose); }
+
+    /* 状态行 */
+    .status-row .metric-val { font-size: 13px; }
+
+    /* 节点参数详情 */
+    .node-detail-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 0 10px; border-bottom: 1px solid var(--border-1); margin-bottom: 14px;
+    }
+    .node-detail-icon { width: 32px; height: 32px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 16px; background: var(--cyan-dim); color: var(--cyan); }
+    .node-detail-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .node-detail-id { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+    .param-row {
+      display: flex; align-items: center;
+      border: 1px solid var(--border-1); border-radius: var(--radius-md);
+      overflow: hidden; margin-bottom: 6px; background: var(--bg-2);
+    }
+    .param-label { flex: 0 0 110px; padding: 8px 12px; font-size: 11px; color: var(--text-3); background: var(--bg-1); border-right: 1px solid var(--border-1); font-family: var(--font-mono); }
+    .param-values { flex: 1; display: flex; }
+    .param-val { flex: 1; padding: 8px 10px; font-size: 11px; font-family: var(--font-mono); text-align: center; border-right: 1px solid var(--border-1); color: var(--text-2); }
+    .param-val:last-child { border-right: none; }
+    .param-val.diff { color: var(--amber); background: var(--amber-dim); }
+    .param-val.empty { color: var(--text-3); }
+
+    .empty-tip { padding: 32px; text-align: center; color: var(--text-3); font-size: 12px; }
+    .empty-tip .tip-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.4; }
+
+    /* ── 区域D：底部结论与操作 ── */
+    .bottom-bar {
+      flex-shrink: 0; border-top: 1px solid var(--border-1);
+      background: var(--bg-1);
+      transition: height 0.3s ease, padding 0.3s ease;
+    }
+    .bottom-bar-collapsed {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 24px; cursor: pointer;
+    }
+    .bottom-bar-label { font-size: 12px; color: var(--text-2); display: flex; align-items: center; gap: 8px; }
+    .bottom-bar-label .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+    .bottom-bar-expanded { padding: 16px 24px; display: none; }
+    .bottom-bar.open .bottom-bar-expanded { display: block; }
+    .bottom-bar.open .bottom-bar-collapsed { border-bottom: 1px solid var(--border-1); cursor: default; }
+    .bottom-bar.open .expand-arrow { transform: rotate(180deg); }
+    .expand-arrow { transition: transform 0.2s ease; font-size: 11px; color: var(--text-3); }
+
+    .ai-summary {
+      background: var(--bg-2); border: 1px solid var(--border-1); border-radius: var(--radius-lg);
+      padding: 14px 16px; margin-bottom: 14px;
+      border-left: 3px solid var(--cyan);
+    }
+    .ai-summary-label { font-size: 10px; color: var(--cyan); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+    .ai-summary-text { font-size: 12px; color: var(--text-2); line-height: 1.7; }
+    .ai-summary-text strong { color: var(--text-1); }
+
+    .bottom-actions { display: flex; gap: 8px; align-items: center; }
+    .bottom-actions .spacer { flex: 1; }
+
+    /* 版本选择下拉（模拟） */
+    .version-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--bg-4); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); z-index: 100; box-shadow: var(--shadow-md);
+      overflow: hidden; display: none;
+    }
+    .version-dropdown.open { display: block; }
+    .version-option {
+      padding: 8px 12px; font-size: 11px; color: var(--text-2);
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      transition: background var(--transition);
+    }
+    .version-option:hover { background: var(--bg-3); color: var(--text-1); }
+    .version-option .vdot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .version-option .vdot.failed { background: var(--rose); }
+    .version-option.selected { color: var(--cyan); }
+    .version-option.selected::after { content: '✓'; margin-left: auto; }
+
+    /* 基准列标记 */
+    .baseline-badge {
+      font-size: 9px; padding: 1px 5px; border-radius: 3px;
+      background: var(--cyan-dim); color: var(--cyan); font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
+    /* 滚动条美化 */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+    /* 对比模式选中行高亮 */
+    .diff-table tbody tr.selected td { color: var(--cyan); }
+
+    /* 列颜色指示线 */
+    .col-indicator { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  </style>
+</head>
+<body>
+
+<!-- ══ 顶部导航 ══ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">
+      <div class="logo-icon">🌐</div>
+      本体智见平台
+    </div>
+    <span style="color:var(--border-2)">|</span>
+    <nav class="breadcrumb">
+      <a href="#">业务本体生成</a>
+      <span class="sep">›</span>
+      <span class="current">跨流程对比</span>
+    </nav>
+  </div>
+  <div class="topbar-right">
+    <button class="btn btn-ghost btn-sm" onclick="history.back()">← 返回列表</button>
+    <button class="btn btn-secondary btn-sm">保存对比配置</button>
+    <button class="btn btn-primary btn-sm">导出报告</button>
+  </div>
+</header>
+
+<!-- ══ 主内容 ══ -->
+<main class="main">
+
+  <!-- 区域A：流程配置栏 -->
+  <section class="flow-config-bar">
+    <div class="flow-config-header">
+      <span class="flow-config-title">参与对比的流程 · 选择每个流程的代表版本</span>
+      <div class="diff-legend">
+        <span><span style="color:var(--green)">✓</span> 存在此节点</span>
+        <span><span style="color:var(--text-3)">—</span> 无此节点</span>
+        <span><span style="color:var(--amber)">★</span> 独有节点</span>
+      </div>
+    </div>
+    <div class="flow-cards">
+
+      <!-- 流程A -->
+      <div class="flow-card active" id="card-A">
+        <div class="flow-card-tag tag-cyan"></div>
+        <button class="flow-card-remove" onclick="removeCard('A')">✕</button>
+        <div class="flow-card-name">风力发电预测模型 v2</div>
+        <div class="flow-card-meta">8节点 · 7连线 · 更新于 01-15</div>
+        <div style="position:relative">
+          <div class="flow-card-version" onclick="toggleDropdown('A')">
+            <span class="version-dot"></span>
+            <span>V3 · 调整数据处理阈值</span>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="version-dropdown" id="dropdown-A">
+            <div class="version-option selected"><span class="vdot"></span>V3 · 调整数据处理阈值</div>
+            <div class="version-option"><span class="vdot"></span>V2 · 增加多源输入节点</div>
+            <div class="version-option"><span class="vdot failed"></span>V1 · 初始版本</div>
+          </div>
+        </div>
+        <div style="margin-top:6px; display:flex; gap:4px; align-items:center">
+          <span class="badge badge-green" style="font-size:10px">成功</span>
+          <span style="font-size:10px;color:var(--text-3)">3.2s · 功率 847kW</span>
+          <span class="baseline-badge">基准</span>
+        </div>
+      </div>
+
+      <!-- 流程B -->
+      <div class="flow-card" id="card-B">
+        <div class="flow-card-tag tag-purple"></div>
+        <button class="flow-card-remove" onclick="removeCard('B')">✕</button>
+        <div class="flow-card-name">NWP实时数据优先流程</div>
+        <div class="flow-card-meta">6节点 · 5连线 · 更新于 01-12</div>
+        <div style="position:relative">
+          <div class="flow-card-version" onclick="toggleDropdown('B')">
+            <span class="version-dot"></span>
+            <span>V2 · 优化NWP接入权重</span>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="version-dropdown" id="dropdown-B">
+            <div class="version-option selected"><span class="vdot"></span>V2 · 优化NWP接入权重</div>
+            <div class="version-option"><span class="vdot"></span>V1 · 初始版本</div>
+          </div>
+        </div>
+        <div style="margin-top:6px; display:flex; gap:4px; align-items:center">
+          <span class="badge badge-green" style="font-size:10px">成功</span>
+          <span style="font-size:10px;color:var(--text-3)">2.8s · 功率 901kW</span>
+        </div>
+      </div>
+
+      <!-- 流程C -->
+      <div class="flow-card" id="card-C">
+        <div class="flow-card-tag tag-amber"></div>
+        <button class="flow-card-remove" onclick="removeCard('C')">✕</button>
+        <div class="flow-card-name">SCADA实时数据流程</div>
+        <div class="flow-card-meta">7节点 · 6连线 · 更新于 01-10</div>
+        <div style="position:relative">
+          <div class="flow-card-version" onclick="toggleDropdown('C')">
+            <span class="version-dot failed"></span>
+            <span>V1 · 初始版本</span>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="version-dropdown" id="dropdown-C">
+            <div class="version-option selected"><span class="vdot failed"></span>V1 · 初始版本</div>
+          </div>
+        </div>
+        <div style="margin-top:6px; display:flex; gap:4px; align-items:center">
+          <span class="badge badge-rose" style="font-size:10px">失败</span>
+          <span style="font-size:10px;color:var(--text-3)">4.5s · ──</span>
+        </div>
+      </div>
+
+      <!-- 添加按钮 -->
+      <div class="flow-card-add" onclick="alert('从列表页选择流程添加')">
+        <div class="add-icon">＋</div>
+        <div>添加流程</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 区域B + C：主体 -->
+  <div class="main-body" id="mainBody">
+
+    <!-- 区域B：左侧结构差异图 -->
+    <section class="panel-left">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><span class="icon">⬡</span> 节点结构差异</div>
+          <div class="panel-subtitle">点击节点行，右侧切换为参数详情</div>
+        </div>
+        <div class="panel-actions">
+          <button class="btn btn-ghost btn-sm">仅显示差异</button>
+        </div>
+      </div>
+
+      <div class="diff-table-wrap">
+        <table class="diff-table">
+          <thead>
+            <tr>
+              <th class="col-node">节点</th>
+              <th class="col-flow th-cyan"><span class="col-indicator" style="background:var(--cyan)"></span>流程A</th>
+              <th class="col-flow th-purple"><span class="col-indicator" style="background:var(--purple)"></span>流程B</th>
+              <th class="col-flow th-amber"><span class="col-indicator" style="background:var(--amber)"></span>流程C</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 分组：知识层 -->
+            <tr class="group-row"><td colspan="4">知识来源层</td></tr>
+            <tr onclick="selectNode('协议文档', 'doc')">
+              <td><div class="td-node"><div class="node-icon doc">📄</div><div><div class="node-name">协议文档</div><div class="node-id">protocol_doc</div></div></div></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-missing">—</span></td>
+            </tr>
+            <tr onclick="selectNode('规范标准', 'doc')">
+              <td><div class="td-node"><div class="node-icon doc">📋</div><div><div class="node-name">规范标准</div><div class="node-id">standard_spec</div></div></div></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+            </tr>
+            <tr class="has-diff" onclick="selectNode('因果链路', 'rag')">
+              <td><div class="td-node"><div class="node-icon rag">🔗</div><div><div class="node-name">因果链路</div><div class="node-id">causal_chain</div></div></div></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-missing">—</span></td>
+              <td class="diff-cell"><span class="diff-missing">—</span></td>
+            </tr>
+
+            <!-- 分组：处理层 -->
+            <tr class="group-row"><td colspan="4">数据处理层</td></tr>
+            <tr onclick="selectNode('RAG方法', 'rag')" class="selected">
+              <td><div class="td-node"><div class="node-icon rag">🔍</div><div><div class="node-name">RAG方法</div><div class="node-id">rag_retrieval</div></div></div></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+            </tr>
+            <tr class="has-diff" onclick="selectNode('多源数据接入', 'data')">
+              <td><div class="td-node"><div class="node-icon data">⚡</div><div><div class="node-name">多源数据接入</div><div class="node-id">multi_source_input</div></div></div></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-missing">—</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+            </tr>
+            <tr onclick="selectNode('数据处理', 'data')">
+              <td><div class="td-node"><div class="node-icon data">⚙️</div><div><div class="node-name">数据处理</div><div class="node-id">data_processing</div></div></div></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+            </tr>
+            <tr class="has-diff" onclick="selectNode('NWP预报接入', 'data')">
+              <td><div class="td-node"><div class="node-icon data">🌤</div><div><div class="node-name">NWP预报接入</div><div class="node-id">nwp_input</div></div></div></td>
+              <td class="diff-cell"><span class="diff-missing">—</span></td>
+              <td class="diff-cell"><span class="diff-unique">★</span></td>
+              <td class="diff-cell"><span class="diff-missing">—</span></td>
+            </tr>
+
+            <!-- 分组：输出层 -->
+            <tr class="group-row"><td colspan="4">预测输出层</td></tr>
+            <tr onclick="selectNode('星闸大模型', 'model')">
+              <td><div class="td-node"><div class="node-icon model">🤖</div><div><div class="node-name">星闸大模型</div><div class="node-id">llm_wind_forecast</div></div></div></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-missing">—</span></td>
+            </tr>
+            <tr onclick="selectNode('功率预测', 'output')">
+              <td><div class="td-node"><div class="node-icon output">⚡</div><div><div class="node-name">功率预测</div><div class="node-id">power_output</div></div></div></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+              <td class="diff-cell"><span class="diff-present">✓</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 区域C：右侧指标与参数 -->
+    <section class="panel-right">
+      <div class="tab-bar">
+        <div class="tab-item active" onclick="switchTab('output')">最终输出对比</div>
+        <div class="tab-item" onclick="switchTab('node')">节点参数详情</div>
+      </div>
+
+      <!-- Tab1：最终输出对比 -->
+      <div class="tab-content">
+        <div class="tab-pane active" id="tab-output">
+
+          <!-- 列头说明 -->
+          <div style="display:flex; gap:0; margin-bottom:12px; background:var(--bg-2); border:1px solid var(--border-1); border-radius:var(--radius-md); overflow:hidden;">
+            <div style="flex:0 0 110px; padding:8px 12px; background:var(--bg-1); border-right:1px solid var(--border-1); font-size:11px; color:var(--text-3);">指标</div>
+            <div style="flex:1; display:flex;">
+              <div style="flex:1;padding:8px 10px;text-align:center;border-right:1px solid var(--border-1);font-size:11px;font-weight:600;color:var(--cyan);">流程A <span class="baseline-badge">基准</span></div>
+              <div style="flex:1;padding:8px 10px;text-align:center;border-right:1px solid var(--border-1);font-size:11px;font-weight:600;color:var(--purple);">流程B</div>
+              <div style="flex:1;padding:8px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--amber);">流程C</div>
+            </div>
+          </div>
+
+          <div class="metric-section">
+            <div class="metric-section-title">执行概况</div>
+            <div class="metric-row status-row">
+              <div class="metric-label">执行状态</div>
+              <div class="metric-values">
+                <div class="metric-val best">✓ 成功</div>
+                <div class="metric-val best">✓ 成功</div>
+                <div class="metric-val worst">✗ 失败</div>
+              </div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-label">总耗时</div>
+              <div class="metric-values">
+                <div class="metric-val">3.2s</div>
+                <div class="metric-val best">2.8s<span class="delta pos">-12.5%</span></div>
+                <div class="metric-val worst">4.5s<span class="delta neg">+40.6%</span></div>
+              </div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-label">节点数</div>
+              <div class="metric-values">
+                <div class="metric-val">8</div>
+                <div class="metric-val best">6<span class="delta pos">-2</span></div>
+                <div class="metric-val">7<span class="delta neg">-1</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="metric-section">
+            <div class="metric-section-title">业务指标</div>
+            <div class="metric-row">
+              <div class="metric-label">功率预测值</div>
+              <div class="metric-values">
+                <div class="metric-val">847 kW</div>
+                <div class="metric-val best">901 kW<span class="delta pos">+6.4%</span></div>
+                <div class="metric-val empty">——</div>
+              </div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-label">置信度</div>
+              <div class="metric-values">
+                <div class="metric-val best">92%</div>
+                <div class="metric-val">88%<span class="delta neg">-4%</span></div>
+                <div class="metric-val empty">——</div>
+              </div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-label">预测误差 RMSE</div>
+              <div class="metric-values">
+                <div class="metric-val">18.3</div>
+                <div class="metric-val best">15.7<span class="delta pos">-14.2%</span></div>
+                <div class="metric-val empty">——</div>
+              </div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-label">RAG召回率</div>
+              <div class="metric-values">
+                <div class="metric-val">76%</div>
+                <div class="metric-val best">81%<span class="delta pos">+6.6%</span></div>
+                <div class="metric-val">69%<span class="delta neg">-9.2%</span></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tab2：节点参数详情 -->
+        <div class="tab-pane" id="tab-node">
+          <div class="node-detail-header">
+            <div class="node-detail-icon">🔍</div>
+            <div>
+              <div class="node-detail-name">RAG方法</div>
+              <div class="node-detail-id">rag_retrieval · 点击左侧节点行切换</div>
+            </div>
+          </div>
+
+          <!-- 列头 -->
+          <div style="display:flex; gap:0; margin-bottom:8px; background:var(--bg-2); border:1px solid var(--border-1); border-radius:var(--radius-md); overflow:hidden;">
+            <div style="flex:0 0 110px; padding:7px 12px; background:var(--bg-1); border-right:1px solid var(--border-1); font-size:11px; color:var(--text-3);">参数</div>
+            <div style="flex:1; display:flex;">
+              <div style="flex:1;padding:7px 10px;text-align:center;border-right:1px solid var(--border-1);font-size:11px;font-weight:600;color:var(--cyan);">流程A</div>
+              <div style="flex:1;padding:7px 10px;text-align:center;border-right:1px solid var(--border-1);font-size:11px;font-weight:600;color:var(--purple);">流程B</div>
+              <div style="flex:1;padding:7px 10px;text-align:center;font-size:11px;font-weight:600;color:var(--amber);">流程C</div>
+            </div>
+          </div>
+
+          <div class="param-row">
+            <div class="param-label">top_k</div>
+            <div class="param-values">
+              <div class="param-val diff">5</div>
+              <div class="param-val diff">3</div>
+              <div class="param-val">5</div>
+            </div>
+          </div>
+          <div class="param-row">
+            <div class="param-label">similarity</div>
+            <div class="param-values">
+              <div class="param-val">0.75</div>
+              <div class="param-val">0.75</div>
+              <div class="param-val">0.75</div>
+            </div>
+          </div>
+          <div class="param-row">
+            <div class="param-label">chunk_size</div>
+            <div class="param-values">
+              <div class="param-val diff">512</div>
+              <div class="param-val diff">256</div>
+              <div class="param-val diff">1024</div>
+            </div>
+          </div>
+          <div class="param-row">
+            <div class="param-label">model</div>
+            <div class="param-values">
+              <div class="param-val diff">embedding-v2</div>
+              <div class="param-val diff">embedding-v3</div>
+              <div class="param-val diff">embedding-v1</div>
+            </div>
+          </div>
+          <div class="param-row">
+            <div class="param-label">输出耗时</div>
+            <div class="param-values">
+              <div class="param-val">0.42s</div>
+              <div class="param-val best">0.31s</div>
+              <div class="param-val worst">0.58s</div>
+            </div>
+          </div>
+          <div class="param-row">
+            <div class="param-label">召回率</div>
+            <div class="param-values">
+              <div class="param-val">76%</div>
+              <div class="param-val best">81%</div>
+              <div class="param-val worst">69%</div>
+            </div>
+          </div>
+
+          <div style="margin-top:10px; padding:10px 12px; background:var(--amber-dim); border:1px solid var(--amber); border-radius:var(--radius-md); font-size:11px; color:var(--amber);">
+            ⚠ 检测到 3 处参数差异（已高亮标注）
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 区域D：底部结论栏 -->
+  <div class="bottom-bar" id="bottomBar">
+    <div class="bottom-bar-collapsed" onclick="toggleBottom()">
+      <div class="bottom-bar-label">
+        <span class="pulse"></span>
+        AI 对比结论已生成 · 点击展开
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">导出报告</button>
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation()">保存配置</button>
+        <span class="expand-arrow" id="expandArrow">▲</span>
+      </div>
+    </div>
+    <div class="bottom-bar-expanded">
+      <div class="ai-summary">
+        <div class="ai-summary-label">✦ Claude AI 对比摘要</div>
+        <div class="ai-summary-text">
+          三条流程的核心差异集中在<strong>数据接入策略</strong>和<strong>知识来源层设计</strong>上。
+          <strong>流程B（NWP实时数据优先）</strong>在功率预测值和执行效率上表现最优，功率输出达 901kW，耗时仅 2.8s，
+          但缺少因果链路与多源数据接入节点，知识覆盖面相对有限。
+          <strong>流程A</strong>在置信度（92%）和知识完整性上最佳，适合对结果可解释性要求较高的场景。
+          <strong>流程C</strong>本次执行失败，建议优先排查 SCADA 数据接入配置后重新评估。
+        </div>
+      </div>
+      <div class="bottom-actions">
+        <span style="font-size:11px;color:var(--text-3)">基于 流程A V3 · 流程B V2 · 流程C V1 生成</span>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost btn-sm">重新生成摘要</button>
+        <button class="btn btn-secondary btn-sm">保存对比配置</button>
+        <button class="btn btn-primary btn-sm">导出对比报告</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Tab 切换
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-item').forEach((el, i) => {
+      el.classList.toggle('active', (i === 0 && tab === 'output') || (i === 1 && tab === 'node'));
+    });
+    document.getElementById('tab-output').classList.toggle('active', tab === 'output');
+    document.getElementById('tab-node').classList.toggle('active', tab === 'node');
+  }
+
+  // 节点行选中 + 切换右侧
+  const nodeIcons = { doc:'📄', rag:'🔍', data:'⚙️', model:'🤖', output:'⚡' };
+  function selectNode(name, type) {
+    document.querySelectorAll('.diff-table tbody tr').forEach(tr => tr.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    // 切换到节点参数tab
+    switchTab('node');
+    // 更新节点名
+    document.querySelector('.node-detail-name').textContent = name;
+    document.querySelector('.node-detail-icon').textContent = nodeIcons[type] || '⚙️';
+  }
+
+  // 底部展开/折叠
+  function toggleBottom() {
+    const bar = document.getElementById('bottomBar');
+    bar.classList.toggle('open');
+  }
+
+  // 版本下拉
+  function toggleDropdown(id) {
+    const dd = document.getElementById('dropdown-' + id);
+    document.querySelectorAll('.version-dropdown').forEach(d => {
+      if (d !== dd) d.classList.remove('open');
+    });
+    dd.classList.toggle('open');
+    event.stopPropagation();
+  }
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.version-dropdown').forEach(d => d.classList.remove('open'));
+  });
+
+  // 移除流程卡片
+  function removeCard(id) {
+    const card = document.getElementById('card-' + id);
+    card.style.opacity = '0';
+    card.style.transform = 'scale(0.9)';
+    card.style.transition = 'all 0.2s ease';
+    setTimeout(() => card.remove(), 200);
+    event.stopPropagation();
+  }
+
+  // 默认展开底部
+  document.getElementById('bottomBar').classList.add('open');
+</script>
+</body>
+</html>
