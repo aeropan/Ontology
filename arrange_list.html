@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>业务本体列表 · 本体智见平台</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+    :root {
+      --bg:#080c18; --surface:#0f1729; --surface2:#131d30; --surface3:#1a2540;
+      --border:#1e2d4a; --border2:#253550;
+      --blue:#3b82f6; --blue-dim:rgba(59,130,246,0.15);
+      --cyan:#06b6d4; --purple:#8b5cf6; --purple-dim:rgba(139,92,246,0.15);
+      --green:#10b981; --green-dim:rgba(16,185,129,0.12);
+      --amber:#f59e0b; --amber-dim:rgba(245,158,11,0.12);
+      --rose:#f43f5e;
+      --text1:#e2e8f0; --text2:#94a3b8; --text3:#475569;
+      --grad1:linear-gradient(135deg,#3b82f6,#8b5cf6);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);font-family:'Noto Sans SC',sans-serif;color:var(--text1);min-height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+    /* TOPBAR */
+    .topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0;}
+    .logo-row{display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;}
+    .logo-icon{width:26px;height:26px;background:var(--grad1);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+    .logo-text{font-size:13px;font-weight:700;}
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);margin-left:16px;}
+    .breadcrumb .sep{color:var(--text3);}
+    .breadcrumb .current{color:var(--text1);font-weight:500;}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+    .icon-btn{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--text2);}
+    /* LAYOUT */
+    .page-wrap{flex:1;overflow-y:auto;padding:20px 24px;}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+    .page-title{font-size:18px;font-weight:700;}
+    .page-title span{color:var(--blue);}
+    .page-subtitle{font-size:12px;color:var(--text2);margin-top:2px;}
+    /* BUTTONS */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;border:none;font-family:inherit;}
+    .btn-primary{background:var(--blue);color:white;}
+    .btn-primary:hover{background:#2563eb;}
+    .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+    .btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+    .btn-sm{padding:4px 10px;font-size:11px;}
+    .btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+    /* STATS */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+    .stat-label{font-size:11px;color:var(--text2);margin-bottom:6px;}
+    .stat-value{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+    .stat-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+    /* FILTER */
+    .filter-btn{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text2);cursor:pointer;}
+    .search-input{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text2);cursor:text;}
+    /* TABS */
+    .tabs{display:flex;gap:0;}
+    .tab{padding:8px 16px;font-size:12px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;}
+    .tab:hover{color:var(--text1);}
+    .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+    /* TABLE */
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+    .table-header{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;}
+    .table-header-title{font-size:13px;font-weight:600;}
+    table{width:100%;border-collapse:collapse;}
+    th{background:var(--surface2);padding:8px 14px;font-size:11px;font-weight:500;color:var(--text2);text-align:left;border-bottom:1px solid var(--border);}
+    td{padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:rgba(255,255,255,0.015);}
+    /* BADGES & TAGS */
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500;}
+    .badge-green{background:var(--green-dim);color:var(--green);}
+    .badge-amber{background:var(--amber-dim);color:var(--amber);}
+    .dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+    .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;background:var(--surface3);color:var(--text2);border:1px solid var(--border);}
+    .action-link{color:var(--blue);font-size:11px;cursor:pointer;transition:opacity 0.15s;}
+    .action-link:hover{opacity:0.7;}
+    .action-link.danger{color:var(--rose);}
+    .checkbox{width:14px;height:14px;border:1.5px solid var(--border2);border-radius:3px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:white;flex-shrink:0;}
+    .checkbox.checked{background:var(--blue);border-color:var(--blue);}
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:12px;box-shadow:0 8px 30px rgba(0,0,0,0.4);transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:300;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px);}
+    .modal-overlay.show{display:flex;}
+    .modal{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.6);overflow:visible;}
+    .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .modal-title{font-size:14px;font-weight:600;}
+    .modal-close{cursor:pointer;color:var(--text2);font-size:16px;}
+    .modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;}
+    .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+    .form-group{display:flex;flex-direction:column;gap:6px;}
+    .form-label{font-size:11px;color:var(--text2);font-weight:500;}
+    .form-input{background:var(--surface3);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text1);font-family:inherit;outline:none;transition:border-color 0.15s;}
+    .form-input:focus{border-color:var(--blue);}
+    .form-input::placeholder{color:var(--text3);}
+    select.form-input{cursor:pointer;}
+    ::-webkit-scrollbar{width:4px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="logo-row" href="index.html">
+      <div class="logo-icon">✦</div>
+      <span class="logo-text">本体智见</span>
+    </a>
+    <div class="breadcrumb">
+      <span>业务本体生成</span>
+      <span class="sep">/</span>
+      <span class="current">业务本体列表</span>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn" title="返回" onclick="history.back()">←</div>
+    </div>
+  </div>
+  <div class="page-wrap">
+    <div class="page-header">
+      <div>
+        <div class="page-title">业务本体<span>生成</span></div>
+        <div class="page-subtitle">基于已有行业本体，通过 AI 业务本体生成面向具体业务场景的应用本体</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost" onclick="location.href='arrange_template.html'">从业务本体模板中新建</button>
+        <button class="btn btn-primary" onclick="openModal('biz-new-modal')">＋ 新建业务本体</button>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-label">全部任务</div><div class="stat-value" style="color:var(--blue)">7</div><div class="stat-sub">本月新增 2</div></div>
+      <div class="stat-card"><div class="stat-label">进行中</div><div class="stat-value" style="color:var(--amber)">2</div><div class="stat-sub">业务本体构建中</div></div>
+      <div class="stat-card"><div class="stat-label">已发布</div><div class="stat-value" style="color:var(--green)">5</div><div class="stat-sub">已部署到服务中心</div></div>
+      <div class="stat-card"><div class="stat-label">引用本体</div><div class="stat-value" style="color:var(--purple)">4</div><div class="stat-sub">跨领域行业本体</div></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+      <div class="tabs">
+        <div class="tab active">全部</div>
+        <div class="tab">进行中</div>
+        <div class="tab">已发布</div>
+        <div class="tab">草稿</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+        <div class="search-input">🔍 搜索业务本体名称...</div>
+        <div class="filter-btn" onclick="showToast('领域筛选')">领域 ▾</div>
+        <div class="filter-btn" onclick="showToast('状态筛选')">状态 ▾</div>
+        <div id="biz-cmp-mode-btn" class="filter-btn" onclick="biz_toggleCmpMode()" style="border-color:var(--border);transition:all .2s">⊞ 对比模式</div>
+        <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+          <div id="biz-view-list-btn" class="filter-btn" style="border:none;border-radius:0;background:var(--blue-dim);color:var(--blue)" onclick="switchBizView('list')">≡ 列表</div>
+          <div id="biz-view-card-btn" class="filter-btn" style="border:none;border-left:1px solid var(--border);border-radius:0" onclick="switchBizView('card')">⊞ 卡片</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="biz-cmp-bar" style="display:none;align-items:center;gap:10px;padding:10px 14px;background:var(--blue-dim);border:1px solid rgba(59,130,246,.3);border-radius:8px;margin-bottom:14px">
+      <span style="font-size:13px">⊞</span>
+      <span id="biz-cmp-hint" style="font-size:12px;color:var(--blue);font-weight:500">请勾选 2～4 个流程</span>
+      <div style="flex:1;height:1px;background:rgba(59,130,246,.2)"></div>
+      <button id="biz-cmp-start" class="btn btn-primary btn-sm" disabled onclick="location.href='arrange_compare.html'">开始对比</button>
+      <button class="btn btn-ghost btn-sm" onclick="biz_toggleCmpMode()">退出对比模式</button>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div id="biz-list-view">
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-header-title">业务本体</div>
+          <div style="margin-left:auto;font-size:11px;color:var(--text2)">共 7 条</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width:32px"><div class="checkbox checked">✓</div></th>
+              <th>任务名称</th><th>引用本体</th><th>业务场景</th><th>业务本体节点</th><th>状态</th><th>创建人</th><th>更新时间</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="cursor:pointer" onclick="location.href='Arrange.html'">
+              <td><div class="checkbox checked">✓</div></td>
+              <td><div style="font-weight:500">新能源影像报告接诊流程本体</div><div style="font-size:10px;color:var(--text3)">由 张工程师 创建 · biz-2026-001</div><div style="font-size:10px;color:var(--cyan)">💾 3 条调试记录</div></td>
+              <td><span style="color:var(--cyan);font-size:11px;cursor:pointer">风力发电预测本体 v2</span></td>
+              <td><span class="tag">门诊接诊</span></td>
+              <td style="font-family:'JetBrains Mono',monospace;color:var(--blue)">5</td>
+              <td><span class="badge badge-green"><span class="dot"></span>已发布</span></td>
+              <td style="font-size:11px;color:var(--text2)">张工程师</td>
+              <td style="font-size:11px;color:var(--text2)">2026-03-03 14:22</td>
+              <td><span class="action-link" onclick="event.stopPropagation();location.href='Arrange.html'">查看</span><span style="color:var(--text3);margin:0 6px">|</span><span class="action-link danger" onclick="event.stopPropagation();showToast('已删除')">删除</span></td>
+            </tr>
+            <tr style="cursor:pointer" onclick="location.href='Arrange.html'">
+              <td><div class="checkbox"></div></td>
+              <td><div style="font-weight:500">灾害预警信息上报工作流</div><div style="font-size:10px;color:var(--text3)">由 李工程师 创建 · biz-2026-002</div><div style="font-size:10px;color:var(--cyan)">💾 1 条调试记录</div></td>
+              <td><span style="color:var(--cyan);font-size:11px;cursor:pointer">灾害预警知识图谱 v1</span></td>
+              <td><span class="tag">应急响应</span></td>
+              <td style="font-family:'JetBrains Mono',monospace;color:var(--blue)">7</td>
+              <td><span class="badge badge-amber"><span class="dot"></span>进行中</span></td>
+              <td style="font-size:11px;color:var(--text2)">李工程师</td>
+              <td style="font-size:11px;color:var(--text2)">2026-03-04 09:15</td>
+              <td><span class="action-link" onclick="event.stopPropagation();location.href='Arrange.html'">继续</span><span style="color:var(--text3);margin:0 6px">|</span><span class="action-link danger" onclick="event.stopPropagation();showToast('已删除')">删除</span></td>
+            </tr>
+            <tr style="cursor:pointer" onclick="location.href='Arrange.html'">
+              <td><div class="checkbox"></div></td>
+              <td><div style="font-weight:500">金融风控审批流本体</div><div style="font-size:10px;color:var(--text3)">由 王工程师 创建 · biz-2026-003</div><div style="font-size:10px;color:var(--cyan)">💾 5 条调试记录</div></td>
+              <td><span style="color:var(--cyan);font-size:11px;cursor:pointer">金融风控实体本体 v1</span></td>
+              <td><span class="tag">贷款审批</span></td>
+              <td style="font-family:'JetBrains Mono',monospace;color:var(--blue)">4</td>
+              <td><span class="badge badge-green"><span class="dot"></span>已发布</span></td>
+              <td style="font-size:11px;color:var(--text2)">王工程师</td>
+              <td style="font-size:11px;color:var(--text2)">2026-03-01 16:30</td>
+              <td><span class="action-link" onclick="event.stopPropagation();location.href='Arrange.html'">查看</span><span style="color:var(--text3);margin:0 6px">|</span><span class="action-link danger" onclick="event.stopPropagation();showToast('已删除')">删除</span></td>
+            </tr>
+            <tr style="cursor:pointer" onclick="location.href='Arrange.html'">
+              <td><div class="checkbox"></div></td>
+              <td><div style="font-weight:500">药物靶点筛查流程本体</div><div style="font-size:10px;color:var(--text3)">由 陈工程师 创建 · biz-2026-004</div></td>
+              <td><span style="color:var(--cyan);font-size:11px;cursor:pointer">药物靶点关系本体 v2</span></td>
+              <td><span class="tag">新药研发</span></td>
+              <td style="font-family:'JetBrains Mono',monospace;color:var(--blue)">6</td>
+              <td><span class="badge badge-amber"><span class="dot"></span>进行中</span></td>
+              <td style="font-size:11px;color:var(--text2)">陈工程师</td>
+              <td style="font-size:11px;color:var(--text2)">2026-03-04 11:40</td>
+              <td><span class="action-link" onclick="event.stopPropagation();location.href='Arrange.html'">继续</span><span style="color:var(--text3);margin:0 6px">|</span><span class="action-link danger" onclick="event.stopPropagation();showToast('已删除')">删除</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CARD VIEW -->
+    <div id="biz-card-view" style="display:none">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+        <div id="biz-card-f1" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden" onclick="biz_cardClick('f1')" onmouseenter="if(!BIZ_CMP_MODE){this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'}" onmouseleave="if(!BIZ_CMP_MODE){this.style.borderColor='var(--border)';this.style.transform='';this.style.boxShadow=''}">
+          <div id="biz-chk-f1" onclick="event.stopPropagation();biz_toggleCmpSel('f1')" style="display:none;position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);background:var(--surface2);align-items:center;justify-content:center;font-size:11px;z-index:5;cursor:pointer;transition:all .15s"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--cyan))"></div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--blue-dim);display:flex;align-items:center;justify-content:center;font-size:16px">🏥</div>
+            <span class="badge badge-green"><span class="dot"></span>已发布</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">新能源影像报告接诊流程本体</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">引用：风力发电预测本体 v2</div>
+          <div style="font-size:10px;color:var(--cyan);margin-bottom:6px">💾 3 条调试记录</div>
+          <div style="display:flex;gap:14px;margin:10px 0;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+            <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--blue);font-family:'JetBrains Mono',monospace">5</div><div style="font-size:9px;color:var(--text3)">工作流节点</div></div>
+            <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--cyan);font-family:'JetBrains Mono',monospace">4</div><div style="font-size:9px;color:var(--text3)">连线</div></div>
+            <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace">12</div><div style="font-size:9px;color:var(--text3)">执行次数</div></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:var(--text3)">张工程师 · 03-03</span><span class="action-link">查看详情 →</span></div>
+        </div>
+        <div id="biz-card-f2" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden" onclick="biz_cardClick('f2')" onmouseenter="if(!BIZ_CMP_MODE){this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'}" onmouseleave="if(!BIZ_CMP_MODE){this.style.borderColor='var(--border)';this.style.transform='';this.style.boxShadow=''}">
+          <div id="biz-chk-f2" onclick="event.stopPropagation();biz_toggleCmpSel('f2')" style="display:none;position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);background:var(--surface2);align-items:center;justify-content:center;font-size:11px;z-index:5;cursor:pointer;transition:all .15s"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--rose))"></div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--amber-dim);display:flex;align-items:center;justify-content:center;font-size:16px">⚡</div>
+            <span class="badge badge-amber"><span class="dot"></span>进行中</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">灾害预警信息上报工作流</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">引用：灾害预警知识图谱 v1</div>
+          <div style="font-size:10px;color:var(--cyan);margin-bottom:6px">💾 1 条调试记录</div>
+          <div style="display:flex;gap:14px;margin:10px 0;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+            <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--blue);font-family:'JetBrains Mono',monospace">7</div><div style="font-size:9px;color:var(--text3)">工作流节点</div></div>
+            <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--cyan);font-family:'JetBrains Mono',monospace">6</div><div style="font-size:9px;color:var(--text3)">连线</div></div>
+            <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--amber);font-family:'JetBrains Mono',monospace">3</div><div style="font-size:9px;color:var(--text3)">执行次数</div></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:var(--text3)">李工程师 · 03-04</span><span class="action-link">继续编排 →</span></div>
+        </div>
+        <div id="biz-card-f3" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden" onclick="biz_cardClick('f3')" onmouseenter="if(!BIZ_CMP_MODE){this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'}" onmouseleave="if(!BIZ_CMP_MODE){this.style.borderColor='var(--border)';this.style.transform='';this.style.boxShadow=''}">
+          <div id="biz-chk-f3" onclick="event.stopPropagation();biz_toggleCmpSel('f3')" style="display:none;position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);background:var(--surface2);align-items:center;justify-content:center;font-size:11px;z-index:5;cursor:pointer;transition:all .15s"></div>
+          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),var(--cyan))"></div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:16px">💰</div>
+            <span class="badge badge-green"><span class="dot"></span>已发布</span>
+          </div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:4px">金融风控审批流本体</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">引用：金融风控实体本体 v1</div>
+          <div style="font-size:10px;color:var(--cyan);margin-bottom:6px">💾 5 条调试记录</div>
+          <div style="display:flex;gap:14px;margin:10px 0;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+            <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--blue);font-family:'JetBrains Mono',monospace">4</div><div style="font-size:9px;color:var(--text3)">工作流节点</div></div>
+            <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--cyan);font-family:'JetBrains Mono',monospace">3</div><div style="font-size:9px;color:var(--text3)">连线</div></div>
+            <div style="text-align:center"><div style="font-size:14px;font-weight:700;color:var(--green);font-family:'JetBrains Mono',monospace">28</div><div style="font-size:9px;color:var(--text3)">执行次数</div></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:10px;color:var(--text3)">王工程师 · 03-01</span><span class="action-link">查看详情 →</span></div>
+        </div>
+        <div style="background:var(--surface);border:1.5px dashed var(--border);border-radius:10px;padding:16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:200px;transition:all 0.2s" onclick="openModal('biz-new-modal')" onmouseenter="this.style.borderColor='var(--blue)';this.style.background='var(--blue-dim)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+          <div style="font-size:28px;opacity:0.4">＋</div>
+          <div style="font-size:12px;color:var(--text3)">新建业务本体</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="biz-new-modal" onclick="if(event.target===this)closeModal('biz-new-modal')">
+    <div class="modal" style="width:460px;overflow:visible;">
+      <div class="modal-header">
+        <div class="modal-title">新建业务本体</div>
+        <div class="modal-close" onclick="closeModal('biz-new-modal')">✕</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">业务本体名称 *</label>
+          <input class="form-input" type="text" placeholder="如：新能源影像报告接诊流程本体">
+        </div>
+        <div class="form-group">
+          <label class="form-label">领域 *</label>
+          <select class="form-input">
+            <option value="">请选择领域</option>
+            <option>新能源</option><option>金融</option><option>工业</option><option>气象</option><option>生物医药</option>
+          </select>
+        </div>
+        <div class="form-group" style="position:relative;">
+          <label class="form-label">添加知识本体 (可多选)</label>
+          <div class="form-input" style="min-height:36px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:4px 8px;cursor:text;overflow:visible;" onclick="document.getElementById('biz-new-dropdown').style.display='block'">
+            <div id="biz-selected-chips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+            <input type="text" placeholder="搜索并关联已入库的本体..." style="background:transparent;border:none;color:var(--text1);font-size:12px;outline:none;flex:1;min-width:140px;" onfocus="document.getElementById('biz-new-dropdown').style.display='block'">
+          </div>
+          <div id="biz-new-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface2);border:1px solid var(--border);border-radius:6px;margin-top:4px;max-height:160px;overflow-y:auto;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.5);">
+            <div style="padding:8px 12px;font-size:11px;cursor:pointer;color:var(--text1);border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--blue-dim)'" onmouseout="this.style.background='transparent'" onclick="addBizChipModal('风力发电预测本体 v2');this.parentNode.style.display='none'">📈 风力发电预测本体 v2</div>
+            <div style="padding:8px 12px;font-size:11px;cursor:pointer;color:var(--text1);border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--blue-dim)'" onmouseout="this.style.background='transparent'" onclick="addBizChipModal('灾害预警知识图谱 v1');this.parentNode.style.display='none'">⚡ 灾害预警知识图谱 v1</div>
+            <div style="padding:8px 12px;font-size:11px;cursor:pointer;color:var(--text1);border-bottom:1px solid var(--border);" onmouseover="this.style.background='var(--blue-dim)'" onmouseout="this.style.background='transparent'" onclick="addBizChipModal('金融风控实体本体 v1');this.parentNode.style.display='none'">💰 金融风控实体本体 v1</div>
+            <div style="padding:8px 12px;font-size:11px;cursor:pointer;color:var(--text1);" onmouseover="this.style.background='var(--blue-dim)'" onmouseout="this.style.background='transparent'" onclick="addBizChipModal('药物靶点关系本体 v2');this.parentNode.style.display='none'">🧬 药物靶点关系本体 v2</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('biz-new-modal')">取消</button>
+        <button class="btn btn-primary" onclick="closeModal('biz-new-modal');location.href='Arrange.html'">创建并编排</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script>
+    var BIZ_CMP_MODE = false;
+    var BIZ_CMP_SEL = new Set();
+
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(function(){ t.classList.remove('show'); }, 2500);
+    }
+    function openModal(id) { document.getElementById(id).classList.add('show'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+    function switchBizView(mode) {
+      var lv=document.getElementById('biz-list-view'), cv=document.getElementById('biz-card-view');
+      var lb=document.getElementById('biz-view-list-btn'), cb=document.getElementById('biz-view-card-btn');
+      if (mode==='list') {
+        lv.style.display=''; cv.style.display='none';
+        lb.style.background='var(--blue-dim)'; lb.style.color='var(--blue)';
+        cb.style.background=''; cb.style.color='';
+      } else {
+        lv.style.display='none'; cv.style.display='';
+        cb.style.background='var(--blue-dim)'; cb.style.color='var(--blue)';
+        lb.style.background=''; lb.style.color='';
+      }
+    }
+
+    function addBizChipModal(name) {
+      var chips=document.getElementById('biz-selected-chips');
+      if ([].slice.call(chips.children).some(function(c){return c.dataset.name===name;})) return;
+      var chip=document.createElement('div');
+      chip.dataset.name=name;
+      chip.style.cssText='display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:var(--blue-dim);border:1px solid rgba(59,130,246,.4);border-radius:12px;font-size:11px;color:var(--blue)';
+      chip.innerHTML=name+' <span style="cursor:pointer;opacity:0.7" onclick="this.parentNode.remove()">×</span>';
+      chips.appendChild(chip);
+    }
+
+    function biz_cardClick(id) {
+      if (BIZ_CMP_MODE) { biz_toggleCmpSel(id); } else { location.href='Arrange.html'; }
+    }
+
+    function biz_toggleCmpMode() {
+      BIZ_CMP_MODE = !BIZ_CMP_MODE;
+      var bar=document.getElementById('biz-cmp-bar');
+      var modeBtn=document.getElementById('biz-cmp-mode-btn');
+      var ids=['f1','f2','f3'];
+      if (BIZ_CMP_MODE) {
+        bar.style.display='flex';
+        modeBtn.style.background='var(--blue-dim)'; modeBtn.style.color='var(--blue)'; modeBtn.style.borderColor='rgba(59,130,246,.35)';
+        ids.forEach(function(id){ var c=document.getElementById('biz-chk-'+id); if(c) c.style.display='flex'; });
+      } else {
+        bar.style.display='none';
+        modeBtn.style.background=''; modeBtn.style.color=''; modeBtn.style.borderColor='var(--border)';
+        ids.forEach(function(id){ var c=document.getElementById('biz-chk-'+id); if(c) c.style.display='none'; });
+        BIZ_CMP_SEL.clear();
+        biz_renderCmpState();
+      }
+    }
+
+    function biz_toggleCmpSel(id) {
+      if (BIZ_CMP_SEL.has(id)) { BIZ_CMP_SEL.delete(id); }
+      else { if (BIZ_CMP_SEL.size>=4) { showToast('最多同时对比 4 个流程'); return; } BIZ_CMP_SEL.add(id); }
+      biz_renderCmpState();
+    }
+
+    function biz_renderCmpState() {
+      ['f1','f2','f3'].forEach(function(id){
+        var card=document.getElementById('biz-card-'+id), chk=document.getElementById('biz-chk-'+id);
+        if (!card||!chk) return;
+        var sel=BIZ_CMP_SEL.has(id);
+        card.style.borderColor=sel?'var(--blue)':'var(--border)';
+        card.style.boxShadow=sel?'0 0 0 2px rgba(59,130,246,.35)':'';
+        chk.textContent=sel?'✓':'';
+        chk.style.background=sel?'var(--blue)':'var(--surface2)';
+        chk.style.borderColor=sel?'var(--blue)':'var(--border)';
+        chk.style.color=sel?'#fff':'';
+      });
+      biz_updateCmpBar();
+    }
+
+    function biz_updateCmpBar() {
+      var n=BIZ_CMP_SEL.size;
+      var hint=document.getElementById('biz-cmp-hint'), start=document.getElementById('biz-cmp-start');
+      if (n<2) { hint.textContent=n===0?'请勾选 2～4 个流程':'再勾选 '+(2-n)+' 个流程'; start.disabled=true; }
+      else { hint.textContent='已选 '+n+' 个流程'; start.disabled=false; }
+    }
+  </script>
+</body>
+</html>
