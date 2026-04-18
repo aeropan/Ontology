@@ -936,6 +936,130 @@
       0%,100% { box-shadow: 0 0 20px rgba(6,182,212,.3) }
       50%      { box-shadow: 0 0 40px rgba(6,182,212,.7) }
     }
+
+    /* ── TIMELINE RUN HISTORY ── */
+    .cp-tl { display: flex; flex-direction: column; padding: 6px 8px; }
+    .cp-tl-row { display: flex; gap: 8px; }
+    .cp-tl-spine { display: flex; flex-direction: column; align-items: center; width: 14px; flex-shrink: 0; padding-top: 10px; }
+    .cp-tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .cp-tl-line { flex: 1; width: 1px; background: var(--border); margin-top: 4px; min-height: 8px; }
+    .cp-tl-body { flex: 1; min-width: 0; padding-bottom: 10px; }
+    .cp-tl-card {
+      background: rgba(255,255,255,.03); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 10px; transition: border-color .15s;
+    }
+    .cp-tl-card:hover { border-color: rgba(255,255,255,.15); }
+    .cp-tl-card.on { border-color: var(--accent-cyan); background: rgba(6,182,212,.05); }
+    .cp-tl-card.pinned { border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.04); }
+    .cp-tl-r1 { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .cp-tl-ver { font-size: 10px; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent-cyan); flex-shrink: 0; }
+    .cp-tl-name { font-size: 11px; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cp-tl-pin-icon { font-size: 11px; flex-shrink: 0; }
+    .cp-tl-chk { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); background: rgba(255,255,255,.04); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; color: transparent; font-size: 9px; flex-shrink: 0; }
+    .cp-tl-chk.on { background: var(--accent-cyan); border-color: var(--accent-cyan); color: #fff; }
+    .cp-tl-metrics { display: flex; gap: 10px; font-size: 9px; color: var(--text-muted); margin-bottom: 3px; }
+    .cp-tl-metric { display: flex; align-items: center; gap: 3px; }
+    .cp-tl-metric-val { color: var(--text-dim); font-family: 'Space Mono', monospace; }
+    .cp-tl-actions { display: flex; gap: 4px; margin-top: 5px; }
+    .cp-tl-btn { height: 20px; padding: 0 7px; border-radius: 4px; border: 1px solid var(--border); background: rgba(255,255,255,.04); color: var(--text-muted); font-size: 9px; cursor: pointer; transition: all .15s; font-family: 'Noto Sans SC', sans-serif; display: flex; align-items: center; }
+    .cp-tl-btn:hover { border-color: rgba(255,255,255,.2); color: var(--text); }
+    .cp-tl-btn.pin-btn:hover { border-color: rgba(245,158,11,.4); color: var(--accent-amber); }
+    .cp-tl-btn.del-btn:hover { border-color: rgba(239,68,68,.3); color: #ef4444; }
+
+    /* ── FLOATING COMPARE BAR ── */
+    .cp-float-bar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 10px 14px;
+      background: rgba(8,12,20,.95); border-top: 1px solid var(--accent-cyan);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; gap: 8px;
+      transform: translateY(100%); transition: transform .25s ease;
+      z-index: 30;
+    }
+    .cp-float-bar.show { transform: translateY(0); }
+    .cp-float-bar-cnt { font-size: 11px; color: var(--accent-cyan); flex: 1; }
+
+    /* ── FULLSCREEN COMPARE OVERLAY ── */
+    #cmp-fullscreen {
+      position: fixed; inset: 0; z-index: 600;
+      background: #080c14;
+      display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform .35s cubic-bezier(.4,0,.2,1);
+    }
+    #cmp-fullscreen.open { transform: translateY(0); }
+
+    .cmpfs-topbar {
+      height: 48px; flex-shrink: 0;
+      background: rgba(13,20,35,.92); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 12px;
+      backdrop-filter: blur(20px);
+    }
+    .cmpfs-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .cmpfs-vpills { display: flex; gap: 6px; }
+    .cmpfs-vpill { font-size: 10px; font-weight: 700; font-family: 'Space Mono', monospace; padding: 2px 8px; border-radius: 3px; background: var(--accent-cyan-dim); color: var(--accent-cyan); }
+    .cmpfs-vpill.baseline { background: rgba(245,158,11,.15); color: var(--accent-amber); }
+    .cmpfs-spacer { flex: 1; }
+    .cmpfs-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: rgba(255,255,255,.06); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: all .15s; }
+    .cmpfs-close:hover { background: rgba(255,255,255,.12); color: var(--text); }
+
+    .cmpfs-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+    .cmpfs-nav { width: 140px; flex-shrink: 0; border-right: 1px solid var(--border); overflow-y: auto; padding: 12px 0; background: rgba(255,255,255,.01); }
+    .cmpfs-nav::-webkit-scrollbar { width: 2px; }
+    .cmpfs-nav::-webkit-scrollbar-thumb { background: var(--border); }
+    .cmpfs-ns { padding: 6px 12px 4px; font-size: 10px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: color .15s; }
+    .cmpfs-ns:hover, .cmpfs-ns.act { color: var(--accent-cyan); }
+    .cmpfs-ni { padding: 3px 12px 3px 22px; font-size: 10px; color: var(--text-muted); cursor: pointer; transition: color .15s; }
+    .cmpfs-ni:hover { color: var(--text); }
+    .cmpfs-cont { flex: 1; overflow: auto; padding: 20px 24px; }
+    .cmpfs-cont::-webkit-scrollbar { width: 4px; height: 4px; }
+    .cmpfs-cont::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .cmpfs-sec { margin-bottom: 28px; }
+    .cmpfs-sec-ttl { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .cmpfs-sec-badge { font-size: 9px; padding: 1px 6px; border-radius: 3px; font-weight: 600; }
+
+    /* Version columns */
+    .cmpfs-ver-col { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 8px; padding: 12px 10px; text-align: center; }
+    .cmpfs-ver-col.baseline-col { border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.04); }
+    .cmpfs-ver-num { font-size: 16px; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent-cyan); }
+    .cmpfs-ver-num.b { color: var(--accent-amber); }
+    .cmpfs-ver-lbl { font-size: 10px; color: var(--text-muted); margin: 3px 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cmpfs-ver-st { font-size: 11px; margin-bottom: 10px; }
+    .cmpfs-apply-btn { width: 100%; padding: 7px; background: rgba(6,182,212,.1); border: 1px solid rgba(6,182,212,.3); border-radius: 6px; color: var(--accent-cyan); font-size: 11px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: 'Noto Sans SC', sans-serif; }
+    .cmpfs-apply-btn:hover { background: rgba(6,182,212,.2); border-color: var(--accent-cyan); box-shadow: 0 0 12px rgba(6,182,212,.2); }
+    .cmpfs-apply-btn.b { background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.3); color: var(--accent-amber); }
+    .cmpfs-apply-btn.b:hover { background: rgba(245,158,11,.2); border-color: var(--accent-amber); }
+
+    /* Config diff */
+    .cfgdiff-key { font-size: 10px; color: var(--text-muted); padding: 6px 8px; display: flex; align-items: flex-start; padding-top: 8px; }
+    .cfgdiff-cell { font-size: 10px; padding: 6px 8px; border-radius: 5px; border: 1px solid var(--border); background: rgba(255,255,255,.02); color: var(--text-dim); font-family: 'Space Mono', monospace; line-height: 1.5; word-break: break-all; }
+    .cfgdiff-cell.same { opacity: .4; }
+    .cfgdiff-cell.changed { background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.3); color: var(--accent-amber); }
+    .cfgdiff-cell.baseline { background: rgba(6,182,212,.08); border-color: rgba(6,182,212,.2); }
+
+    /* Node diff */
+    .ndiff-key { font-size: 10px; color: var(--text-muted); padding: 5px 8px; background: rgba(255,255,255,.02); display: flex; align-items: center; border: 1px solid var(--border); border-radius: 4px 0 0 4px; }
+    .ndiff-cell { font-size: 10px; color: var(--text-dim); padding: 5px 8px; background: rgba(255,255,255,.02); border: 1px solid var(--border); border-left: none; text-align: center; font-family: 'Space Mono', monospace; cursor: pointer; transition: background .15s; }
+    .ndiff-cell:last-child { border-radius: 0 4px 4px 0; }
+    .ndiff-cell:hover { background: rgba(255,255,255,.05); }
+    .ndiff-cell.fast { background: rgba(16,185,129,.1); color: var(--accent-green); }
+    .ndiff-cell.slow { background: rgba(239,68,68,.08); color: #ef4444; }
+    .ndiff-cell.failed { background: rgba(239,68,68,.12); color: #ef4444; }
+    .ndiff-cell.hidden-same { opacity: .3; }
+    .ndiff-bubble { background: rgba(139,92,246,.08); border: 1px solid rgba(139,92,246,.2); border-radius: 6px; padding: 10px 12px; font-size: 10px; display: none; margin-bottom: 4px; }
+    .ndiff-bubble.show { display: block; }
+    .ndiff-bubble-title { color: var(--accent-purple); font-weight: 600; margin-bottom: 6px; font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
+    .ndiff-bubble-row { display: flex; gap: 8px; margin-bottom: 4px; color: var(--text-dim); line-height: 1.5; }
+    .ndiff-bubble-ver { color: var(--accent-cyan); font-family: 'Space Mono', monospace; flex-shrink: 0; font-size: 9px; }
+
+    /* Dynamic output stat cards */
+    .dyn-stat-card { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; text-align: center; }
+    .dyn-stat-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .dyn-stat-val { font-size: 20px; font-weight: 700; font-family: 'Space Mono', monospace; line-height: 1; }
+    .dyn-stat-trend { font-size: 10px; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 3px; }
+    .trend-up { color: var(--accent-green); }
+    .trend-dn { color: #ef4444; }
+    .trend-eq { color: var(--text-muted); }
+    .dyn-placeholder { background: rgba(255,255,255,.02); border: 1px dashed var(--border); border-radius: 8px; padding: 20px; text-align: center; font-size: 10px; color: var(--text-muted); opacity: .5; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -988,7 +1112,7 @@
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost btn-sm" onclick="wf_resetFlow()">↺ 重置流程</button>
         <button class="btn btn-ghost btn-sm" id="wf-saveBtn" onclick="wf_saveToGraph()">⊞ 保存到 Neo4j</button>
-        <button class="btn btn-ghost btn-sm" id="cp-saveBtn" disabled onclick="cp_openSaveModal()">📥 保存当前结果</button>
+        <button class="btn btn-ghost btn-sm" id="cp-histBtn" onclick="cp_toggleDrawer()">⏱ 运行历史</button>
         <button class="btn btn-primary btn-sm" id="wf-runBtn" onclick="wf_runFlow()">▶ 执行流程</button>
       </div>
     </div>
@@ -1325,35 +1449,31 @@
     </div>
   </div>
 
-  <!-- ===== MODAL: 保存流程结果 ===== -->
-  <div class="modal-overlay" id="cp-save-modal" onclick="if(event.target===this)cp_closeSaveModal()">
-    <div class="modal" style="width:420px">
+  <!-- ===== MODAL: 固化基准版本 ===== -->
+  <div class="modal-overlay" id="cp-pin-modal" onclick="if(event.target===this)cp_closePinModal()">
+    <div class="modal" style="width:400px">
       <div class="modal-header">
-        <div class="modal-title">保存当前结果</div>
-        <div class="modal-close" onclick="cp_closeSaveModal()">×</div>
+        <div class="modal-title">📌 固化为基准版本</div>
+        <div class="modal-close" onclick="cp_closePinModal()">×</div>
       </div>
       <div class="modal-body">
-        <div style="margin-bottom:14px">
-          <div style="font-size:11px;color:var(--text-2,#94a3b8);margin-bottom:8px">备注名称</div>
-          <input id="cp-save-label" class="prop-input" placeholder="如：调整数据处理节点阈值"
-                 style="width:100%;font-size:12px"
-                 onkeydown="if(event.key==='Enter')cp_confirmSave()"/>
-        </div>
-        <div style="background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:10px;color:var(--text-muted)">
-          <div style="font-weight:600;color:var(--text-dim);margin-bottom:6px">自动抓取内容</div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <span>● 执行时间 · 总耗时 · 各节点状态快照</span>
-            <span>● AI 生成的流程概括文本</span>
-            <span>● 功率预测输出指标（kW · 置信度）</span>
-          </div>
+        <div style="font-size:11px;color:var(--text-2,#94a3b8);margin-bottom:8px">为此次运行命名，固化后将作为对比基准</div>
+        <input id="cp-pin-label" class="prop-input" placeholder="如：基准配置 · 调整 RAG 阈值后"
+               style="width:100%;font-size:12px"
+               onkeydown="if(event.key==='Enter')cp_confirmPin()"/>
+        <div style="margin-top:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:8px 10px;font-size:10px;color:var(--text-muted)">
+          固化的版本不会被自动清理，并在对比时以 <span style="color:var(--accent-amber)">📌 基准</span> 标记展示
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" onclick="cp_closeSaveModal()">取消</button>
-        <button class="btn btn-primary" onclick="cp_confirmSave()">确认保存</button>
+        <button class="btn btn-ghost" onclick="cp_closePinModal()">取消</button>
+        <button class="btn btn-primary" onclick="cp_confirmPin()">确认固化</button>
       </div>
     </div>
   </div>
+
+  <!-- ===== FULLSCREEN COMPARE ===== -->
+  <div id="cmp-fullscreen"></div>
 
   <!-- ===== TOAST ===== -->
   <div class="toast" id="toast"><span id="toast-msg">操作成功</span></div>
@@ -1668,10 +1788,6 @@
       const countEl = document.getElementById('wf-runCountEl');
       if (countEl) countEl.textContent = wf_runCount;
 
-      // 禁用保存按钮（执行中）
-      const saveBtn = document.getElementById('cp-saveBtn');
-      if (saveBtn) { saveBtn.disabled = true; saveBtn.classList.remove('cp-save-ready'); }
-
       WF_NODE_ORDER.forEach(id => wf_setNodeStatus(id, 'idle'));
       let delay = 0;
       WF_NODE_ORDER.forEach((id, i) => {
@@ -1684,9 +1800,9 @@
                 btn.removeAttribute('data-running');
                 btn.classList.remove('running');
                 btn.textContent = '▶ 执行流程';
-                // 流程完成：抓取快照并激活保存按钮
+                // 流程完成：自动抓取并记录到运行历史
                 cp_captureSnapshot();
-                if (saveBtn) { saveBtn.disabled = false; saveBtn.classList.add('cp-save-ready'); }
+                cp_autoSave();
               }, 800);
             }
           }, 650);
@@ -2061,11 +2177,10 @@
 
     const CP_STORE   = [];
     let   CP_VERSION = 1;
-    let   CP_SEL     = new Set(); // selected record IDs
-    let   CP_EXP     = null;      // expanded record ID
-    let   CP_MODE    = 'list';    // 'list' | 'compare'
-    let   CP_CMP_IDS = [];        // IDs for current compare session
-    let   CP_SNAP    = null;      // latest execution snapshot
+    let   CP_SEL     = new Set();
+    let   CP_SNAP    = null;
+    let   CP_PIN_ID  = null;
+    let   CP_CMP_IDS = [];
 
     // AI摘要预设池
     const CP_SUMMARIES = [
@@ -2127,48 +2242,59 @@
       };
     }
 
-    // ── Save modal ──
-    function cp_openSaveModal() {
-      const m = document.getElementById('cp-save-modal');
-      if (m) { m.classList.add('show'); setTimeout(() => document.getElementById('cp-save-label')?.focus(), 80); }
-    }
-    function cp_closeSaveModal() {
-      const m = document.getElementById('cp-save-modal');
-      if (m) m.classList.remove('show');
-    }
-    function cp_confirmSave() {
-      if (!CP_SNAP) { showToast('请先执行流程'); return; }
-      const input = document.getElementById('cp-save-label');
-      const label = input?.value?.trim() || `流程结果 #${CP_VERSION}`;
-      if (input) input.value = '';
-      const rec = { ...CP_SNAP, runName: label, version: CP_VERSION++ };
+    // ── Auto-save ──
+    function cp_autoSave() {
+      if (!CP_SNAP) return;
+      const rec = { ...CP_SNAP, version: CP_VERSION++ };
       CP_STORE.unshift(rec);
-      cp_closeSaveModal();
-      showToast(`✅ 已保存 V${rec.version}：${label}`);
-      const saveBtn = document.getElementById('cp-saveBtn');
-      if (saveBtn) { saveBtn.disabled = true; saveBtn.classList.remove('cp-save-ready'); }
       try { localStorage.setItem('cp_store', JSON.stringify(CP_STORE)); localStorage.setItem('cp_ver', CP_VERSION); } catch(e) {}
-      if (document.getElementById('cp-drawer')?.classList.contains('open') && CP_MODE === 'list') cp_renderList();
+      if (document.getElementById('cp-drawer')?.classList.contains('open')) cp_renderTimeline();
+    }
+
+    // ── Pin modal ──
+    function cp_openPinModal(id) {
+      CP_PIN_ID = id;
+      const rec = CP_STORE.find(r => r.id === id);
+      const m = document.getElementById('cp-pin-modal');
+      if (!m) return;
+      const input = document.getElementById('cp-pin-label');
+      if (input) input.value = rec?.runName || '';
+      m.classList.add('show');
+      setTimeout(() => input?.focus(), 80);
+    }
+    function cp_closePinModal() {
+      document.getElementById('cp-pin-modal')?.classList.remove('show');
+      CP_PIN_ID = null;
+    }
+    function cp_confirmPin() {
+      if (!CP_PIN_ID) return;
+      const input = document.getElementById('cp-pin-label');
+      const name = input?.value?.trim();
+      if (!name) { showToast('请输入名称'); return; }
+      const rec = CP_STORE.find(r => r.id === CP_PIN_ID);
+      if (rec) { rec.runName = name; rec.isPinned = true; }
+      cp_closePinModal();
+      showToast(`📌 已固化为基准：${name}`);
+      if (document.getElementById('cp-drawer')?.classList.contains('open')) cp_renderTimeline();
     }
 
     // ── Drawer open/close ──
     function cp_toggleDrawer() {
       const d = document.getElementById('cp-drawer');
-      if (d?.classList.contains('open')) { cp_closeDrawer(); }
+      if (d?.classList.contains('open')) cp_closeDrawer();
       else { wf_closeDrawer(); cp_openDrawer(); }
     }
     function cp_openDrawer() {
-      CP_MODE = 'list';
       const d = document.getElementById('cp-drawer');
       if (d) d.classList.add('open');
       document.getElementById('cp-edge-tab')?.classList.add('active');
-      cp_renderList();
+      cp_renderTimeline();
     }
     function cp_closeDrawer() {
       const d = document.getElementById('cp-drawer');
       if (d) { d.classList.remove('open'); d.innerHTML = ''; }
       document.getElementById('cp-edge-tab')?.classList.remove('active');
-      CP_SEL.clear(); CP_EXP = null; CP_MODE = 'list';
+      CP_SEL.clear();
     }
 
     // ── Record helpers ──
@@ -2182,114 +2308,78 @@
       return (r.nodeMetrics.reduce((s, n) => s + n.durationMs, 0) / 1000).toFixed(1);
     }
 
-    // ── List rendering ──
-    function cp_renderList() {
+    // ── Timeline rendering ──
+    function cp_renderTimeline() {
       const d = document.getElementById('cp-drawer');
       if (!d) return;
       const selCount = CP_SEL.size;
-      const selBarHTML = selCount > 0
-        ? `<div class="cp-sel-bar show"><span>已选 ${selCount} 条</span><div class="cp-sel-line"></div><button class="cp-sel-clear" onclick="cp_clearSel()">清除选择</button></div>`
-        : `<div class="cp-sel-bar"></div>`;
-
       d.innerHTML = `
         <div class="cp-drw-header">
           <div class="cp-drw-top">
-            <div class="cp-drw-title">对比池</div>
-            <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px" onclick="cp_openSaveModal()">+ 保存当前结果</button>
+            <div class="cp-drw-title">运行历史</div>
+            <div style="font-size:10px;color:var(--text-muted)">${CP_STORE.length} 条</div>
           </div>
           <div class="cp-meta-row">
             <div class="cp-meta-left">
-              <span>已有 ${CP_STORE.length} 条记录</span>
               <button class="cp-meta-btn" onclick="cp_selAll()">全选</button>
               <button class="cp-meta-btn" onclick="cp_clearSel()">清除</button>
             </div>
           </div>
         </div>
-        ${selBarHTML}
-        <div class="cp-list" id="cp-list">${cp_cardsHTML()}</div>
-        <div class="cp-bot-bar" id="cp-bot-bar">${cp_botBarHTML()}</div>`;
-    }
-
-    function cp_cardsHTML() {
-      if (CP_STORE.length === 0) return `
-        <div style="text-align:center;padding:36px 20px;font-size:11px;color:var(--text-muted);opacity:.5">
-          <div style="font-size:28px;margin-bottom:8px">📭</div>
-          执行流程后点击"保存当前结果"
+        <div class="cp-list" id="cp-list" style="padding-bottom:${selCount > 0 ? '56px' : '8px'}">
+          ${cp_timelineHTML()}
+        </div>
+        <div class="cp-float-bar ${selCount > 0 ? 'show' : ''}" id="cp-float-bar">
+          <div class="cp-float-bar-cnt">已选 ${selCount} / 4</div>
+          ${selCount >= 2
+            ? `<button class="btn btn-primary btn-sm" onclick="cp_startCompareFullscreen()">开始对比 (${selCount})</button>`
+            : `<div style="font-size:10px;color:var(--text-muted)">再选 ${2 - selCount} 个</div>`}
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px" onclick="cp_clearSel()">取消</button>
         </div>`;
-      return CP_STORE.map(r => cp_cardHTML(r)).join('');
     }
 
-    function cp_cardHTML(r) {
-      const status  = cp_recordStatus(r);
-      const dotCls  = { success: 'cpd-ok', partial: 'cpd-par', failed: 'cpd-err' }[status] || 'cpd-ok';
-      const stCls   = { success: 'cpst-ok', partial: 'cpst-par', failed: 'cpst-err' }[status] || 'cpst-ok';
-      const stTxt   = { success: '成功', partial: '部分完成', failed: '失败' }[status] || '成功';
-      const isSel   = CP_SEL.has(r.id);
-      const isExp   = CP_EXP === r.id;
-      const dt      = new Date(r.timestamp);
-      const timeStr = dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-      const dateStr = dt.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
-      return `
-      <div class="cp-rc ${isSel ? 'on' : ''}" id="cp-rc-${r.id}">
-        <div class="cp-rc-main" onclick="cp_toggleExp('${r.id}')">
-          <div class="cp-rc-dot ${dotCls}"></div>
-          <div class="cp-rc-info">
-            <div class="cp-rc-r1">
-              <span class="cp-rc-ver">V${r.version}</span>
-              <span class="cp-rc-lbl">${r.runName}</span>
-              <span class="cp-rc-st ${stCls}">${stTxt}</span>
-            </div>
-            <div class="cp-rc-r2"><span>${dateStr} ${timeStr}</span><span>耗时 ${cp_totalDurS(r)}s</span></div>
+    function cp_timelineHTML() {
+      if (CP_STORE.length === 0) return `
+        <div style="text-align:center;padding:40px 20px;font-size:11px;color:var(--text-muted);opacity:.5">
+          <div style="font-size:28px;margin-bottom:8px">📭</div>执行流程后自动记录
+        </div>`;
+      return `<div class="cp-tl">` + CP_STORE.map((r, idx) => {
+        const status  = cp_recordStatus(r);
+        const dotCls  = { success: 'cpd-ok', partial: 'cpd-par', failed: 'cpd-err' }[status];
+        const isSel   = CP_SEL.has(r.id);
+        const dt      = new Date(r.timestamp);
+        const timeStr = dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const isLast  = idx === CP_STORE.length - 1;
+        return `
+        <div class="cp-tl-row">
+          <div class="cp-tl-spine">
+            <div class="cp-tl-dot ${dotCls}"></div>
+            ${!isLast ? `<div class="cp-tl-line"></div>` : ''}
           </div>
-          <div class="cp-rc-chk ${isSel ? 'on' : ''}" onclick="event.stopPropagation();cp_toggleSel('${r.id}')">${isSel ? '✓' : ''}</div>
-        </div>
-        <div class="cp-rc-out">输出: 功率 ${r.finalOutputs.powerKw} kW &nbsp;置信度 ${Math.round(r.finalOutputs.confidenceRatio * 100)}%</div>
-        <div class="cp-rc-acts">
-          <div class="cp-act-ic" onclick="event.stopPropagation();cp_toggleExp('${r.id}')" title="展开详情">⊞</div>
-          <div class="cp-act-ic del" onclick="event.stopPropagation();cp_delete('${r.id}')" title="删除">✕</div>
-        </div>
-        ${isExp ? cp_detailHTML(r) : `<div class="cp-rc-detail" id="cp-det-${r.id}"></div>`}
-      </div>`;
-    }
-
-    function cp_detailHTML(r) {
-      const nodes    = r.nodeMetrics.slice(0, 8);
-      const keyNodes = r.nodeMetrics.filter(n => n.outputPreview);
-      return `
-      <div class="cp-rc-detail show">
-        <div class="cp-det-summ">${r.aiSummary}</div>
-        ${keyNodes.length ? `
-        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">关键节点输出</div>
-        <div class="cp-nl">
-          ${keyNodes.map(n => `<div class="cp-ni" style="flex-direction:column;align-items:flex-start;gap:2px">
-            <div style="display:flex;align-items:center;gap:6px;width:100%"><span style="color:var(--accent-green)">✓</span><span style="flex:1">${n.nodeName}</span><span style="color:var(--accent-cyan);font-family:'Space Mono',monospace;font-size:9px">${(n.durationMs/1000).toFixed(2)}s</span></div>
-            <div style="font-size:9px;color:var(--text-muted);padding-left:16px;line-height:1.4">${n.outputPreview}</div>
-          </div>`).join('')}
-        </div>` : ''}
-        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">节点状态</div>
-        <div class="cp-nl">
-          ${nodes.map(n => `<div class="cp-ni"><span style="color:var(--accent-green)">✓</span><span style="flex:1">${n.nodeName}</span><span style="color:var(--accent-cyan);font-family:'Space Mono',monospace;font-size:9px">${(n.durationMs/1000).toFixed(2)}s</span></div>`).join('')}
-        </div>
-        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">关键参数</div>
-        <div class="cp-ps">
-          <div class="cp-pr"><span class="cp-pr-k">输出功率</span><span class="cp-pr-v">${r.finalOutputs.powerKw} kW</span></div>
-          <div class="cp-pr"><span class="cp-pr-k">置信度</span><span class="cp-pr-v">${Math.round(r.finalOutputs.confidenceRatio * 100)}%</span></div>
-          <div class="cp-pr"><span class="cp-pr-k">总耗时</span><span class="cp-pr-v">${cp_totalDurS(r)}s</span></div>
-        </div>
-        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;margin-top:8px">配置快照</div>
-        <div class="cp-ps">
-          <div class="cp-pr"><span class="cp-pr-k">温度参数</span><span class="cp-pr-v">${r.configSnapshot.modelTemperature}</span></div>
-          <div class="cp-pr" style="align-items:flex-start"><span class="cp-pr-k">数据源</span><span class="cp-pr-v" style="text-align:right;max-width:130px;white-space:normal;line-height:1.4">${r.configSnapshot.dataSourceIds.join('<br>')}</span></div>
-        </div>
-      </div>`;
-    }
-
-    function cp_botBarHTML() {
-      const n = CP_SEL.size;
-      if (n === 0) return `<div class="cp-bot-hint">勾选记录开始对比</div>`;
-      if (n === 1) return `<div class="cp-bot-acts"><button class="btn btn-ghost btn-sm" style="flex:1;font-size:11px" onclick="cp_viewSingle()">查看完整详情</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="cp_clearSel()">取消</button></div>`;
-      if (n <= 4) return `<div class="cp-bot-acts"><button class="btn btn-primary btn-sm" style="flex:1;font-size:11px" onclick="cp_startCompare()">开始对比 (${n})</button><button class="btn btn-ghost btn-sm" style="font-size:11px" onclick="cp_clearSel()">取消</button></div>`;
-      return `<div class="cp-bot-hint" style="color:var(--accent-amber)">最多同时对比4条</div><div class="cp-bot-acts" style="margin-top:6px"><button class="btn btn-ghost btn-sm" style="flex:1;font-size:11px" onclick="cp_clearSel()">清除选择</button></div>`;
+          <div class="cp-tl-body">
+            <div class="cp-tl-card ${isSel ? 'on' : ''} ${r.isPinned ? 'pinned' : ''}">
+              <div class="cp-tl-r1">
+                <span class="cp-tl-ver">V${r.version}</span>
+                <span class="cp-tl-name">${r.runName || `运行 #${r.version}`}</span>
+                ${r.isPinned ? `<span class="cp-tl-pin-icon" title="已固化">📌</span>` : ''}
+                <div class="cp-tl-chk ${isSel ? 'on' : ''}" onclick="event.stopPropagation();cp_toggleSel('${r.id}')">${isSel ? '✓' : ''}</div>
+              </div>
+              <div class="cp-tl-metrics">
+                <div class="cp-tl-metric"><span>⏱</span><span class="cp-tl-metric-val">${cp_totalDurS(r)}s</span></div>
+                <div class="cp-tl-metric"><span>⚡</span><span class="cp-tl-metric-val">${r.finalOutputs.powerKw}kW</span></div>
+                <div class="cp-tl-metric"><span>✦</span><span class="cp-tl-metric-val">${Math.round(r.finalOutputs.confidenceRatio * 100)}%</span></div>
+              </div>
+              <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">${timeStr}</div>
+              <div class="cp-tl-actions">
+                ${r.isPinned
+                  ? `<button class="cp-tl-btn pin-btn" onclick="event.stopPropagation();cp_openPinModal('${r.id}')">✏ 重命名</button>`
+                  : `<button class="cp-tl-btn pin-btn" onclick="event.stopPropagation();cp_openPinModal('${r.id}')">📌 固化</button>`}
+                <button class="cp-tl-btn del-btn" onclick="event.stopPropagation();cp_delete('${r.id}')">✕ 删除</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('') + `</div>`;
     }
 
     // ── Selection helpers ──
@@ -2297,189 +2387,240 @@
       if (CP_SEL.has(id)) { CP_SEL.delete(id); }
       else if (CP_SEL.size < 4) { CP_SEL.add(id); }
       else { showToast('最多同时选择4条'); return; }
-      cp_renderList();
+      cp_renderTimeline();
     }
     function cp_selAll() {
       CP_STORE.slice(0, 4).forEach(r => CP_SEL.add(r.id));
       if (CP_STORE.length > 4) showToast('已选前4条，最多同时对比4条');
-      cp_renderList();
+      cp_renderTimeline();
     }
-    function cp_clearSel() { CP_SEL.clear(); cp_renderList(); }
-    function cp_toggleExp(id) { CP_EXP = CP_EXP === id ? null : id; cp_renderList(); }
+    function cp_clearSel() { CP_SEL.clear(); cp_renderTimeline(); }
     function cp_delete(id) {
       const idx = CP_STORE.findIndex(r => r.id === id);
       if (idx < 0) return;
       const ver = CP_STORE[idx].version;
       CP_STORE.splice(idx, 1);
       CP_SEL.delete(id);
-      if (CP_EXP === id) CP_EXP = null;
       showToast(`已删除 V${ver}`);
-      cp_renderList();
+      cp_renderTimeline();
       try { localStorage.setItem('cp_store', JSON.stringify(CP_STORE)); } catch(e) {}
     }
 
-    // ── Single detail view ──
-    function cp_viewSingle() {
+    // ── Full-screen compare ──
+    function cp_startCompareFullscreen() {
       CP_CMP_IDS = [...CP_SEL];
-      cmp_renderBottomDrawer();
-      cmp_openBottomDrawer();
+      cmp_renderFullscreen();
+      cmp_openFullscreen();
+    }
+    function cmp_openFullscreen() {
+      document.getElementById('cmp-fullscreen')?.classList.add('open');
+    }
+    function cmp_closeFullscreen() {
+      document.getElementById('cmp-fullscreen')?.classList.remove('open');
     }
 
-    // ── Compare mode ──
-    function cp_startCompare() {
-      CP_MODE = 'compare';
-      CP_CMP_IDS = [...CP_SEL];
-      cp_renderCompareMode();
+    // ── Config diff ──
+    function cfgDiff_HTML(records) {
+      const baseline = records[0].configSnapshot;
+      const cols = `90px ${Array(records.length).fill('1fr').join(' ')}`;
+      const keys = [
+        { key: 'ragPrompt',        label: 'RAG Prompt' },
+        { key: 'dataSourceIds',    label: '数据源', fmt: v => Array.isArray(v) ? v.join('<br>') : String(v) },
+        { key: 'modelTemperature', label: '温度参数' },
+      ];
+      return keys.map(({ key, label, fmt }) => {
+        const baseVal = baseline[key];
+        const cells = records.map((r, i) => {
+          const val    = r.configSnapshot[key];
+          const valStr = fmt ? fmt(val) : String(val);
+          const isBase = i === 0;
+          const isDiff = JSON.stringify(val) !== JSON.stringify(baseVal);
+          const cls    = isBase ? 'baseline' : isDiff ? 'changed' : 'same';
+          return `<div class="cfgdiff-cell ${cls}">${valStr}${isDiff && !isBase ? ' <span style="font-size:8px;opacity:.7">≠ 基准</span>' : ''}</div>`;
+        }).join('');
+        return `<div style="display:grid;grid-template-columns:${cols};gap:6px;margin-bottom:4px">
+          <div class="cfgdiff-key">${label}</div>${cells}
+        </div>`;
+      }).join('');
     }
 
-    function cp_renderCompareMode() {
-      const records = CP_CMP_IDS.map(id => CP_STORE.find(r => r.id === id)).filter(Boolean);
-      const d = document.getElementById('cp-drawer');
-      if (!d) return;
-      d.innerHTML = `
-        <div class="cp-cmp-head">
-          <button class="cp-back" onclick="cp_exitCompare()">← 返回列表</button>
-          <div class="cp-cmp-ttl">对比模式 (${records.length}条)</div>
+    // ── Node diff ──
+    function ndiff_HTML(records) {
+      const baseline = records[0];
+      const cols = `90px ${Array(records.length).fill('1fr').join(' ')}`;
+      return WF_NODE_ORDER.slice(0, 8).map(nid => {
+        const el     = document.getElementById(nid);
+        const nm     = el?.querySelector('.node-name')?.textContent || nid;
+        const baseMs = baseline.nodeMetrics.find(n => n.nodeId === nid)?.durationMs ?? 0;
+        const cells  = records.map((r, i) => {
+          const nd = r.nodeMetrics.find(n => n.nodeId === nid);
+          if (!nd) return `<div class="ndiff-cell">─</div>`;
+          const ms     = nd.durationMs;
+          const ratio  = baseMs > 0 ? (ms - baseMs) / baseMs : 0;
+          const isBase = i === 0;
+          if (nd.status === 'failed') return `<div class="ndiff-cell failed" onclick="ndiff_toggleBubble('${nid}')">✗ 失败</div>`;
+          if (!isBase && Math.abs(ratio) > 0.2) {
+            const cls = ratio < 0 ? 'fast' : 'slow';
+            return `<div class="ndiff-cell ${cls}" onclick="ndiff_toggleBubble('${nid}')">${ratio < 0 ? '↓' : '↑'} ${(ms/1000).toFixed(2)}s</div>`;
+          }
+          const hasP = !!nd.outputPreview;
+          return `<div class="ndiff-cell${isBase ? '' : ' hidden-same'}" onclick="ndiff_toggleBubble('${nid}')">${(ms/1000).toFixed(2)}s${hasP ? ' 💬' : ''}</div>`;
+        }).join('');
+        const hasPreviews = records.some(r => r.nodeMetrics.find(n => n.nodeId === nid)?.outputPreview);
+        const bubbleRows  = records.map(r => {
+          const nd = r.nodeMetrics.find(n => n.nodeId === nid);
+          if (!nd?.outputPreview) return '';
+          return `<div class="ndiff-bubble-row"><span class="ndiff-bubble-ver">V${r.version}</span><span>${nd.outputPreview}</span></div>`;
+        }).join('');
+        return `
+        <div style="display:grid;grid-template-columns:${cols};gap:0;margin-bottom:3px">
+          <div class="ndiff-key">${nm}</div>${cells}
         </div>
-        <div class="cp-sum-grid">
-          ${records.map(r => {
+        ${hasPreviews ? `<div class="ndiff-bubble" id="ndiff-bubble-${nid}"><div class="ndiff-bubble-title">节点中间态输出</div>${bubbleRows}</div>` : ''}`;
+      }).join('');
+    }
+    function ndiff_toggleBubble(nid) {
+      document.getElementById(`ndiff-bubble-${nid}`)?.classList.toggle('show');
+    }
+
+    // ── Dynamic output renderer ──
+    function dynOut_HTML(records) {
+      const cols = Array(records.length).fill('1fr').join(' ');
+      const statBlock = (label, vals, unit, bestIsMax) => {
+        const baseVal = vals[0];
+        const cards   = vals.map((v, i) => {
+          const diff  = v - baseVal;
+          const isBase = i === 0;
+          let trendHTML = `<div class="dyn-stat-trend trend-eq">— 基准</div>`;
+          if (!isBase && diff !== 0) {
+            const arrow = diff > 0 ? (bestIsMax ? '↑' : '↓') : (bestIsMax ? '↓' : '↑');
+            const cls   = (diff > 0) === bestIsMax ? 'trend-up' : 'trend-dn';
+            trendHTML   = `<div class="dyn-stat-trend ${cls}">${arrow} ${diff > 0 ? '+' : ''}${Math.round(diff)}${unit}</div>`;
+          }
+          return `<div class="dyn-stat-card">
+            <div class="dyn-stat-label">V${records[i].version}</div>
+            <div class="dyn-stat-val" style="color:${isBase ? 'var(--accent-amber)' : 'var(--accent-cyan)'}">${v}</div>
+            <div style="font-size:9px;color:var(--text-muted)">${unit}</div>
+            ${trendHTML}
+          </div>`;
+        }).join('');
+        return `
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${label}</div>
+          <div style="display:grid;grid-template-columns:${cols};gap:8px">${cards}</div>
+        </div>`;
+      };
+      return statBlock('输出功率', records.map(r => r.finalOutputs.powerKw), ' kW', true)
+           + statBlock('置信度',   records.map(r => Math.round(r.finalOutputs.confidenceRatio * 100)), '%', true)
+           + `<div class="dyn-placeholder">🗺 地图 / 可视化渲染区（预留 GeoJSON · Canvas · 图表接入）</div>`;
+    }
+
+    // ── Fullscreen rendering ──
+    function cmp_renderFullscreen() {
+      const records = CP_CMP_IDS.map(id => CP_STORE.find(r => r.id === id)).filter(Boolean);
+      const d = document.getElementById('cmp-fullscreen');
+      if (!d || records.length === 0) return;
+
+      const vPills = records.map((r, i) =>
+        `<span class="cmpfs-vpill ${i===0?'baseline':''}">${i===0?'📌 ':''}V${r.version}</span>`).join('');
+      const cols = `90px ${Array(records.length).fill('1fr').join(' ')}`;
+
+      const verCols = `
+        <div style="display:grid;grid-template-columns:${cols};gap:8px;margin-bottom:20px">
+          <div></div>
+          ${records.map((r, i) => {
             const st   = cp_recordStatus(r);
-            const icon = { success: '✓', partial: '⚠', failed: '✗' }[st] || '✓';
             const sc   = { success: 'var(--accent-green)', partial: 'var(--accent-amber)', failed: '#ef4444' }[st];
-            const stxt = { success: '成功', partial: '部分完成', failed: '失败' }[st];
-            return `<div class="cp-sum-col">
-              <div class="csc-ver">V${r.version}</div>
-              <div class="csc-lbl">${r.runName}</div>
-              <div class="csc-sep"></div>
-              <div class="csc-stat" style="color:${sc}">${icon} ${stxt}</div>
-              <div class="csc-dur">${cp_totalDurS(r)}s</div>
-              <div class="csc-power">${r.finalOutputs.powerKw}kW</div>
-              <div style="font-size:9px;color:var(--text-muted)">置信度 ${Math.round(r.finalOutputs.confidenceRatio * 100)}%</div>
+            const stxt = { success: '✓ 成功', partial: '⚠ 部分完成', failed: '✗ 失败' }[st];
+            return `<div class="cmpfs-ver-col ${i===0?'baseline-col':''}">
+              <div class="cmpfs-ver-num ${i===0?'b':''}">V${r.version}</div>
+              <div class="cmpfs-ver-lbl">${r.runName || `运行 #${r.version}`}</div>
+              <div class="cmpfs-ver-st" style="color:${sc}">${stxt}</div>
+              <button class="cmpfs-apply-btn ${i===0?'b':''}" onclick="cp_applyConfig('${r.id}')">应用此配置</button>
             </div>`;
           }).join('')}
-        </div>
-        <div style="padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0">
-          <button class="btn btn-primary btn-sm" style="width:100%;justify-content:center" onclick="cmp_renderBottomDrawer();cmp_openBottomDrawer()">
-            展开完整对比详情 ↑
-          </button>
         </div>`;
-    }
-
-    function cp_exitCompare() {
-      CP_MODE = 'list';
-      cp_renderList();
-    }
-
-    // ── Bottom detail drawer ──
-    function cmp_openBottomDrawer() {
-      document.getElementById('cmp-btm-drw')?.classList.add('open');
-    }
-    function cmp_closeBottomDrawer() {
-      document.getElementById('cmp-btm-drw')?.classList.remove('open');
-    }
-
-    function cmp_renderBottomDrawer() {
-      const records = CP_CMP_IDS.map(id => CP_STORE.find(r => r.id === id)).filter(Boolean);
-      const d = document.getElementById('cmp-btm-drw');
-      if (!d || records.length === 0) return;
-      const n = records.length;
-      const gcols = `120px ${Array(n).fill('1fr').join(' ')}`;
-
-      const powers = records.map(r => r.finalOutputs.powerKw);
-      const durs   = records.map(r => parseFloat(cp_totalDurS(r)));
-      const confs  = records.map(r => Math.round(r.finalOutputs.confidenceRatio * 100));
-      const samePow = powers.every(v => v === powers[0]);
-      const sameDur = durs.every(v => v === durs[0]);
-      const sameCnf = confs.every(v => v === confs[0]);
-
-      function rowHTML(label, vals, bestIsMax, allSame, fmt) {
-        const best  = bestIsMax ? Math.max(...vals) : Math.min(...vals);
-        const worst = bestIsMax ? Math.min(...vals) : Math.max(...vals);
-        const cells = vals.map(v => {
-          const cls = allSame ? 'cc-same' : v === best ? 'cc-best' : v === worst ? 'cc-worst' : '';
-          return `<div class="cmp-rc ${cls}">${fmt(v)}</div>`;
-        }).join('');
-        return `<div class="cmp-row" style="grid-template-columns:${gcols}">${'<div class="cmp-rl">'}${label}</div>${cells}</div>`;
-      }
-
-      const colHeads = `<div style="display:grid;grid-template-columns:${gcols};gap:4px;margin-bottom:8px">
-        <div></div>
-        ${records.map(r => { const st=cp_recordStatus(r); return `<div class="cmp-ch"><div class="cch-v">V${r.version}</div><div class="cch-l">${r.runName}</div><div class="cch-s">${st==='success'?'✓ 成功':st==='partial'?'⚠ 部分完成':'✗ 失败'}</div></div>`; }).join('')}
-      </div>`;
-
-      const nodeRows = WF_NODE_ORDER.slice(0, 8).map(nid => {
-        const el = document.getElementById(nid);
-        const nm = el?.querySelector('.node-name')?.textContent || nid;
-        const cells = records.map(r => { const nd = r.nodeMetrics.find(x => x.nodeId === nid); return `<div class="cmp-rc">${nd ? `✓ ${(nd.durationMs/1000).toFixed(2)}s` : '─'}</div>`; }).join('');
-        return `<div class="cmp-row" style="grid-template-columns:${gcols}"><div class="cmp-rl">${nm}</div>${cells}</div>`;
-      }).join('');
-
-      const vPills = records.map(r => `<span class="cmp-vpill">V${r.version}</span>`).join(' ');
 
       d.innerHTML = `
-        <div class="cmp-dh" id="cmp-dh"></div>
-        <div class="cmp-bhead">
-          <div class="cmp-btitle">结果对比 <div style="display:flex;gap:4px">${vPills}</div></div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="showToast('正在生成对比报告…')">导出</button>
-            <button class="btn btn-ghost btn-sm" onclick="cmp_closeBottomDrawer()">关闭</button>
-          </div>
+        <div class="cmpfs-topbar">
+          <div class="cmpfs-title">深度对比台</div>
+          <div class="cmpfs-vpills">${vPills}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-left:8px">最左侧版本为基准</div>
+          <div class="cmpfs-spacer"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-right:6px" onclick="showToast('正在生成对比报告…')">导出</button>
+          <button class="cmpfs-close" onclick="cmp_closeFullscreen()">×</button>
         </div>
-        <div class="cmp-body">
-          <div class="cmp-nav">
-            <div class="cmp-ns act" onclick="cmp_goto('cmp-s-overview')">▼ 流程概况</div>
-            <div class="cmp-ns" onclick="cmp_goto('cmp-s-nodes')">▼ 节点状态</div>
-            ${WF_NODE_ORDER.slice(0, 8).map(nid => { const el=document.getElementById(nid); const nm=el?.querySelector('.node-name')?.textContent||nid; return `<div class="cmp-ni" onclick="cmp_goto('cmp-s-nodes')">${nm}</div>`; }).join('')}
-            <div class="cmp-ns" onclick="cmp_goto('cmp-s-output')">▼ 最终输出</div>
+        <div class="cmpfs-body">
+          <div class="cmpfs-nav">
+            <div class="cmpfs-ns act" onclick="cmpfs_goto('cmpfs-s-versions')">▼ 版本概览</div>
+            <div class="cmpfs-ns" onclick="cmpfs_goto('cmpfs-s-config')">▼ 配置差异</div>
+            <div class="cmpfs-ns" onclick="cmpfs_goto('cmpfs-s-nodes')">▼ 节点状态</div>
+            ${WF_NODE_ORDER.slice(0,8).map(nid => {
+              const el = document.getElementById(nid);
+              return `<div class="cmpfs-ni" onclick="cmpfs_goto('cmpfs-s-nodes')">${el?.querySelector('.node-name')?.textContent||nid}</div>`;
+            }).join('')}
+            <div class="cmpfs-ns" onclick="cmpfs_goto('cmpfs-s-output')">▼ 输出结果</div>
           </div>
-          <div class="cmp-cont" id="cmp-cont">
-            ${colHeads}
-            <div class="cmp-sec" id="cmp-s-overview">
-              <div class="cmp-sec-ttl">流程概况</div>
-              <div style="display:grid;grid-template-columns:${gcols};gap:4px;margin-bottom:6px">
-                <div style="font-size:10px;color:var(--text-muted);padding:4px 0">AI摘要</div>
-                ${records.map(r=>`<div style="font-size:10px;color:var(--text-dim);line-height:1.5;padding:6px 8px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15);border-radius:4px">${r.aiSummary}</div>`).join('')}
+          <div class="cmpfs-cont" id="cmpfs-cont">
+
+            <div class="cmpfs-sec" id="cmpfs-s-versions">
+              <div class="cmpfs-sec-ttl">版本概览
+                <span class="cmpfs-sec-badge" style="background:rgba(245,158,11,.15);color:var(--accent-amber)">📌 Baseline = V${records[0].version}</span>
               </div>
-              ${rowHTML('总耗时', durs, false, sameDur, v => v + 's')}
+              ${verCols}
             </div>
-            <div class="cmp-sec" id="cmp-s-nodes" style="margin-top:14px">
-              <div class="cmp-sec-ttl">节点状态</div>
-              ${nodeRows}
+
+            <div class="cmpfs-sec" id="cmpfs-s-config">
+              <div class="cmpfs-sec-ttl">配置差异 (Config Diff)
+                <span class="cmpfs-sec-badge" style="background:rgba(245,158,11,.12);color:var(--accent-amber)">黄色 = 已修改</span>
+                <span class="cmpfs-sec-badge" style="background:rgba(6,182,212,.1);color:var(--accent-cyan)">蓝色 = 基准</span>
+              </div>
+              ${cfgDiff_HTML(records)}
             </div>
-            <div class="cmp-sec" id="cmp-s-output" style="margin-top:14px">
-              <div class="cmp-sec-ttl">最终输出</div>
-              ${rowHTML('输出功率 (kW)', powers, true,  samePow, v => v + ' kW')}
-              ${rowHTML('置信度 (%)',    confs,  true,  sameCnf, v => v + '%')}
+
+            <div class="cmpfs-sec" id="cmpfs-s-nodes">
+              <div class="cmpfs-sec-ttl">节点状态
+                <span class="cmpfs-sec-badge" style="background:rgba(16,185,129,.12);color:var(--accent-green)">↓ 更快</span>
+                <span class="cmpfs-sec-badge" style="background:rgba(239,68,68,.1);color:#ef4444">↑ 更慢</span>
+              </div>
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px">耗时差异 &gt;20% 或失败时高亮；灰显表示无差异。点击节点可展开中间态输出。</div>
+              ${ndiff_HTML(records)}
             </div>
+
+            <div class="cmpfs-sec" id="cmpfs-s-output">
+              <div class="cmpfs-sec-ttl">最终输出 (Dynamic Renderer)</div>
+              ${dynOut_HTML(records)}
+            </div>
+
           </div>
         </div>`;
-
-      cmp_setupResize();
     }
 
-    function cmp_goto(id) {
+    function cmpfs_goto(id) {
       const el = document.getElementById(id);
-      const cont = document.getElementById('cmp-cont');
+      const cont = document.getElementById('cmpfs-cont');
       if (el && cont) cont.scrollTo({ top: el.offsetTop - 8, behavior: 'smooth' });
     }
 
-    function cmp_setupResize() {
-      const handle = document.getElementById('cmp-dh');
-      const drawer = document.getElementById('cmp-btm-drw');
-      if (!handle || !drawer) return;
-      let startY, startH;
-      handle.addEventListener('mousedown', e => {
-        startY = e.clientY; startH = drawer.offsetHeight;
-        const onMove = ev => {
-          const delta = startY - ev.clientY;
-          const newH  = Math.max(200, Math.min(window.innerHeight * 0.85, startH + delta));
-          drawer.style.height = newH + 'px';
-        };
-        const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onUp);
-        e.preventDefault();
-      });
+    // ── Apply configuration ──
+    function cp_applyConfig(recId) {
+      const rec = CP_STORE.find(r => r.id === recId);
+      if (!rec) return;
+      const cfg = rec.configSnapshot;
+      const dsType = document.getElementById('wf-ds-type');
+      if (dsType) {
+        const isReanalysis = cfg.dataSourceIds.some(s => s.includes('ERA5'));
+        dsType.value = isReanalysis ? '再分析数据' : '预报数据';
+        wf_updateDataset();
+        const dsSet = document.getElementById('wf-ds-set');
+        if (dsSet && cfg.dataSourceIds.length > 0) {
+          const opt = [...dsSet.options].find(o => o.value === cfg.dataSourceIds[0]);
+          if (opt) dsSet.value = cfg.dataSourceIds[0];
+        }
+      }
+      cmp_closeFullscreen();
+      showToast(`✅ 已应用配置：${rec.runName || 'V' + rec.version} → 画布节点参数已更新`);
+      setTimeout(() => wf_applyToCanvas(), 300);
     }
 
   </script>
