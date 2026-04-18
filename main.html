@@ -8522,6 +8522,7 @@
         <div class="search-input">🔍 搜索业务本体名称...</div>
         <div class="filter-btn" onclick="showToast('领域筛选')">领域 ▾</div>
         <div class="filter-btn" onclick="showToast('状态筛选')">状态 ▾</div>
+        <div id="biz-cmp-mode-btn" class="filter-btn" onclick="biz_toggleCmpMode()" style="border-color:var(--border);transition:all .2s">⊞ 对比模式</div>
         <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden">
           <div id="biz-view-list-btn" class="filter-btn"
             style="border:none;border-radius:0;background:var(--blue-dim);color:var(--blue)"
@@ -8531,6 +8532,16 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 对比模式操作栏 -->
+    <div id="biz-cmp-bar" style="display:none;align-items:center;gap:10px;padding:10px 14px;background:var(--blue-dim);border:1px solid rgba(59,130,246,.3);border-radius:8px;margin-bottom:14px">
+      <span style="font-size:13px">⊞</span>
+      <span id="biz-cmp-hint" style="font-size:12px;color:var(--blue);font-weight:500">请勾选 2～4 个流程</span>
+      <div style="flex:1;height:1px;background:rgba(59,130,246,.2)"></div>
+      <button id="biz-cmp-start" class="btn btn-primary btn-sm" disabled
+              onclick="location.href='arrange_compare.html'">开始对比</button>
+      <button class="btn btn-ghost btn-sm" onclick="biz_toggleCmpMode()">退出对比模式</button>
     </div>
 
     <!-- LIST VIEW -->
@@ -8564,6 +8575,7 @@
               <td>
                 <div style="font-weight:500">新能源影像报告接诊流程本体</div>
                 <div style="font-size:10px;color:var(--text3)">由 张工程师 创建 · biz-2026-001</div>
+                <div style="font-size:10px;color:var(--cyan)">💾 3 条调试记录</div>
               </td>
               <td><span style="color:var(--cyan);font-size:11px;cursor:pointer">风力发电预测本体 v2</span></td>
               <td><span class="tag">门诊接诊</span></td>
@@ -8584,6 +8596,7 @@
               <td>
                 <div style="font-weight:500">灾害预警信息上报工作流</div>
                 <div style="font-size:10px;color:var(--text3)">由 李工程师 创建 · biz-2026-002</div>
+                <div style="font-size:10px;color:var(--cyan)">💾 1 条调试记录</div>
               </td>
               <td><span style="color:var(--cyan);font-size:11px;cursor:pointer">灾害预警知识图谱 v1</span></td>
               <td><span class="tag">应急响应</span></td>
@@ -8604,6 +8617,7 @@
               <td>
                 <div style="font-weight:500">金融风控审批流本体</div>
                 <div style="font-size:10px;color:var(--text3)">由 王工程师 创建 · biz-2026-003</div>
+                <div style="font-size:10px;color:var(--cyan)">💾 5 条调试记录</div>
               </td>
               <td><span style="color:var(--cyan);font-size:11px;cursor:pointer">金融风控实体本体 v1</span></td>
               <td><span class="tag">贷款审批</span></td>
@@ -8646,11 +8660,14 @@
     <div id="biz-card-view" style="display:none">
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
 
-        <div
+        <div id="biz-card-f1"
           style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden"
-          onclick="goPage('biz-detail')"
-          onmouseenter="this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'"
-          onmouseleave="this.style.borderColor='var(--border)';this.style.transform='';this.style.boxShadow=''">
+          onclick="biz_cardClick('f1')"
+          onmouseenter="if(!BIZ_CMP_MODE){this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'}"
+          onmouseleave="if(!BIZ_CMP_MODE){this.style.borderColor='var(--border)';this.style.transform='';this.style.boxShadow=''}">
+          <!-- 对比勾选框 -->
+          <div id="biz-chk-f1" onclick="event.stopPropagation();biz_toggleCmpSel('f1')"
+               style="display:none;position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);background:var(--surface2);align-items:center;justify-content:center;font-size:11px;z-index:5;cursor:pointer;transition:all .15s"></div>
           <div
             style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--cyan))">
           </div>
@@ -8661,7 +8678,8 @@
             <span class="badge badge-green"><span class="dot"></span>已发布</span>
           </div>
           <div style="font-size:13px;font-weight:600;margin-bottom:4px">新能源影像报告接诊流程本体</div>
-          <div style="font-size:11px;color:var(--text2);margin-bottom:10px">引用：风力发电预测本体 v2</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">引用：风力发电预测本体 v2</div>
+          <div style="font-size:10px;color:var(--cyan);margin-bottom:6px">💾 3 条调试记录</div>
           <div
             style="display:flex;gap:14px;margin:10px 0;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
             <div style="text-align:center">
@@ -8686,11 +8704,14 @@
           </div>
         </div>
 
-        <div
+        <div id="biz-card-f2"
           style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden"
-          onclick="goPage('biz-detail')"
-          onmouseenter="this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)'"
-          onmouseleave="this.style.borderColor='var(--border)';this.style.transform=''">
+          onclick="biz_cardClick('f2')"
+          onmouseenter="if(!BIZ_CMP_MODE){this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'}"
+          onmouseleave="if(!BIZ_CMP_MODE){this.style.borderColor='var(--border)';this.style.transform='';this.style.boxShadow=''}">
+          <!-- 对比勾选框 -->
+          <div id="biz-chk-f2" onclick="event.stopPropagation();biz_toggleCmpSel('f2')"
+               style="display:none;position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);background:var(--surface2);align-items:center;justify-content:center;font-size:11px;z-index:5;cursor:pointer;transition:all .15s"></div>
           <div
             style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber),var(--rose))">
           </div>
@@ -8701,7 +8722,8 @@
             <span class="badge badge-amber"><span class="dot"></span>进行中</span>
           </div>
           <div style="font-size:13px;font-weight:600;margin-bottom:4px">灾害预警信息上报工作流</div>
-          <div style="font-size:11px;color:var(--text2);margin-bottom:10px">引用：灾害预警知识图谱 v1</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">引用：灾害预警知识图谱 v1</div>
+          <div style="font-size:10px;color:var(--cyan);margin-bottom:6px">💾 1 条调试记录</div>
           <div
             style="display:flex;gap:14px;margin:10px 0;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
             <div style="text-align:center">
@@ -8726,11 +8748,14 @@
           </div>
         </div>
 
-        <div
+        <div id="biz-card-f3"
           style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden"
-          onclick="goPage('biz-detail')"
-          onmouseenter="this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)'"
-          onmouseleave="this.style.borderColor='var(--border)';this.style.transform=''">
+          onclick="biz_cardClick('f3')"
+          onmouseenter="if(!BIZ_CMP_MODE){this.style.borderColor='var(--blue)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'}"
+          onmouseleave="if(!BIZ_CMP_MODE){this.style.borderColor='var(--border)';this.style.transform='';this.style.boxShadow=''}">
+          <!-- 对比勾选框 -->
+          <div id="biz-chk-f3" onclick="event.stopPropagation();biz_toggleCmpSel('f3')"
+               style="display:none;position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);background:var(--surface2);align-items:center;justify-content:center;font-size:11px;z-index:5;cursor:pointer;transition:all .15s"></div>
           <div
             style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),var(--cyan))">
           </div>
@@ -8741,7 +8766,8 @@
             <span class="badge badge-green"><span class="dot"></span>已发布</span>
           </div>
           <div style="font-size:13px;font-weight:600;margin-bottom:4px">金融风控审批流本体</div>
-          <div style="font-size:11px;color:var(--text2);margin-bottom:10px">引用：金融风控实体本体 v1</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">引用：金融风控实体本体 v1</div>
+          <div style="font-size:10px;color:var(--cyan);margin-bottom:6px">💾 5 条调试记录</div>
           <div
             style="display:flex;gap:14px;margin:10px 0;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
             <div style="text-align:center">
@@ -10746,6 +10772,77 @@
         goPage(e.data.page);
       }
     });
+
+    // ========================================================
+    // 跨流程对比模式
+    // ========================================================
+    let BIZ_CMP_MODE = false;
+    const BIZ_CMP_SEL = new Set();
+
+    function biz_toggleCmpMode() {
+      BIZ_CMP_MODE = !BIZ_CMP_MODE;
+      const btn = document.getElementById('biz-cmp-mode-btn');
+      const bar = document.getElementById('biz-cmp-bar');
+      btn.style.background  = BIZ_CMP_MODE ? 'var(--blue-dim)' : '';
+      btn.style.color       = BIZ_CMP_MODE ? 'var(--blue)' : '';
+      btn.style.borderColor = BIZ_CMP_MODE ? 'var(--blue)' : 'var(--border)';
+      bar.style.display     = BIZ_CMP_MODE ? 'flex' : 'none';
+      ['f1','f2','f3'].forEach(id => {
+        const chk = document.getElementById('biz-chk-' + id);
+        if (chk) chk.style.display = BIZ_CMP_MODE ? 'flex' : 'none';
+      });
+      if (!BIZ_CMP_MODE) {
+        BIZ_CMP_SEL.clear();
+        biz_renderCmpState();
+      }
+    }
+
+    function biz_cardClick(id) {
+      if (BIZ_CMP_MODE) {
+        biz_toggleCmpSel(id);
+      } else {
+        goPage('biz-detail');
+      }
+    }
+
+    function biz_toggleCmpSel(id) {
+      if (BIZ_CMP_SEL.has(id)) {
+        BIZ_CMP_SEL.delete(id);
+      } else {
+        if (BIZ_CMP_SEL.size >= 4) { showToast('最多同时对比 4 个流程'); return; }
+        BIZ_CMP_SEL.add(id);
+      }
+      biz_renderCmpState();
+    }
+
+    function biz_renderCmpState() {
+      ['f1','f2','f3'].forEach(id => {
+        const card = document.getElementById('biz-card-' + id);
+        const chk  = document.getElementById('biz-chk-' + id);
+        if (!card || !chk) return;
+        const sel = BIZ_CMP_SEL.has(id);
+        card.style.borderColor = sel ? 'var(--blue)' : 'var(--border)';
+        card.style.boxShadow   = sel ? '0 0 0 2px rgba(59,130,246,.35)' : '';
+        chk.textContent        = sel ? '✓' : '';
+        chk.style.background   = sel ? 'var(--blue)' : 'var(--surface2)';
+        chk.style.borderColor  = sel ? 'var(--blue)' : 'var(--border)';
+        chk.style.color        = sel ? '#fff' : '';
+      });
+      biz_updateCmpBar();
+    }
+
+    function biz_updateCmpBar() {
+      const n     = BIZ_CMP_SEL.size;
+      const hint  = document.getElementById('biz-cmp-hint');
+      const start = document.getElementById('biz-cmp-start');
+      if (n < 2) {
+        hint.textContent = n === 0 ? '请勾选 2～4 个流程' : '再勾选 ' + (2 - n) + ' 个流程';
+        start.disabled = true;
+      } else {
+        hint.textContent = '已选 ' + n + ' 个流程';
+        start.disabled = false;
+      }
+    }
 
   </script>
 
