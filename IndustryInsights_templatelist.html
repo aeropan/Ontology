@@ -152,6 +152,99 @@ body {
 .tpl-tag-cyan   { background: var(--cyan-dim);   color: var(--cyan);   }
 .tpl-tag-amber  { background: var(--amber-dim);  color: var(--amber);  }
 .tpl-tag-rose   { background: var(--rose-dim);   color: var(--rose);   }
+
+/* ── 新建模板 Modal ── */
+.ntpl-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+  z-index: 500;
+}
+.ntpl-overlay.show { display: flex; }
+.ntpl-modal {
+  background: var(--bg-2); border: 1px solid var(--border-2);
+  border-radius: 12px; width: 480px; max-height: 86vh;
+  overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+.ntpl-header {
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border-1);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ntpl-title { font-size: 15px; font-weight: 600; color: var(--text-1); }
+.ntpl-close {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-3); font-size: 16px;
+  transition: all 0.15s;
+}
+.ntpl-close:hover { background: var(--bg-3); color: var(--text-1); }
+.ntpl-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.ntpl-footer {
+  padding: 14px 20px; border-top: 1px solid var(--border-1);
+  display: flex; justify-content: flex-end; gap: 8px;
+}
+.ntpl-field { display: flex; flex-direction: column; gap: 6px; }
+.ntpl-label { font-size: 11px; font-weight: 500; color: var(--text-2); }
+.ntpl-input, .ntpl-select, .ntpl-textarea {
+  background: var(--bg-3); border: 1px solid var(--border-1);
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; color: var(--text-1); font-family: inherit;
+  outline: none; transition: border-color 0.15s;
+}
+.ntpl-input:focus, .ntpl-select:focus, .ntpl-textarea:focus { border-color: var(--blue); }
+.ntpl-input::placeholder, .ntpl-textarea::placeholder { color: var(--text-3); }
+.ntpl-select { cursor: pointer; }
+.ntpl-textarea { resize: vertical; min-height: 72px; }
+.ntpl-onto-wrap { position: relative; }
+.ntpl-onto-box {
+  background: var(--bg-3); border: 1px solid var(--border-1);
+  border-radius: 8px; padding: 6px 10px;
+  min-height: 38px; display: flex; flex-wrap: wrap; gap: 5px;
+  align-items: center; cursor: text; transition: border-color 0.15s;
+}
+.ntpl-onto-box:focus-within { border-color: var(--blue); }
+.ntpl-onto-input {
+  background: transparent; border: none; outline: none;
+  font-size: 12px; color: var(--text-1); font-family: inherit;
+  flex: 1; min-width: 140px;
+}
+.ntpl-onto-input::placeholder { color: var(--text-3); }
+.ntpl-onto-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 12px; font-size: 11px;
+  background: var(--blue-dim); border: 1px solid rgba(59,130,246,.35);
+  color: var(--blue);
+}
+.ntpl-onto-chip span { cursor: pointer; opacity: 0.7; }
+.ntpl-onto-chip span:hover { opacity: 1; }
+.ntpl-dropdown {
+  display: none; position: absolute; top: 100%; left: 0; right: 0;
+  background: var(--bg-3); border: 1px solid var(--border-1);
+  border-radius: 8px; margin-top: 4px;
+  max-height: 160px; overflow-y: auto;
+  z-index: 10; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+}
+.ntpl-dropdown.open { display: block; }
+.ntpl-dropdown-item {
+  padding: 8px 12px; font-size: 11px; color: var(--text-1);
+  cursor: pointer; transition: background 0.1s;
+  border-bottom: 1px solid var(--border-1);
+}
+.ntpl-dropdown-item:last-child { border-bottom: none; }
+.ntpl-dropdown-item:hover { background: var(--blue-dim); }
+.ntpl-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 8px; font-size: 12px;
+  font-weight: 500; cursor: pointer; transition: all 0.15s;
+  border: none; font-family: inherit;
+}
+.ntpl-btn-ghost {
+  background: transparent; border: 1px solid var(--border-2); color: var(--text-2);
+}
+.ntpl-btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+.ntpl-btn-primary { background: var(--blue); color: #fff; }
+.ntpl-btn-primary:hover { opacity: 0.85; }
 </style>
 </head>
 <body>
@@ -428,7 +521,31 @@ function deleteTemplate(btn) {
   card.remove();
 }
 function newTemplate() {
-  alert('新建洞察模板（待实现）');
+  document.getElementById('ntpl-name').value = '';
+  document.getElementById('ntpl-industry').value = '';
+  document.getElementById('ntpl-desc').value = '';
+  document.getElementById('ntpl-chips').innerHTML = '';
+  document.getElementById('ntpl-overlay').classList.add('show');
+}
+function closeNewTpl() {
+  document.getElementById('ntpl-overlay').classList.remove('show');
+}
+function ntplAddChip(name) {
+  const chips = document.getElementById('ntpl-chips');
+  if ([...chips.children].some(c => c.dataset.name === name)) return;
+  const chip = document.createElement('div');
+  chip.className = 'ntpl-onto-chip';
+  chip.dataset.name = name;
+  chip.innerHTML = name + ' <span onclick="this.parentNode.remove()">×</span>';
+  chips.appendChild(chip);
+}
+function confirmNewTpl() {
+  const name = document.getElementById('ntpl-name').value.trim();
+  const industry = document.getElementById('ntpl-industry').value;
+  if (!name) { document.getElementById('ntpl-name').focus(); return; }
+  if (!industry) { document.getElementById('ntpl-industry').focus(); return; }
+  closeNewTpl();
+  window.location.href = 'IndustryInsights_templatedetail.html';
 }
 
 /* ════════════════════════════
@@ -459,5 +576,59 @@ function filterCards(keyword) {
 function goBack()   { window.location.href = 'IndustryInsights_list.html'; }
 function goDetail() { window.location.href = 'IndustryInsights_templatedetail.html'; }
 </script>
+
+<!-- ── 新建洞察模板 Modal ── -->
+<div class="ntpl-overlay" id="ntpl-overlay" onclick="if(event.target===this)closeNewTpl()">
+  <div class="ntpl-modal">
+    <div class="ntpl-header">
+      <div class="ntpl-title">新建洞察模板</div>
+      <div class="ntpl-close" onclick="closeNewTpl()">×</div>
+    </div>
+    <div class="ntpl-body">
+      <div class="ntpl-field">
+        <label class="ntpl-label">模板名称 *</label>
+        <input id="ntpl-name" class="ntpl-input" type="text" placeholder="如：风电技术方法提取模板">
+      </div>
+      <div class="ntpl-field">
+        <label class="ntpl-label">行业 *</label>
+        <select id="ntpl-industry" class="ntpl-select">
+          <option value="">请选择行业</option>
+          <option value="wind">风电</option>
+          <option value="solar">光伏</option>
+          <option value="hydro">水电</option>
+          <option value="disaster">灾害预测</option>
+          <option value="finance">金融</option>
+          <option value="bio">生物医药</option>
+        </select>
+      </div>
+      <div class="ntpl-field">
+        <label class="ntpl-label">描述</label>
+        <textarea id="ntpl-desc" class="ntpl-textarea" placeholder="简要描述模板的适用场景和功能…"></textarea>
+      </div>
+      <div class="ntpl-field">
+        <label class="ntpl-label">选择本体 (可多选)</label>
+        <div class="ntpl-onto-wrap">
+          <div class="ntpl-onto-box" onclick="document.getElementById('ntpl-onto-input').focus()">
+            <div id="ntpl-chips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+            <input id="ntpl-onto-input" class="ntpl-onto-input" placeholder="搜索并关联已入库的本体…"
+              onfocus="document.getElementById('ntpl-dd').classList.add('open')"
+              onblur="setTimeout(()=>document.getElementById('ntpl-dd').classList.remove('open'),150)">
+          </div>
+          <div id="ntpl-dd" class="ntpl-dropdown">
+            <div class="ntpl-dropdown-item" onclick="ntplAddChip('风力发电预测本体 v2')">📈 风力发电预测本体 v2</div>
+            <div class="ntpl-dropdown-item" onclick="ntplAddChip('灾害预警知识图谱 v1')">⚡ 灾害预警知识图谱 v1</div>
+            <div class="ntpl-dropdown-item" onclick="ntplAddChip('金融风控实体本体 v1')">💰 金融风控实体本体 v1</div>
+            <div class="ntpl-dropdown-item" onclick="ntplAddChip('药物靶点关系本体 v2')">🧬 药物靶点关系本体 v2</div>
+            <div class="ntpl-dropdown-item" onclick="ntplAddChip('光伏功率预测本体 v1')">☀️ 光伏功率预测本体 v1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ntpl-footer">
+      <button class="ntpl-btn ntpl-btn-ghost" onclick="closeNewTpl()">取消</button>
+      <button class="ntpl-btn ntpl-btn-primary" onclick="confirmNewTpl()">确认创建</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
