@@ -225,72 +225,100 @@ body {
    文件查看 / 编辑弹框
 ══════════════════════════════════════ */
 .file-modal {
-  background: var(--bg-3); border: 1px solid var(--border-2);
-  border-radius: 14px; width: 860px; max-width: 94vw;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-  display: flex; flex-direction: column;
-  max-height: 88vh; overflow: hidden;
+  background: var(--bg-2); border: 1px solid var(--border-2);
+  border-radius: 12px; width: min(92vw, 1080px); height: 82vh;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+  display: flex; flex-direction: column; overflow: hidden;
 }
 .file-modal-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px; border-bottom: 1px solid var(--border-1);
-  flex-shrink: 0;
+  padding: 12px 16px; border-bottom: 1px solid var(--border-1);
+  background: var(--bg-3); flex-shrink: 0;
 }
 .file-modal-title {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 8px;
 }
 .file-modal-name {
-  font-size: 14px; font-weight: 600; color: var(--text-1);
+  font-size: 13px; font-weight: 600; color: var(--text-1);
   font-family: var(--font-mono);
 }
 .file-modal-badge {
-  font-size: 10px; font-weight: 500; padding: 2px 8px;
+  font-size: 10px; font-weight: 500; padding: 2px 7px;
   border-radius: 4px;
 }
 .badge-view { background: var(--bg-4); color: var(--text-3); }
 .badge-edit { background: var(--blue-dim); color: var(--blue); }
+/* 编辑器工具栏 */
+.file-modal-toolbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 7px 16px; border-bottom: 1px solid var(--border-1);
+  background: var(--bg-2); flex-shrink: 0;
+}
+.file-modal-toolbar-info {
+  font-size: 11px; color: var(--text-3); font-family: var(--font-mono);
+}
+.file-modal-toolbar-info span { color: var(--text-2); }
+.file-modal-toolbar-lang {
+  margin-left: auto; display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--cyan); font-family: var(--font-mono);
+}
 .file-modal-close {
-  width: 28px; height: 28px; border-radius: 6px;
+  width: 26px; height: 26px; border-radius: 5px;
   display: flex; align-items: center; justify-content: center;
   font-size: 16px; cursor: pointer; color: var(--text-3);
   background: none; border: none; font-family: inherit; transition: all 0.15s;
 }
 .file-modal-close:hover { background: var(--bg-4); color: var(--text-1); }
+/* 编辑器主体：行号 + 文本区 */
 .file-modal-body {
-  flex: 1; overflow: hidden; display: flex; flex-direction: column;
+  flex: 1; overflow: hidden; display: flex;
+  background: #070b14;
+}
+.file-modal-gutter {
+  width: 48px; flex-shrink: 0; padding: 16px 0;
+  background: #070b14; border-right: 1px solid rgba(255,255,255,0.05);
+  overflow: hidden; user-select: none;
+}
+.file-modal-gutter-lines {
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.9;
+  color: rgba(148,163,184,0.25); text-align: right; padding-right: 10px;
 }
 .file-modal-textarea {
-  flex: 1; width: 100%; background: var(--bg-1);
+  flex: 1; background: transparent;
   border: none; outline: none; resize: none;
-  padding: 16px 20px; font-size: 12px; font-family: var(--font-mono);
-  color: var(--text-1); line-height: 1.8; tab-size: 2;
+  padding: 16px 20px; font-size: 12.5px; font-family: var(--font-mono);
+  color: #e2e8f0; line-height: 1.9; tab-size: 2;
+  caret-color: var(--blue);
 }
-.file-modal-textarea[readonly] { color: var(--text-2); cursor: default; }
-/* 弹框内 textarea 滚动条 */
-.file-modal-textarea::-webkit-scrollbar { width: 4px; }
+.file-modal-textarea[readonly] { color: #94a3b8; cursor: default; }
+.file-modal-textarea::-webkit-scrollbar { width: 5px; }
 .file-modal-textarea::-webkit-scrollbar-track { background: transparent; }
-.file-modal-textarea::-webkit-scrollbar-thumb {
-  background: var(--border-2);
-  border-radius: 2px;
-}
-.file-modal-textarea::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+.file-modal-textarea::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+.file-modal-textarea::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+/* 底部状态栏 + 操作 */
 .file-modal-footer {
-  display: flex; align-items: center; justify-content: flex-end;
-  gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-1);
-  flex-shrink: 0;
+  display: flex; align-items: center;
+  padding: 10px 16px; border-top: 1px solid var(--border-1);
+  background: var(--bg-3); flex-shrink: 0; gap: 10px;
 }
+.file-modal-statusbar {
+  font-size: 10px; color: var(--text-3); font-family: var(--font-mono);
+  display: flex; gap: 14px;
+}
+.file-modal-statusbar span { color: var(--text-2); }
 .btn-modal-cancel {
-  padding: 7px 18px; background: transparent;
-  border: 1px solid var(--border-2); border-radius: 8px;
-  font-size: 13px; font-family: inherit; color: var(--text-2);
+  margin-left: auto;
+  padding: 6px 16px; background: transparent;
+  border: 1px solid var(--border-2); border-radius: 7px;
+  font-size: 12px; font-family: inherit; color: var(--text-2);
   cursor: pointer; transition: all 0.15s;
 }
-.btn-modal-cancel:hover { color: var(--text-1); border-color: var(--border-2); }
+.btn-modal-cancel:hover { color: var(--text-1); border-color: var(--text-2); }
 .btn-modal-save {
   display: flex; align-items: center; gap: 6px;
-  padding: 7px 18px; background: var(--blue);
-  color: #fff; border: none; border-radius: 8px;
-  font-size: 13px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+  padding: 6px 16px; background: var(--blue);
+  color: #fff; border: none; border-radius: 7px;
+  font-size: 12px; font-family: inherit; cursor: pointer; transition: opacity 0.15s;
 }
 .btn-modal-save:hover { opacity: 0.85; }
 
@@ -414,14 +442,16 @@ body {
   background: var(--rose-dim); color: var(--rose);
   border: 1px solid rgba(244,63,94,0.25);
 }
+/* 下载按钮 */
+.btn-download {
   display: flex; align-items: center; gap: 5px;
-  padding: 5px 11px; border-radius: 7px;
+  padding: 4px 10px; border-radius: 6px; height: 28px;
   background: transparent; border: 1px solid var(--border-2);
-  color: var(--text-3); font-size: 12px; font-family: inherit;
+  color: var(--text-2); font-size: 11px; font-family: inherit;
   cursor: pointer; transition: all 0.15s;
 }
 .btn-download:hover { border-color: var(--blue); color: var(--blue); }
-.btn-download:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-download:disabled { opacity: 0.35; cursor: not-allowed; }
 
 </style>
 </head>
@@ -686,13 +716,23 @@ body {
   <div class="file-modal" onclick="event.stopPropagation()">
     <div class="file-modal-header">
       <div class="file-modal-title">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="var(--cyan)" stroke-width="1.5" style="flex-shrink:0"><path d="M4 2h6l3 3v9H4V2z"/><path d="M10 2v3h3"/></svg>
         <span class="file-modal-name" id="file-modal-name"></span>
         <span class="file-modal-badge" id="file-modal-badge"></span>
       </div>
       <button class="file-modal-close" onclick="closeFileModal()">×</button>
     </div>
+    <div class="file-modal-toolbar">
+      <div class="file-modal-toolbar-info" id="file-modal-info">行 1，列 1</div>
+      <div class="file-modal-toolbar-lang">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4l4 4-4 4M9 12h4"/></svg>
+        YAML
+      </div>
+    </div>
     <div class="file-modal-body">
-      <textarea class="file-modal-textarea" id="file-modal-textarea" spellcheck="false"></textarea>
+      <div class="file-modal-gutter"><div class="file-modal-gutter-lines" id="file-modal-gutter"></div></div>
+      <textarea class="file-modal-textarea" id="file-modal-textarea" spellcheck="false"
+        oninput="updateFileModalMeta()" onclick="updateFileModalMeta()" onkeyup="updateFileModalMeta()"></textarea>
     </div>
     <div class="file-modal-footer" id="file-modal-footer"></div>
   </div>
@@ -909,11 +949,29 @@ validation:
   iqr_multiplier: 1.5`,
 };
 
+function updateFileModalMeta() {
+  const ta = document.getElementById('file-modal-textarea');
+  const lines = ta.value.split('\n');
+  const pos = ta.selectionStart;
+  let row = 1, col = 1, cur = 0;
+  for (let i = 0; i < lines.length; i++) {
+    if (cur + lines[i].length >= pos) { row = i + 1; col = pos - cur + 1; break; }
+    cur += lines[i].length + 1;
+  }
+  document.getElementById('file-modal-info').textContent = `行 ${row}，列 ${col}`;
+  const gutter = document.getElementById('file-modal-gutter');
+  gutter.innerHTML = lines.map((_, i) => i + 1).join('<br>');
+  /* 同步滚动 */
+  const g = document.getElementById('file-modal-gutter');
+  g.parentElement && (g.parentElement.scrollTop = 0);
+}
+
 function openFileModal(name, mode) {
   const content = mockFileContent[name] || `# ${name}\n# 暂无内容`;
   const ta = document.getElementById('file-modal-textarea');
   ta.value = content;
   ta.readOnly = (mode === 'view');
+  setTimeout(updateFileModalMeta, 0);
 
   document.getElementById('file-modal-name').textContent = name;
   const badge = document.getElementById('file-modal-badge');
@@ -921,10 +979,13 @@ function openFileModal(name, mode) {
   badge.className = `file-modal-badge ${mode === 'view' ? 'badge-view' : 'badge-edit'}`;
 
   const footer = document.getElementById('file-modal-footer');
+  const lineCount = content.split('\n').length;
+  const charCount = content.length;
+  const statusHTML = `<div class="file-modal-statusbar"><span>${lineCount}</span> 行 &nbsp;·&nbsp; <span>${charCount}</span> 字符 &nbsp;·&nbsp; UTF-8</div>`;
   if (mode === 'view') {
-    footer.innerHTML = `<button class="btn-modal-cancel" onclick="closeFileModal()">关闭</button>`;
+    footer.innerHTML = statusHTML + `<button class="btn-modal-cancel" onclick="closeFileModal()" style="margin-left:auto">关闭</button>`;
   } else {
-    footer.innerHTML = `
+    footer.innerHTML = statusHTML + `
       <button class="btn-modal-cancel" onclick="closeFileModal()">取消</button>
       <button class="btn-modal-save" onclick="saveFileContent('${name}')">
         <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9l4 4 8-8"/></svg>
