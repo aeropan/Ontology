@@ -156,95 +156,95 @@ body {
 /* ── 新建模板 Modal ── */
 .ntpl-overlay {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+  background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
   display: none; align-items: center; justify-content: center;
   z-index: 500;
 }
 .ntpl-overlay.show { display: flex; }
 .ntpl-modal {
-  background: var(--bg-2); border: 1px solid var(--border-2);
-  border-radius: 12px; width: 480px; max-height: 86vh;
-  overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  background: var(--bg-3); border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg); width: 480px; max-height: 88vh;
+  overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,.7);
 }
 .ntpl-header {
-  padding: 18px 20px 14px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border-1);
   display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-4); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
-.ntpl-title { font-size: 15px; font-weight: 600; color: var(--text-1); }
+.ntpl-title { font-size: 14px; font-weight: 600; color: var(--text-1); }
 .ntpl-close {
-  width: 28px; height: 28px; border-radius: 6px;
+  width: 26px; height: 26px; border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: var(--text-3); font-size: 16px;
-  transition: all 0.15s;
+  transition: all 0.15s; background: none; border: none;
 }
 .ntpl-close:hover { background: var(--bg-3); color: var(--text-1); }
-.ntpl-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.ntpl-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
 .ntpl-footer {
-  padding: 14px 20px; border-top: 1px solid var(--border-1);
+  padding: 12px 20px; border-top: 1px solid var(--border-1);
   display: flex; justify-content: flex-end; gap: 8px;
+  background: var(--bg-4); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
-.ntpl-field { display: flex; flex-direction: column; gap: 6px; }
-.ntpl-label { font-size: 11px; font-weight: 500; color: var(--text-2); }
+.ntpl-field { display: flex; flex-direction: column; gap: 5px; }
+.ntpl-label { font-size: 11px; font-weight: 500; color: var(--text-2); letter-spacing: 0.3px; }
 .ntpl-input, .ntpl-select, .ntpl-textarea {
-  background: var(--bg-3); border: 1px solid var(--border-1);
-  border-radius: 8px; padding: 8px 12px;
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: var(--radius-md); padding: 8px 12px;
   font-size: 12px; color: var(--text-1); font-family: inherit;
   outline: none; transition: border-color 0.15s;
+  width: 100%;
 }
-.ntpl-input:focus, .ntpl-select:focus, .ntpl-textarea:focus { border-color: var(--blue); }
+.ntpl-input:focus, .ntpl-select:focus, .ntpl-textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-dim);
+}
 .ntpl-input::placeholder, .ntpl-textarea::placeholder { color: var(--text-3); }
-.ntpl-select { cursor: pointer; }
-.ntpl-textarea { resize: vertical; min-height: 72px; }
+.ntpl-select { cursor: pointer; appearance: auto; }
+.ntpl-textarea { resize: vertical; min-height: 68px; line-height: 1.6; }
 .ntpl-onto-wrap { position: relative; }
 .ntpl-onto-box {
-  background: var(--bg-3); border: 1px solid var(--border-1);
-  border-radius: 8px; padding: 6px 10px;
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: var(--radius-md); padding: 6px 10px;
   min-height: 38px; display: flex; flex-wrap: wrap; gap: 5px;
-  align-items: center; cursor: text; transition: border-color 0.15s;
+  align-items: center; cursor: text; transition: border-color 0.15s, box-shadow 0.15s;
 }
-.ntpl-onto-box:focus-within { border-color: var(--blue); }
+.ntpl-onto-box:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-dim);
+}
 .ntpl-onto-input {
   background: transparent; border: none; outline: none;
   font-size: 12px; color: var(--text-1); font-family: inherit;
-  flex: 1; min-width: 140px;
+  flex: 1; min-width: 120px;
 }
 .ntpl-onto-input::placeholder { color: var(--text-3); }
 .ntpl-onto-chip {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 2px 8px; border-radius: 12px; font-size: 11px;
+  padding: 2px 8px; border-radius: 20px; font-size: 11px;
   background: var(--blue-dim); border: 1px solid rgba(59,130,246,.35);
-  color: var(--blue);
+  color: var(--blue); white-space: nowrap;
 }
-.ntpl-onto-chip span { cursor: pointer; opacity: 0.7; }
+.ntpl-onto-chip span { cursor: pointer; opacity: 0.6; font-size: 12px; }
 .ntpl-onto-chip span:hover { opacity: 1; }
 .ntpl-dropdown {
-  display: none; position: absolute; top: 100%; left: 0; right: 0;
-  background: var(--bg-3); border: 1px solid var(--border-1);
-  border-radius: 8px; margin-top: 4px;
-  max-height: 160px; overflow-y: auto;
-  z-index: 10; box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--bg-4); border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  max-height: 150px; overflow-y: auto;
+  z-index: 600; box-shadow: 0 8px 28px rgba(0,0,0,.5);
 }
 .ntpl-dropdown.open { display: block; }
 .ntpl-dropdown-item {
-  padding: 8px 12px; font-size: 11px; color: var(--text-1);
+  padding: 8px 12px; font-size: 12px; color: var(--text-1);
   cursor: pointer; transition: background 0.1s;
   border-bottom: 1px solid var(--border-1);
 }
 .ntpl-dropdown-item:last-child { border-bottom: none; }
-.ntpl-dropdown-item:hover { background: var(--blue-dim); }
-.ntpl-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 16px; border-radius: 8px; font-size: 12px;
-  font-weight: 500; cursor: pointer; transition: all 0.15s;
-  border: none; font-family: inherit;
-}
-.ntpl-btn-ghost {
-  background: transparent; border: 1px solid var(--border-2); color: var(--text-2);
-}
-.ntpl-btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
-.ntpl-btn-primary { background: var(--blue); color: #fff; }
-.ntpl-btn-primary:hover { opacity: 0.85; }
+.ntpl-dropdown-item:hover { background: var(--blue-dim); color: var(--blue); }
+/* shared.css 的 .btn-ghost 在深色 modal 内需要覆盖边框色 */
+.ntpl-footer .btn-ghost { border-color: var(--border-2); color: var(--text-2); }
+.ntpl-footer .btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
 </style>
 </head>
 <body>
@@ -625,8 +625,8 @@ function goDetail() { window.location.href = 'IndustryInsights_templatedetail.ht
       </div>
     </div>
     <div class="ntpl-footer">
-      <button class="ntpl-btn ntpl-btn-ghost" onclick="closeNewTpl()">取消</button>
-      <button class="ntpl-btn ntpl-btn-primary" onclick="confirmNewTpl()">确认创建</button>
+      <button class="btn btn-ghost" onclick="closeNewTpl()">取消</button>
+      <button class="btn btn-primary" onclick="confirmNewTpl()">确认创建</button>
     </div>
   </div>
 </div>
