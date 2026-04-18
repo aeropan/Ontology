@@ -2076,24 +2076,54 @@
     ];
 
     function cp_captureSnapshot() {
-      const nodeDur = {};
-      const t0 = performance.now();
-      WF_NODE_ORDER.forEach((id, i) => { nodeDur[id] = (0.15 + Math.random() * 0.7).toFixed(2); });
-      const totalDur = (1.8 + Math.random() * 2.8).toFixed(1);
+      const RAG_PROMPTS = [
+        '基于ERA5气象数据，检索风速预测相关的领域知识与因果链路',
+        '结合切出风速阈值与山地地形修正系数，执行语义增强检索',
+        '融合协议规范与功率曲线知识库，提取风机运行约束条件',
+      ];
+      const DS_SETS = {
+        '再分析数据': ['ERA5-single levels-40years', 'ERA5-pressure-levels-40years'],
+        '预报数据':   ['NCEP GFS 全球预报历史存档', 'ECMWF HRES 全球数值预报数据（0.25°）', 'GFS'],
+      };
+      const dsType   = document.getElementById('wf-ds-type')?.value || '再分析数据';
+      const allSets  = DS_SETS[dsType] || DS_SETS['再分析数据'];
+      const pickedSets = allSets.slice(0, 1 + Math.floor(Math.random() * Math.min(2, allSets.length)));
+
+      const OUTPUT_PREVIEWS = {
+        'wf-n4': '检索到 12 条相关知识片段，语义相似度 0.87，覆盖切出风速、地形修正系数',
+        'wf-n6': '完成 3 路数据时序对齐，特征张量维度 [96, 128]，缺失率 0.3%',
+        'wf-n7': '生成 48h 风速预测序列，峰值 18.4 m/s，RMSE 1.23 m/s',
+      };
+
       CP_SNAP = {
-        nodeResults: WF_NODE_ORDER.map(id => {
+        id: Date.now().toString(),
+        runName: '',
+        isPinned: false,
+        timestamp: Date.now(),
+
+        configSnapshot: {
+          ragPrompt: RAG_PROMPTS[Math.floor(Math.random() * RAG_PROMPTS.length)],
+          dataSourceIds: pickedSets,
+          modelTemperature: parseFloat((0.3 + Math.random() * 0.5).toFixed(2)),
+        },
+
+        nodeMetrics: WF_NODE_ORDER.map(id => {
           const el = document.getElementById(id);
           return {
-            id,
-            name: el?.querySelector('.node-name')?.textContent || id,
-            status: 'done',
-            duration: nodeDur[id],
+            nodeId: id,
+            nodeName: el?.querySelector('.node-name')?.textContent || id,
+            durationMs: Math.floor(150 + Math.random() * 700),
+            status: 'success',
+            ...(OUTPUT_PREVIEWS[id] ? { outputPreview: OUTPUT_PREVIEWS[id] } : {}),
           };
         }),
-        totalDuration: totalDur,
-        status: 'success',
-        power: Math.floor(820 + Math.random() * 160),
-        confidence: Math.floor(86 + Math.random() * 11),
+
+        aiSummary: CP_SUMMARIES[Math.floor(Math.random() * CP_SUMMARIES.length)],
+
+        finalOutputs: {
+          powerKw: Math.floor(820 + Math.random() * 160),
+          confidenceRatio: parseFloat((0.86 + Math.random() * 0.11).toFixed(3)),
+        },
       };
     }
 
@@ -2111,14 +2141,7 @@
       const input = document.getElementById('cp-save-label');
       const label = input?.value?.trim() || `流程结果 #${CP_VERSION}`;
       if (input) input.value = '';
-      const rec = {
-        id: Date.now().toString(),
-        version: CP_VERSION++,
-        label,
-        createdAt: new Date(),
-        snap: { ...CP_SNAP },
-        aiSummary: CP_SUMMARIES[Math.floor(Math.random() * CP_SUMMARIES.length)],
-      };
+      const rec = { ...CP_SNAP, runName: label, version: CP_VERSION++ };
       CP_STORE.unshift(rec);
       cp_closeSaveModal();
       showToast(`✅ 已保存 V${rec.version}：${label}`);
@@ -2146,6 +2169,17 @@
       if (d) { d.classList.remove('open'); d.innerHTML = ''; }
       document.getElementById('cp-edge-tab')?.classList.remove('active');
       CP_SEL.clear(); CP_EXP = null; CP_MODE = 'list';
+    }
+
+    // ── Record helpers ──
+    function cp_recordStatus(r) {
+      if (!r.nodeMetrics?.length) return 'success';
+      if (r.nodeMetrics.every(n => n.status === 'success')) return 'success';
+      if (r.nodeMetrics.some(n => n.status === 'failed')) return 'failed';
+      return 'partial';
+    }
+    function cp_totalDurS(r) {
+      return (r.nodeMetrics.reduce((s, n) => s + n.durationMs, 0) / 1000).toFixed(1);
     }
 
     // ── List rendering ──
@@ -2186,13 +2220,15 @@
     }
 
     function cp_cardHTML(r) {
-      const dotCls = { success: 'cpd-ok', partial: 'cpd-par', failed: 'cpd-err' }[r.snap.status] || 'cpd-ok';
-      const stCls  = { success: 'cpst-ok', partial: 'cpst-par', failed: 'cpst-err' }[r.snap.status] || 'cpst-ok';
-      const stTxt  = { success: '成功', partial: '部分完成', failed: '失败' }[r.snap.status] || '成功';
-      const isSel  = CP_SEL.has(r.id);
-      const isExp  = CP_EXP === r.id;
-      const timeStr = r.createdAt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-      const dateStr = r.createdAt.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+      const status  = cp_recordStatus(r);
+      const dotCls  = { success: 'cpd-ok', partial: 'cpd-par', failed: 'cpd-err' }[status] || 'cpd-ok';
+      const stCls   = { success: 'cpst-ok', partial: 'cpst-par', failed: 'cpst-err' }[status] || 'cpst-ok';
+      const stTxt   = { success: '成功', partial: '部分完成', failed: '失败' }[status] || '成功';
+      const isSel   = CP_SEL.has(r.id);
+      const isExp   = CP_EXP === r.id;
+      const dt      = new Date(r.timestamp);
+      const timeStr = dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = dt.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
       return `
       <div class="cp-rc ${isSel ? 'on' : ''}" id="cp-rc-${r.id}">
         <div class="cp-rc-main" onclick="cp_toggleExp('${r.id}')">
@@ -2200,14 +2236,14 @@
           <div class="cp-rc-info">
             <div class="cp-rc-r1">
               <span class="cp-rc-ver">V${r.version}</span>
-              <span class="cp-rc-lbl">${r.label}</span>
+              <span class="cp-rc-lbl">${r.runName}</span>
               <span class="cp-rc-st ${stCls}">${stTxt}</span>
             </div>
-            <div class="cp-rc-r2"><span>${dateStr} ${timeStr}</span><span>耗时 ${r.snap.totalDuration}s</span></div>
+            <div class="cp-rc-r2"><span>${dateStr} ${timeStr}</span><span>耗时 ${cp_totalDurS(r)}s</span></div>
           </div>
           <div class="cp-rc-chk ${isSel ? 'on' : ''}" onclick="event.stopPropagation();cp_toggleSel('${r.id}')">${isSel ? '✓' : ''}</div>
         </div>
-        <div class="cp-rc-out">输出: 功率 ${r.snap.power} kW &nbsp;置信度 ${r.snap.confidence}%</div>
+        <div class="cp-rc-out">输出: 功率 ${r.finalOutputs.powerKw} kW &nbsp;置信度 ${Math.round(r.finalOutputs.confidenceRatio * 100)}%</div>
         <div class="cp-rc-acts">
           <div class="cp-act-ic" onclick="event.stopPropagation();cp_toggleExp('${r.id}')" title="展开详情">⊞</div>
           <div class="cp-act-ic del" onclick="event.stopPropagation();cp_delete('${r.id}')" title="删除">✕</div>
@@ -2217,19 +2253,33 @@
     }
 
     function cp_detailHTML(r) {
-      const nodes = r.snap.nodeResults.slice(0, 8);
+      const nodes    = r.nodeMetrics.slice(0, 8);
+      const keyNodes = r.nodeMetrics.filter(n => n.outputPreview);
       return `
       <div class="cp-rc-detail show">
         <div class="cp-det-summ">${r.aiSummary}</div>
+        ${keyNodes.length ? `
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">关键节点输出</div>
+        <div class="cp-nl">
+          ${keyNodes.map(n => `<div class="cp-ni" style="flex-direction:column;align-items:flex-start;gap:2px">
+            <div style="display:flex;align-items:center;gap:6px;width:100%"><span style="color:var(--accent-green)">✓</span><span style="flex:1">${n.nodeName}</span><span style="color:var(--accent-cyan);font-family:'Space Mono',monospace;font-size:9px">${(n.durationMs/1000).toFixed(2)}s</span></div>
+            <div style="font-size:9px;color:var(--text-muted);padding-left:16px;line-height:1.4">${n.outputPreview}</div>
+          </div>`).join('')}
+        </div>` : ''}
         <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">节点状态</div>
         <div class="cp-nl">
-          ${nodes.map(n => `<div class="cp-ni"><span style="color:var(--accent-green)">✓</span><span style="flex:1">${n.name}</span><span style="color:var(--accent-cyan);font-family:'Space Mono',monospace;font-size:9px">${n.duration}s</span></div>`).join('')}
+          ${nodes.map(n => `<div class="cp-ni"><span style="color:var(--accent-green)">✓</span><span style="flex:1">${n.nodeName}</span><span style="color:var(--accent-cyan);font-family:'Space Mono',monospace;font-size:9px">${(n.durationMs/1000).toFixed(2)}s</span></div>`).join('')}
         </div>
         <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">关键参数</div>
         <div class="cp-ps">
-          <div class="cp-pr"><span class="cp-pr-k">输出功率</span><span class="cp-pr-v">${r.snap.power} kW</span></div>
-          <div class="cp-pr"><span class="cp-pr-k">置信度</span><span class="cp-pr-v">${r.snap.confidence}%</span></div>
-          <div class="cp-pr"><span class="cp-pr-k">总耗时</span><span class="cp-pr-v">${r.snap.totalDuration}s</span></div>
+          <div class="cp-pr"><span class="cp-pr-k">输出功率</span><span class="cp-pr-v">${r.finalOutputs.powerKw} kW</span></div>
+          <div class="cp-pr"><span class="cp-pr-k">置信度</span><span class="cp-pr-v">${Math.round(r.finalOutputs.confidenceRatio * 100)}%</span></div>
+          <div class="cp-pr"><span class="cp-pr-k">总耗时</span><span class="cp-pr-v">${cp_totalDurS(r)}s</span></div>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;margin-top:8px">配置快照</div>
+        <div class="cp-ps">
+          <div class="cp-pr"><span class="cp-pr-k">温度参数</span><span class="cp-pr-v">${r.configSnapshot.modelTemperature}</span></div>
+          <div class="cp-pr" style="align-items:flex-start"><span class="cp-pr-k">数据源</span><span class="cp-pr-v" style="text-align:right;max-width:130px;white-space:normal;line-height:1.4">${r.configSnapshot.dataSourceIds.join('<br>')}</span></div>
         </div>
       </div>`;
     }
@@ -2293,17 +2343,18 @@
         </div>
         <div class="cp-sum-grid">
           ${records.map(r => {
-            const icon = { success: '✓', partial: '⚠', failed: '✗' }[r.snap.status] || '✓';
-            const sc   = { success: 'var(--accent-green)', partial: 'var(--accent-amber)', failed: '#ef4444' }[r.snap.status];
-            const stxt = { success: '成功', partial: '部分完成', failed: '失败' }[r.snap.status];
+            const st   = cp_recordStatus(r);
+            const icon = { success: '✓', partial: '⚠', failed: '✗' }[st] || '✓';
+            const sc   = { success: 'var(--accent-green)', partial: 'var(--accent-amber)', failed: '#ef4444' }[st];
+            const stxt = { success: '成功', partial: '部分完成', failed: '失败' }[st];
             return `<div class="cp-sum-col">
               <div class="csc-ver">V${r.version}</div>
-              <div class="csc-lbl">${r.label}</div>
+              <div class="csc-lbl">${r.runName}</div>
               <div class="csc-sep"></div>
               <div class="csc-stat" style="color:${sc}">${icon} ${stxt}</div>
-              <div class="csc-dur">${r.snap.totalDuration}s</div>
-              <div class="csc-power">${r.snap.power}kW</div>
-              <div style="font-size:9px;color:var(--text-muted)">置信度 ${r.snap.confidence}%</div>
+              <div class="csc-dur">${cp_totalDurS(r)}s</div>
+              <div class="csc-power">${r.finalOutputs.powerKw}kW</div>
+              <div style="font-size:9px;color:var(--text-muted)">置信度 ${Math.round(r.finalOutputs.confidenceRatio * 100)}%</div>
             </div>`;
           }).join('')}
         </div>
@@ -2334,9 +2385,9 @@
       const n = records.length;
       const gcols = `120px ${Array(n).fill('1fr').join(' ')}`;
 
-      const powers = records.map(r => r.snap.power);
-      const durs   = records.map(r => parseFloat(r.snap.totalDuration));
-      const confs  = records.map(r => r.snap.confidence);
+      const powers = records.map(r => r.finalOutputs.powerKw);
+      const durs   = records.map(r => parseFloat(cp_totalDurS(r)));
+      const confs  = records.map(r => Math.round(r.finalOutputs.confidenceRatio * 100));
       const samePow = powers.every(v => v === powers[0]);
       const sameDur = durs.every(v => v === durs[0]);
       const sameCnf = confs.every(v => v === confs[0]);
@@ -2353,13 +2404,13 @@
 
       const colHeads = `<div style="display:grid;grid-template-columns:${gcols};gap:4px;margin-bottom:8px">
         <div></div>
-        ${records.map(r => `<div class="cmp-ch"><div class="cch-v">V${r.version}</div><div class="cch-l">${r.label}</div><div class="cch-s">${r.snap.status==='success'?'✓ 成功':r.snap.status==='partial'?'⚠ 部分完成':'✗ 失败'}</div></div>`).join('')}
+        ${records.map(r => { const st=cp_recordStatus(r); return `<div class="cmp-ch"><div class="cch-v">V${r.version}</div><div class="cch-l">${r.runName}</div><div class="cch-s">${st==='success'?'✓ 成功':st==='partial'?'⚠ 部分完成':'✗ 失败'}</div></div>`; }).join('')}
       </div>`;
 
       const nodeRows = WF_NODE_ORDER.slice(0, 8).map(nid => {
         const el = document.getElementById(nid);
         const nm = el?.querySelector('.node-name')?.textContent || nid;
-        const cells = records.map(r => { const nd = r.snap.nodeResults.find(x => x.id === nid); return `<div class="cmp-rc">${nd ? `✓ ${nd.duration}s` : '─'}</div>`; }).join('');
+        const cells = records.map(r => { const nd = r.nodeMetrics.find(x => x.nodeId === nid); return `<div class="cmp-rc">${nd ? `✓ ${(nd.durationMs/1000).toFixed(2)}s` : '─'}</div>`; }).join('');
         return `<div class="cmp-row" style="grid-template-columns:${gcols}"><div class="cmp-rl">${nm}</div>${cells}</div>`;
       }).join('');
 
