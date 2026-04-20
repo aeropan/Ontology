@@ -32,6 +32,41 @@
   ```
 - 页面专属的一次性组件无需放入此文件，直接写在页面 `<script>` 内即可
 
+## 颜色层级与组件规范（重要）
+
+### 背景层级（必须遵守，禁止随意混用）
+
+| 变量 | 值 | 用途 |
+|------|-----|------|
+| `--bg-0` | #080c18 | 页面最底层背景 |
+| `--bg-1` | #0d1220 | 侧边栏 / 次级面板 |
+| `--bg-2` | #0f1729 | 卡片 / 表单输入框（凹陷感） |
+| `--bg-3` | #131d30 | Modal 主体 / 悬浮面板 |
+| `--bg-4` | #1a2540 | Modal header/footer、下拉菜单（最高层） |
+
+**典型层级关系**：页面(`--bg-0`) → 卡片(`--bg-2`) → Modal body(`--bg-3`) → Modal header/footer & 输入框(`--bg-4` / `--bg-2`) → 下拉(`--bg-4`)
+
+> 输入框在 modal 内用 `--bg-2`，形成"凹陷"视觉；在普通页面上同样用 `--bg-2`。
+
+### 必须使用 shared.css 组件，不自定义
+
+| 需求 | 正确做法 |
+|------|---------|
+| 按钮 | `class="btn btn-primary"` / `btn-ghost` / `btn-secondary` / `btn-danger` |
+| 表单字段 | `class="form-group"` + `form-label` + `form-input` / `form-select` / `form-textarea` |
+| 下拉菜单 | `class="dropdown"` + `dropdown-item`，JS 切换 `.open` |
+| 模态框 | `class="modal-overlay"` + `modal` + `modal-header` + `modal-body` + `modal-footer`，JS 切换 `.active` |
+| 关闭按钮 | `class="btn-close"` |
+| 徽章 | `class="badge badge-{color}"` |
+| 空状态 | `class="empty-state"` |
+| 滚动条 | 全局已统一（shared.css 自动生效）；代码/编辑器区域额外加 `class="scrollbar-code"` |
+
+### 禁止事项
+- 禁止在页面 `<style>` 内重新定义 `--bg-*`、`--text-*`、`--border-*` 等已有变量
+- 禁止为上述组件创建页面专属的平行类（如 `ntpl-btn-primary`、`my-modal` 等）
+- 禁止使用硬编码颜色值替代 CSS 变量（如 `background: #0f1729` 应改为 `var(--bg-2)`）
+- Focus 状态必须包含 `box-shadow: 0 0 0 2px var(--blue-dim)`，不得仅改 border-color
+
 ## 用户背景
 - 解释代码改动时，说明"为什么"，不只是"做了什么"
 - 可以使用技术语言和复杂工具，优先保证解决效率
