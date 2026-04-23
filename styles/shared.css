@@ -482,3 +482,96 @@ code, pre, .mono {
   color: var(--blue);
   background: var(--blue-dim);
 }
+
+
+/* ============================================================
+   页面顶部导航栏 (PageTopbar)
+   由 createPageTopbar() 组件自动生成
+   ============================================================ */
+
+.page-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--bg-0);
+  border-bottom: 1px solid var(--border-1);
+  flex-shrink: 0;
+}
+
+/* 页面内容区统一边距 */
+.page-content {
+  padding: 0 24px 24px;
+}
+
+/* 面包屑导航区 */
+.topbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+/* 模块名链接 */
+.topbar-module {
+  color: var(--text-2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.topbar-module:hover {
+  color: var(--blue);
+}
+
+/* 中间层级链接 */
+.topbar-sub {
+  color: var(--text-2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.topbar-sub:hover {
+  color: var(--blue);
+}
+
+/* 分隔符 */
+.topbar-sep {
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+/* 当前页面（不可点击） */
+.topbar-current {
+  color: var(--text-1);
+  font-weight: 500;
+}
+
+/* 右侧操作区 */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 返回按钮 */
+.topbar-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.topbar-back:hover {
+  color: var(--text-1);
+  border-color: var(--border-1);
+}

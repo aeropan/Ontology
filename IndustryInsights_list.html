@@ -11,7 +11,12 @@
 <style>
 body {
   min-height: 100vh;
-  padding: 24px;
+}
+
+/* 内容区统一边距 */
+.page-header, .filter-bar, .stats-row, .tabs-bar, #biz-card-view, #biz-list-view {
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 /* ── 页头 ── */
@@ -60,6 +65,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
+  padding: 0 24px;
 }
 .insight-card {
   background: var(--bg-2); border: 1px solid var(--border-1);
@@ -157,6 +163,15 @@ body {
 </style>
 </head>
 <body>
+
+<!-- 顶部导航栏 -->
+<div class="page-topbar">
+  <nav class="topbar-breadcrumb">
+    <a href="IndustryInsights_list.html" class="topbar-module">行业洞察</a>
+    <span class="topbar-sep">›</span>
+    <span class="topbar-current">列表</span>
+  </nav>
+</div>
 
 <!-- ── 页头 ── -->
 <div class="page-header">

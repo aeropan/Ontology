@@ -68,6 +68,86 @@ function _bindEscClose(overlay) {
 
 
 /* ============================================================
+   页面顶部导航栏组件 (PageTopbar)
+   ============================================================ */
+
+/**
+ * 模块导航配置表
+ * 根据模块标识自动生成面包屑路径
+ */
+const MODULE_CONFIG = {
+  knowledge: { name: '知识抽取与融合', path: '#' },
+  literature: { name: '文献库', path: 'literature_list.html' },
+  ontology: { name: '本体中心', path: 'ontology_center.html' },
+  rag: { name: 'RAG增强管理', path: 'rag_management.html' },
+  business: { name: '业务本体生成', path: 'arrange_list.html' },
+  industry: { name: '行业洞察', path: 'IndustryInsights_list.html' }
+};
+
+/**
+ * 创建并挂载页面顶部导航栏（全局函数方式）
+ *
+ * @param {Object} options
+ *   - module      {string}   模块标识
+ *   - pageName    {string}   当前页面名称
+ *   - subPages    {Array}    多级面包屑 [{name:'',path:''}, ...]
+ *   - container   {HTMLElement} 挂载容器，默认 document.body
+ *   - showBack    {boolean}  是否显示返回按钮，默认 true
+ *   - onBack      {Function} 返回按钮点击回调
+ */
+function renderPageTopbar(options = {}) {
+  const {
+    module = '',
+    pageName = '',
+    subPages = [],
+    container = document.body,
+    showBack = true,
+    onBack = null
+  } = options;
+
+  // 获取模块配置
+  const moduleConf = MODULE_CONFIG[module] || { name: module || '未知模块', path: '#' };
+
+  // 构建面包屑 HTML
+  let breadcrumbHtml = `<a href="${moduleConf.path}" class="topbar-module">${moduleConf.name}</a>`;
+
+  // 添加中间层级
+  subPages.forEach(sub => {
+    breadcrumbHtml += `<span class="topbar-sep">›</span><a href="${sub.path || '#'}" class="topbar-sub">${sub.name}</a>`;
+  });
+
+  // 添加当前页面
+  breadcrumbHtml += `<span class="topbar-sep">›</span><span class="topbar-current">${pageName}</span>`;
+
+  // 右侧操作区
+  let rightHtml = '';
+  if (showBack) {
+    rightHtml = `<button class="topbar-back" onclick="${onBack ? onBack.toString() + '()' : 'history.back()'}">← 返回</button>`;
+  }
+
+  // 创建 DOM
+  const topbar = document.createElement('div');
+  topbar.className = 'page-topbar';
+  topbar.innerHTML = `
+    <nav class="topbar-breadcrumb">${breadcrumbHtml}</nav>
+    <div class="topbar-actions">${rightHtml}</div>
+  `;
+
+  // 插入到容器最前面
+  if (container.firstChild) {
+    container.insertBefore(topbar, container.firstChild);
+  } else {
+    container.appendChild(topbar);
+  }
+
+  return topbar;
+}
+
+// 导出为全局函数（供传统 script 调用）
+window.renderPageTopbar = renderPageTopbar;
+
+
+/* ============================================================
    组件注册区
    新增组件时在此处 export，并遵循上方调用规范
    ============================================================ */

@@ -11,18 +11,13 @@
 <style>
 body {
   min-height: 100vh;
-  padding: 24px 28px;
 }
 
-/* ── 面包屑 ── */
-.page-nav {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; color: var(--text-3); margin-bottom: 18px;
+/* 内容区统一边距 */
+.steps, .page-header, .summary-card, .section-header, .table-wrap, .config-panel, .action-bar {
+  padding-left: 24px;
+  padding-right: 24px;
 }
-.page-nav a { color: var(--text-2); text-decoration: none; cursor: pointer; }
-.page-nav a:hover { color: var(--blue); }
-.page-nav .sep { color: var(--text-3); }
-.page-nav .current { color: var(--text-1); }
 
 /* ── 步骤条 ── */
 .steps { display: flex; align-items: center; margin-bottom: 28px; }
@@ -355,13 +350,18 @@ input[type="checkbox"].doc-cb {
 </head>
 <body>
 
-<!-- ── 面包屑 ── -->
-<div class="page-nav">
-  <a onclick="window.location.href='IndustryInsights_list.html'">行业洞察</a>
-  <span class="sep">›</span>
-  <a onclick="window.location.href='IndustryInsights_setting.html'">上传文献</a>
-  <span class="sep">›</span>
-  <span class="current">洞察配置</span>
+<!-- 顶部导航栏 -->
+<div class="page-topbar">
+  <nav class="topbar-breadcrumb">
+    <a href="IndustryInsights_list.html" class="topbar-module">行业洞察</a>
+    <span class="topbar-sep">›</span>
+    <a href="IndustryInsights_setting.html" class="topbar-sub">上传文献</a>
+    <span class="topbar-sep">›</span>
+    <span class="topbar-current">洞察配置</span>
+  </nav>
+  <div class="topbar-actions">
+    <button class="topbar-back" onclick="history.back()">← 返回</button>
+  </div>
 </div>
 
 <!-- ── 步骤条 ── -->

@@ -1020,18 +1020,15 @@
 </head>
 <body>
 
-  <!-- ===== TOPBAR ===== -->
-  <div class="topbar">
-    <div class="breadcrumb">
-      <span>业务本体</span>
-      <span class="sep">/</span>
-      <span class="current">业务本体编排详情</span>
-    </div>
-    <div class="topbar-right">
-      <div class="icon-btn">🔔</div>
-      <div class="icon-btn">⚙</div>
-    </div>
-  </div>
+  <!-- 顶部导航栏 -->
+  <script src="./scripts/components.js"></script>
+  <script>
+    renderPageTopbar({
+      module: 'business',
+      pageName: '业务本体编排详情',
+      showBack: false
+    });
+  </script>
 
   <!-- ===== PAGE WRAPPER ===== -->
   <div class="page-wrap">
