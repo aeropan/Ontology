@@ -1,0 +1,3048 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>本体图谱编辑器 - 本体智见平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
+  <!-- React 18 + Babel standalone（用于 JSX 组件） -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+  <!-- 3D 图谱库按需动态加载（点击「3D」标签时才载入，避免阻塞主页面） -->
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-0);
+      color: var(--text-1);
+      font-family: var(--font-sans);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── 顶部标题栏 ── */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px 10px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-1); flex-shrink: 0;
+    }
+    .header-title {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 17px; font-weight: 600;
+      font-family: var(--font-mono); letter-spacing: 0.5px;
+    }
+    .badge-version {
+      background: var(--blue-dim); color: var(--blue);
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: var(--radius-sm);
+      font-size: 11px; font-weight: 500; padding: 2px 8px;
+      font-family: var(--font-mono);
+    }
+    .badge-auto {
+      background: var(--green-dim); color: var(--green);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: var(--radius-sm); font-size: 11px; padding: 2px 8px;
+    }
+    .header-subtitle { margin-top: 4px; font-size: 12px; color: var(--text-3); }
+    .header-stats { display: flex; gap: 4px; }
+    .stat-chip {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg-2); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); padding: 8px 16px; min-width: 100px;
+    }
+    .stat-icon { font-size: 16px; opacity: 0.8; }
+    .stat-label { font-size: 11px; color: var(--text-3); }
+    .stat-value { font-size: 18px; font-weight: 700; font-family: var(--font-mono); line-height: 1.2; }
+    .stat-chip.blue   .stat-value { color: var(--blue); }
+    .stat-chip.cyan   .stat-value { color: var(--cyan); }
+    .stat-chip.purple .stat-value { color: var(--purple); }
+    .stat-chip.amber  .stat-value { color: var(--amber); }
+
+    /* ── Tab 栏 ── */
+    .tab-bar {
+      display: flex; align-items: center; gap: 2px;
+      padding: 0 24px; background: var(--bg-1);
+      border-bottom: 1px solid var(--border-1); flex-shrink: 0;
+    }
+    .tab-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 16px; font-size: 13px; color: var(--text-3);
+      cursor: pointer; border-bottom: 2px solid transparent;
+      transition: color var(--transition), border-color var(--transition);
+      user-select: none;
+    }
+    .tab-item:hover { color: var(--text-2); }
+    .tab-item.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-bar-spacer { flex: 1; }
+    .btn-save-version {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--green-dim); border: 1px solid rgba(16,185,129,0.35);
+      border-radius: var(--radius-md); padding: 5px 14px;
+      font-size: 12px; font-family: var(--font-sans); color: var(--green);
+      cursor: pointer; transition: all var(--transition);
+    }
+    .btn-save-version:hover { background: rgba(16,185,129,0.25); border-color: rgba(16,185,129,0.55); }
+
+    /* ── 主体 ── */
+    .main-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+    .workspace { display: flex; flex: 1; overflow: hidden; min-height: 0; position: relative; }
+
+    /* ── 图谱区域 ── */
+    .graph-area { flex: 1; position: relative; overflow: hidden; background: var(--bg-0); min-width: 0; min-height: 0; }
+    .graph-svg { width: 100%; height: 100%; }
+
+    /* ── 左侧图谱侧边栏（节点树 + 图例） ── */
+    .graph-sidebar {
+      position: absolute; top: 0; left: 0; bottom: 0;
+      width: 196px; z-index: 15;
+      display: flex; flex-direction: column;
+      background: rgba(13,18,32,0.92);
+      border-right: 1px solid var(--border-1);
+      backdrop-filter: blur(8px);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    .graph-sidebar.collapsed { transform: translateX(-196px); }
+
+    .sidebar-search {
+      position: relative; display: flex; align-items: center; gap: 6px;
+      padding: 9px 18px 9px 12px; border-bottom: 1px solid var(--border-1);
+      flex-shrink: 0;
+    }
+    .sidebar-search input {
+      background: none; border: none; outline: none;
+      font-size: 12px; color: var(--text-1); flex: 3;
+      font-family: var(--font-sans); min-width: 0;
+    }
+    .sidebar-search input::placeholder { color: var(--text-3); }
+    .sidebar-search-icon { color: var(--text-3); font-size: 12px; flex-shrink: 0; }
+
+    /* ── 过滤按钮区域 ── */
+    .filter-wrap { flex: 1; min-width: 0; position: relative; display: flex; align-items: stretch; }
+    .filter-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 3px;
+      background: var(--bg-3); border: 1px solid var(--border-1);
+      border-radius: var(--radius-sm);
+      font-size: 11px; color: var(--text-2); white-space: nowrap;
+      cursor: pointer; padding: 0 5px;
+      font-family: var(--font-sans);
+      transition: all var(--transition);
+    }
+    .filter-btn:hover { background: var(--bg-4); color: var(--text-1); border-color: var(--border-2); }
+    .filter-btn.is-active {
+      background: var(--blue-dim); border-color: rgba(59,130,246,0.45); color: var(--blue);
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    }
+    .filter-active-row {
+      position: absolute; inset: 0; z-index: 5;
+      display: none; align-items: center;
+      gap: 0; padding: 6px 18px 6px 12px;
+      background: var(--bg-1);
+    }
+    .filter-active-btn-wrap { flex: 1; min-width: 0; position: relative; display: flex; height: 100%; }
+    .filter-active-btn-wrap .filter-btn.is-active { flex: 1; }
+    .filter-cancel-x {
+      background: none; border: 1px solid rgba(59,130,246,0.35); border-left: none;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      color: var(--text-3); cursor: pointer; padding: 0 8px;
+      font-size: 11px; display: flex; align-items: center; flex-shrink: 0; height: 100%;
+      transition: all var(--transition);
+    }
+    .filter-cancel-x:hover { color: var(--rose); background: rgba(244,63,94,0.08); border-color: rgba(244,63,94,0.3); }
+
+    /* 悬浮提示面板 */
+    .filter-hover-panel {
+      display: none; position: absolute; top: calc(100% + 8px); left: 0;
+      width: 210px; z-index: 200;
+      background: var(--bg-4); border: 1px solid var(--border-2);
+      border-radius: var(--radius-md); padding: 10px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      pointer-events: none;
+    }
+    .filter-active-btn-wrap:hover .filter-hover-panel { display: block; }
+    .fhp-title { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .fhp-row { display: flex; gap: 6px; font-size: 11px; margin-bottom: 5px; align-items: flex-start; }
+    .fhp-row:last-child { margin-bottom: 0; }
+    .fhp-key { color: var(--text-3); flex-shrink: 0; width: 52px; }
+    .fhp-val { color: var(--text-1); font-family: var(--font-mono); font-size: 10px; line-height: 1.5; }
+
+    /* ── 过滤 Modal 重新设计 ── */
+    .filter-modal-inner { width: 520px; }
+    .filter-modal-title { display: flex; align-items: center; gap: 10px; }
+    .filter-title-bar { width: 3px; height: 18px; background: var(--blue); border-radius: 2px; flex-shrink: 0; }
+    .filter-rule-badge {
+      background: var(--blue-dim); color: var(--blue);
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: var(--radius-sm); font-size: 11px; padding: 1px 8px; font-family: var(--font-mono);
+    }
+    .filter-section { margin-bottom: 22px; }
+    .filter-section:last-child { margin-bottom: 0; }
+    .filter-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .filter-section-title { font-size: 13px; font-weight: 600; color: var(--text-1); display: flex; align-items: center; gap: 8px; }
+    .filter-section-sub { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); font-weight: 400; }
+    .filter-section-clear {
+      background: none; border: none; font-size: 11px; color: var(--text-3);
+      cursor: pointer; padding: 0; transition: color var(--transition);
+    }
+    .filter-section-clear:hover { color: var(--blue); }
+    .filter-section-hint { font-size: 11px; color: var(--text-3); }
+    .filter-section-note {
+      font-size: 11px; color: var(--amber);
+      padding: 5px 10px; background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: var(--radius-sm); margin-bottom: 10px;
+    }
+    .filter-check-group { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    /* 彩色选择 chip */
+    .filter-chip {
+      display: flex; align-items: center; gap: 7px;
+      border-radius: var(--radius-md); padding: 6px 12px;
+      cursor: pointer; transition: all 0.15s; user-select: none; border: 1px solid transparent;
+    }
+    .filter-chip input[type="checkbox"] { display: none; }
+    /* 未选中：统一灰色 */
+    .filter-chip-blue,
+    .filter-chip-green,
+    .filter-chip-purple,
+    .filter-chip-amber { background: rgba(255,255,255,.04); border-color: var(--border-1); }
+    .filter-chip-blue   .filter-chip-label,
+    .filter-chip-green  .filter-chip-label,
+    .filter-chip-purple .filter-chip-label,
+    .filter-chip-amber  .filter-chip-label { color: var(--text-3); }
+    /* 复选框视觉元素 */
+    .filter-chip-check {
+      width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+      border: 1.5px solid var(--border-2); background: transparent;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 900; color: transparent; transition: all .15s;
+    }
+    /* 选中：各自彩色 */
+    .filter-chip-blue:has(input:checked)   { background: rgba(59,130,246,.18);  border-color: rgba(59,130,246,.5); }
+    .filter-chip-green:has(input:checked)  { background: rgba(16,185,129,.18);  border-color: rgba(16,185,129,.5); }
+    .filter-chip-purple:has(input:checked) { background: rgba(139,92,246,.18);  border-color: rgba(139,92,246,.5); }
+    .filter-chip-amber:has(input:checked)  { background: rgba(245,158,11,.18);  border-color: rgba(245,158,11,.5); }
+    .filter-chip-blue:has(input:checked)   .filter-chip-label { color: var(--blue); }
+    .filter-chip-green:has(input:checked)  .filter-chip-label { color: var(--green); }
+    .filter-chip-purple:has(input:checked) .filter-chip-label { color: var(--purple); }
+    .filter-chip-amber:has(input:checked)  .filter-chip-label { color: var(--amber); }
+    .filter-chip-blue:has(input:checked)   .filter-chip-check { background: var(--blue);   border-color: var(--blue);   color: white; }
+    .filter-chip-green:has(input:checked)  .filter-chip-check { background: var(--green);  border-color: var(--green);  color: white; }
+    .filter-chip-purple:has(input:checked) .filter-chip-check { background: var(--purple); border-color: var(--purple); color: white; }
+    .filter-chip-amber:has(input:checked)  .filter-chip-check { background: var(--amber);  border-color: var(--amber);  color: white; }
+    .filter-chip-label { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+    .filter-chip-desc  { font-size: 11px; color: var(--text-3); }
+
+    /* Chip 文献输入框 */
+    .chip-input-wrap {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      background: var(--bg-2); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); padding: 6px 10px; cursor: text; min-height: 40px;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .chip-input-wrap:focus-within { border-color: rgba(59,130,246,0.5); box-shadow: 0 0 0 2px var(--blue-dim); }
+    .chip-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--blue-dim); border: 1px solid rgba(59,130,246,0.35);
+      border-radius: 4px; padding: 2px 8px; font-size: 11px; color: var(--blue); white-space: nowrap;
+    }
+    .chip-tag-remove {
+      background: none; border: none; cursor: pointer;
+      color: rgba(59,130,246,0.6); font-size: 13px; padding: 0; line-height: 1;
+      transition: color var(--transition);
+    }
+    .chip-tag-remove:hover { color: var(--rose); }
+    .chip-input {
+      background: none; border: none; outline: none;
+      font-size: 12px; color: var(--text-1); flex: 1; min-width: 80px; font-family: var(--font-sans);
+    }
+    .chip-input::placeholder { color: var(--text-3); }
+    .chip-hint-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11px; color: var(--text-3); }
+    .chip-hint kbd {
+      background: var(--bg-4); border: 1px solid var(--border-2);
+      border-radius: 3px; padding: 1px 5px; font-size: 10px; font-family: var(--font-mono); color: var(--text-2);
+    }
+    .chip-hint-sep { color: var(--border-2); }
+    .chip-hint-link { color: var(--blue); cursor: pointer; }
+    .chip-count { margin-left: auto; font-family: var(--font-mono); color: var(--text-2); font-size: 11px; }
+
+    /* 下拉匹配结果 */
+    .chip-dropdown {
+      background: var(--bg-3); border: 1px solid var(--border-2);
+      border-radius: var(--radius-md); margin-top: 4px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .chip-dropdown-header {
+      padding: 6px 12px; font-size: 10px; color: var(--text-3);
+      border-bottom: 1px solid var(--border-1); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .chip-dropdown-item {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; cursor: pointer;
+      transition: background var(--transition); border-bottom: 1px solid var(--border-1);
+    }
+    .chip-dropdown-item:last-child { border-bottom: none; }
+    .chip-dropdown-item:hover { background: var(--bg-4); }
+    .chip-dropdown-tag {
+      background: var(--blue-dim); color: var(--blue); border-radius: 3px;
+      padding: 1px 5px; font-size: 10px; font-family: var(--font-mono); flex-shrink: 0; margin-top: 2px;
+    }
+    .chip-dropdown-title { font-size: 12px; color: var(--text-1); margin-bottom: 3px; line-height: 1.4; }
+    .chip-dropdown-meta  { font-size: 10px; color: var(--text-3); font-family: var(--font-mono); }
+
+    /* Footer 统计行 */
+    .filter-modal-footer { justify-content: space-between !important; }
+    .filter-footer-stats { font-size: 12px; color: var(--text-3); }
+    .filter-stats-num  { color: var(--blue);  font-family: var(--font-mono); font-weight: 600; }
+    .filter-stats-hit  { color: var(--green); font-family: var(--font-mono); font-weight: 600; }
+    .filter-footer-actions { display: flex; gap: 10px; }
+
+    /* ── 过滤淡化（独立类，不与节点点击淡化互相影响） ── */
+    .graph-node.filter-dimmed circle { opacity: 0.15; }
+    .graph-node.filter-dimmed rect   { opacity: 0.15; }
+    .graph-node.filter-dimmed text   { opacity: 0.12; }
+    .graph-edge.filter-dimmed { opacity: 0.08; }
+
+    .node-tree { flex: 1; overflow-y: auto; padding: 4px 0; min-height: 0; }
+    .tree-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 10px; font-size: 12px; color: var(--text-2);
+      cursor: pointer; transition: background var(--transition), color var(--transition);
+      user-select: none;
+    }
+    .tree-item:hover { background: rgba(255,255,255,0.04); color: var(--text-1); }
+    .tree-item.active { background: var(--blue-dim); color: var(--blue); }
+    .tree-item.child { padding-left: 24px; }
+    .tree-toggle {
+      font-size: 9px; color: var(--text-3); width: 11px;
+      text-align: center; flex-shrink: 0; transition: transform var(--transition);
+    }
+    .tree-toggle.open { transform: rotate(90deg); }
+    .tree-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .tree-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tree-more {
+      padding: 4px 24px; font-size: 11px; color: var(--text-3); cursor: pointer;
+    }
+    .tree-more:hover { color: var(--blue); }
+    .tree-group { display: flex; flex-direction: column; }
+    .tree-children { display: flex; flex-direction: column; }
+    .tree-biz-icon {
+      width: 13px; height: 13px; flex-shrink: 0;
+      color: var(--text-3); display: block; opacity: 0.75;
+    }
+
+    /* 侧边栏图例 */
+    .sidebar-legend { padding: 10px 14px; font-size: 11px; border-top: 1px solid var(--border-1); flex-shrink: 0; }
+    .legend-section { margin-bottom: 8px; }
+    .legend-section:last-child { margin-bottom: 0; }
+    .legend-title { color: var(--text-3); margin-bottom: 5px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; color: var(--text-2); }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .legend-level-row { display: flex; gap: 5px; margin-top: 4px; }
+    .level-chip {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border-1);
+      border-radius: 3px; padding: 2px 7px; font-size: 10px; color: var(--text-2);
+      cursor: pointer; transition: background var(--transition);
+    }
+    .level-chip:hover { background: rgba(255,255,255,0.08); }
+    .level-chip.active { background: var(--blue-dim); color: var(--blue); border-color: rgba(59,130,246,0.3); }
+
+    /* ── 编辑模式状态按钮（浮动独立） ── */
+    .edit-mode-float {
+      position: absolute; top: 12px; left: 212px;
+      transition: left 0.28s cubic-bezier(0.4,0,0.2,1);
+      z-index: 11; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-edit-status {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(13,18,32,0.85); backdrop-filter: blur(6px);
+      border: 1px solid var(--border-1); border-radius: 20px;
+      padding: 5px 14px; font-size: 12px; color: var(--text-2);
+      cursor: pointer; font-family: var(--font-sans);
+      transition: all var(--transition);
+    }
+    .btn-edit-status:hover {
+      background: var(--blue-dim); color: var(--blue);
+      border-color: rgba(59,130,246,0.4);
+    }
+    .edit-active-bar {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(13,18,32,0.88); backdrop-filter: blur(6px);
+      border: 1px solid rgba(245,158,11,0.3); border-radius: 20px;
+      padding: 5px 8px 5px 12px;
+    }
+    .edit-active-indicator {
+      display: flex; align-items: center; gap: 5px;
+      color: var(--amber); font-size: 11px;
+      padding-right: 8px; border-right: 1px solid var(--border-1);
+      flex-shrink: 0;
+    }
+    .blink-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--amber);
+      animation: blink 1.5s ease-in-out infinite; flex-shrink: 0;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* 编辑确认/取消 */
+    .btn-edit-confirm {
+      background: var(--green-dim); border: 1px solid rgba(16,185,129,0.35);
+      color: var(--green); border-radius: var(--radius-md);
+      padding: 5px 10px; font-size: 13px; cursor: pointer; font-weight: 600;
+      transition: background var(--transition); flex-shrink: 0;
+    }
+    .btn-edit-confirm:hover { background: rgba(16,185,129,0.25); }
+    .btn-edit-cancel {
+      background: var(--rose-dim); border: 1px solid rgba(244,63,94,0.3);
+      color: var(--rose); border-radius: var(--radius-md);
+      padding: 5px 10px; font-size: 13px; cursor: pointer; font-weight: 600;
+      transition: background var(--transition); flex-shrink: 0;
+    }
+    .btn-edit-cancel:hover { background: rgba(244,63,94,0.2); }
+    .btn-edit-undo, .btn-edit-redo {
+      background: none; border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); color: var(--text-3);
+      width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all var(--transition); flex-shrink: 0;
+    }
+    .btn-edit-undo:hover:not(:disabled), .btn-edit-redo:hover:not(:disabled) {
+      color: var(--text-1); background: var(--bg-4); border-color: var(--border-2);
+    }
+    .btn-edit-undo:disabled, .btn-edit-redo:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-edit-del {
+      background: none; border: 1px solid rgba(244,63,94,0.25);
+      color: rgba(244,63,94,0.6); border-radius: var(--radius-md);
+      padding: 4px 8px; font-size: 11px; cursor: pointer; font-family: var(--font-sans);
+      display: flex; align-items: center; gap: 4px;
+      transition: all var(--transition); flex-shrink: 0;
+    }
+    .btn-edit-del:hover { background: rgba(244,63,94,0.12); color: var(--rose); border-color: rgba(244,63,94,0.5); }
+    .btn-add-rel.is-picking {
+      background: rgba(245,158,11,0.18) !important; border-color: rgba(245,158,11,0.5) !important;
+      color: var(--amber) !important;
+    }
+    #rel-pick-hint {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      display: none; align-items: center; gap: 8px; z-index: 12;
+      background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4);
+      border-radius: 20px; padding: 5px 16px;
+      font-size: 12px; color: var(--amber); pointer-events: none; white-space: nowrap;
+    }
+    .rel-pick-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); flex-shrink: 0;
+      animation: blink 1s ease-in-out infinite; }
+
+    /* ── 右上角浮动缩放控件 ── */
+    .graph-float-tr {
+      position: absolute; top: 16px; right: 16px;
+      display: flex; align-items: center; gap: 6px; z-index: 10;
+    }
+    .zoom-group {
+      display: flex; border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); overflow: hidden;
+    }
+    .zoom-btn {
+      background: rgba(13,18,32,0.92); backdrop-filter: blur(6px);
+      border: none; color: var(--text-2);
+      padding: 5px 10px; font-size: 13px; cursor: pointer;
+      transition: background var(--transition);
+    }
+    .zoom-btn:hover { background: var(--bg-3); color: var(--text-1); }
+    .zoom-val {
+      background: rgba(13,18,32,0.92); backdrop-filter: blur(6px);
+      border-left: 1px solid var(--border-1); border-right: 1px solid var(--border-1);
+      padding: 5px 10px; font-size: 12px; color: var(--text-2);
+      font-family: var(--font-mono); min-width: 52px; text-align: center;
+    }
+    .icon-btn {
+      background: rgba(13,18,32,0.92); backdrop-filter: blur(6px);
+      border: 1px solid var(--border-1); border-radius: var(--radius-md);
+      color: var(--text-2); padding: 5px 9px; font-size: 14px; cursor: pointer;
+      transition: background var(--transition);
+    }
+    .icon-btn:hover { background: var(--bg-3); color: var(--text-1); }
+
+    /* ── 右侧抽屉 ── */
+    .right-drawer {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 360px;
+      background: var(--bg-2); border-left: 1px solid var(--border-1);
+      overflow: hidden; transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column;
+      transform: translateX(360px);
+      z-index: 20;
+    }
+    .right-drawer.open { transform: translateX(0); }
+    .drawer-inner { width: 360px; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+    .drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 10px; border-bottom: 1px solid var(--border-1);
+      background: var(--bg-3); flex-shrink: 0;
+    }
+    .drawer-title { font-size: 13px; color: var(--text-2); font-weight: 500; }
+    .drawer-close {
+      background: none; border: none; color: var(--text-3); font-size: 16px;
+      cursor: pointer; line-height: 1; padding: 2px 4px; border-radius: var(--radius-sm);
+      transition: color var(--transition), background var(--transition);
+    }
+    .drawer-close:hover { color: var(--text-1); background: var(--bg-4); }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 16px; }
+    .node-hero { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .node-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .node-avatar.blue   { background: var(--blue-dim);   border: 2px solid var(--blue); }
+    .node-avatar.green  { background: var(--green-dim);  border: 2px solid var(--green); }
+    .node-avatar.purple { background: var(--purple-dim); border: 2px solid var(--purple); }
+    .node-avatar.amber  { background: var(--amber-dim);  border: 2px solid var(--amber); }
+    .node-name { font-size: 16px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+    .node-meta { display: flex; align-items: center; gap: 6px; }
+    .node-type-tag {
+      background: var(--bg-4); border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm); padding: 1px 7px; font-size: 11px; color: var(--text-2);
+    }
+    .node-level-tag { background: var(--blue-dim); color: var(--blue); border-radius: var(--radius-sm); padding: 1px 7px; font-size: 11px; }
+    .drawer-section { margin-bottom: 18px; }
+    .drawer-section-title { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+    .source-item {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-3); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); padding: 8px 12px; font-size: 12px; color: var(--text-2);
+      cursor: pointer; transition: border-color var(--transition);
+    }
+    .source-item:hover { border-color: var(--border-2); color: var(--text-1); }
+    .source-icon { color: var(--text-3); flex-shrink: 0; }
+    .rel-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 0; border-bottom: 1px solid var(--border-1); font-size: 12px;
+    }
+    .rel-item:last-child { border-bottom: none; }
+    .rel-icon { color: var(--text-3); font-size: 12px; }
+    .rel-name { color: var(--text-3); flex-shrink: 0; }
+    .rel-arrow { color: var(--text-3); font-size: 11px; }
+    .rel-target { display: flex; align-items: center; gap: 5px; color: var(--text-2); }
+    .rel-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .drawer-footer {
+      display: flex; gap: 8px; padding: 12px 16px;
+      border-top: 1px solid var(--border-1); background: var(--bg-3); flex-shrink: 0;
+    }
+    .drawer-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      flex: 1; color: var(--text-3); font-size: 12px; text-align: center; gap: 6px;
+    }
+    .drawer-empty-icon { font-size: 28px; opacity: 0.4; }
+
+    /* ── SVG 节点样式 ── */
+    .graph-node { cursor: pointer; }
+    .graph-node circle, .graph-node rect { transition: opacity 0.2s; }
+    .graph-node text { pointer-events: none; transition: opacity 0.2s; }
+    .graph-edge { transition: opacity 0.2s; }
+    .graph-node.dimmed circle { opacity: 0.15; }
+    .graph-node.dimmed rect   { opacity: 0.15; }
+    .graph-node.dimmed text   { opacity: 0.12; }
+    .graph-edge.dimmed { opacity: 0.08; }
+
+    /* ── Tab 面板 ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: flex; flex: 1; overflow: hidden; min-height: 0; min-width: 0; }
+
+    /* ── 文本视图 ── */
+    .text-view-layout { flex: 1; display: flex; overflow: hidden; background: var(--bg-0); }
+    .json-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid var(--border-1); }
+    .json-toolbar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; border-bottom: 1px solid var(--border-1);
+      background: var(--bg-1); flex-shrink: 0;
+    }
+    .json-line-count { font-size: 12px; color: var(--text-3); }
+    .json-body { flex: 1; overflow-y: auto; background: var(--bg-0); }
+    .json-code-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.65; }
+    .json-ln {
+      width: 44px; padding: 0 12px 0 16px; text-align: right; color: var(--text-3);
+      user-select: none; border-right: 1px solid var(--border-1); vertical-align: top;
+    }
+    .json-code-cell { padding: 0 0 0 16px; color: var(--text-2); white-space: pre; }
+    .json-key  { color: #7dd3fc; }
+    .json-str  { color: #86efac; }
+    .json-null { color: var(--text-3); }
+    .json-side {
+      width: 280px; flex-shrink: 0; background: var(--bg-1);
+      display: flex; flex-direction: column; overflow-y: auto; padding: 16px;
+    }
+    .json-side-title { font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border-1); }
+    .json-info-row { display: flex; gap: 8px; margin-bottom: 12px; font-size: 12px; }
+    .json-info-key { color: var(--text-3); flex-shrink: 0; }
+    .json-info-val { color: var(--text-2); font-family: var(--font-mono); word-break: break-all; font-size: 11px; }
+
+    /* ── 版本管理 ── */
+    .version-layout { flex: 1; display: flex; overflow: hidden; background: var(--bg-0); }
+    .version-list-panel { flex: 1; overflow-y: auto; padding: 20px 20px 20px 24px; }
+    .version-list-title { font-size: 15px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+    .version-list-sub { font-size: 12px; color: var(--text-3); margin-bottom: 20px; }
+    .ver-item {
+      border: 1px solid var(--border-1); border-radius: var(--radius-lg);
+      padding: 16px 18px; margin-bottom: 12px; background: var(--bg-2);
+      cursor: pointer; transition: border-color var(--transition), background var(--transition);
+    }
+    .ver-item:hover { border-color: var(--border-2); background: var(--bg-3); }
+    .ver-item.selected { border-color: var(--blue); background: var(--bg-3); }
+    .ver-item-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .ver-item-left { display: flex; align-items: center; gap: 8px; }
+    .ver-num { font-size: 15px; font-weight: 700; color: var(--text-1); font-family: var(--font-mono); }
+    .ver-time { font-size: 11px; color: var(--text-3); }
+    .ver-desc { font-size: 12px; color: var(--text-2); margin-bottom: 10px; line-height: 1.5; }
+    .ver-changes { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .ver-change-tag { font-size: 11px; padding: 1px 7px; border-radius: var(--radius-sm); font-family: var(--font-mono); }
+    .ver-change-tag.add  { background: rgba(16,185,129,0.12); color: var(--green); }
+    .ver-change-tag.edit { background: rgba(59,130,246,0.12); color: var(--blue); }
+    .ver-change-tag.del  { background: rgba(244,63,94,0.1); color: var(--rose); }
+    .ver-actions { display: flex; gap: 6px; }
+    .version-diff-panel {
+      width: 380px; flex-shrink: 0; background: var(--bg-1);
+      border-left: 1px solid var(--border-1); display: flex; flex-direction: column; overflow: hidden;
+    }
+    .diff-panel-title { font-size: 13px; font-weight: 600; color: var(--text-1); padding: 14px 16px 10px; border-bottom: 1px solid var(--border-1); flex-shrink: 0; }
+    .diff-compare-bar { display: flex; align-items: center; padding: 8px 14px; gap: 8px; font-size: 12px; color: var(--text-2); border-bottom: 1px solid var(--border-1); flex-shrink: 0; }
+    .diff-ver-tag { font-size: 11px; font-weight: 600; font-family: var(--font-mono); padding: 2px 8px; border-radius: var(--radius-sm); }
+    .diff-ver-tag.old { background: rgba(244,63,94,0.1); color: var(--rose); }
+    .diff-ver-tag.new { background: var(--blue-dim); color: var(--blue); }
+    .diff-arrow { color: var(--text-3); }
+    .diff-code-area { flex: 1; overflow-y: auto; display: flex; }
+    .diff-col { flex: 1; font-family: var(--font-mono); font-size: 11px; line-height: 1.7; padding: 8px 0; }
+    .diff-col + .diff-col { border-left: 1px solid var(--border-1); }
+    .diff-line { padding: 0 12px; white-space: pre; color: var(--text-2); }
+    .diff-line.removed { background: rgba(244,63,94,0.1); color: #fca5a5; }
+    .diff-line.added   { background: rgba(16,185,129,0.1); color: #86efac; }
+    .diff-stats-panel { border-top: 1px solid var(--border-1); padding: 12px 14px; flex-shrink: 0; }
+    .diff-stats-title { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .diff-stat-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
+    .diff-stat-val { font-family: var(--font-mono); font-weight: 600; }
+    .diff-stat-val.add  { color: var(--green); }
+    .diff-stat-val.del  { color: var(--rose); }
+    .diff-stat-val.edit { color: var(--blue); }
+    .diff-conflict { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+    .diff-conflict span { color: var(--amber); }
+    .diff-footer { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border-1); flex-shrink: 0; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--bg-3); border: 1px solid var(--border-2);
+      border-radius: var(--radius-xl); width: 520px; box-shadow: var(--shadow-lg);
+      transform: translateY(12px); transition: transform 0.22s;
+    }
+    .modal-overlay.active .modal { transform: translateY(0); }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px 14px; border-bottom: 1px solid var(--border-1);
+      background: var(--bg-4); border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    }
+    .modal-title { font-size: 15px; font-weight: 600; color: var(--text-1); }
+    .modal-body { padding: 20px; }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 14px 20px; border-top: 1px solid var(--border-1);
+      background: var(--bg-4); border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    }
+    .rel-connect-bar {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg-4); border: 1px solid var(--border-2);
+      border-radius: var(--radius-md); padding: 10px 14px; margin-bottom: 16px;
+    }
+    .rel-node-name { font-size: 13px; font-weight: 500; color: var(--blue); flex: 1; }
+    .rel-connect-arrow { color: var(--text-3); font-size: 16px; }
+    .source-group { display: flex; gap: 8px; margin-bottom: 6px; }
+    .source-input-wrap { flex: 1; }
+    .add-source-btn {
+      display: flex; align-items: center; gap: 6px;
+      width: 100%; padding: 8px 12px;
+      background: var(--bg-2); border: 1px dashed var(--border-2);
+      border-radius: var(--radius-md); font-size: 12px; color: var(--text-3);
+      cursor: pointer; transition: color var(--transition), border-color var(--transition);
+    }
+    .add-source-btn:hover { color: var(--blue); border-color: rgba(59,130,246,0.4); }
+    .remove-source-btn {
+      background: var(--bg-3); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); color: var(--text-3);
+      padding: 6px 10px; font-size: 13px; cursor: pointer; line-height: 1;
+      transition: color var(--transition);
+    }
+    .remove-source-btn:hover { color: var(--rose); }
+
+    /* ── 侧边栏折叠按钮 ── */
+    .sidebar-toggle-btn {
+      position: absolute; top: 50%; left: 196px;
+      transform: translateY(-50%);
+      width: 20px; height: 40px; z-index: 16;
+      background: rgba(13,18,32,0.92); backdrop-filter: blur(6px);
+      border: 1px solid var(--border-1); border-left: none;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      color: var(--text-3); cursor: pointer; font-size: 9px;
+      display: flex; align-items: center; justify-content: center;
+      transition: left 0.28s cubic-bezier(0.4,0,0.2,1), background var(--transition);
+    }
+    .sidebar-toggle-btn:hover { color: var(--text-1); background: var(--bg-3); }
+
+    /* ── 底部图例条 ── */
+    .canvas-legend {
+      position: absolute; bottom: 12px; right: 12px; left: auto;
+      display: flex; align-items: center;
+      background: rgba(13,18,32,0.88); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); padding: 5px 8px 5px 12px;
+      backdrop-filter: blur(8px); z-index: 5; font-size: 11px;
+    }
+    .canvas-legend-items {
+      display: flex; align-items: center; gap: 14px; flex: 1;
+      overflow: hidden;
+    }
+    .canvas-legend.legend-collapsed .canvas-legend-items { display: none; }
+    .cl-item { display: flex; align-items: center; gap: 5px; color: var(--text-2); white-space: nowrap; }
+    .cl-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .cl-icon { width: 15px; height: 15px; flex-shrink: 0; color: var(--text-3); display: block; }
+    .cl-sep  { width: 1px; height: 14px; background: var(--border-1); flex-shrink: 0; }
+    .cl-toggle-btn {
+      background: none; border: 0; color: var(--text-3);
+      cursor: pointer; font-size: 10px; padding: 2px 4px; flex-shrink: 0;
+      margin-left: 8px; border-radius: 3px;
+      transition: color var(--transition), background var(--transition);
+    }
+    .cl-toggle-btn:hover { color: var(--text-1); background: rgba(255,255,255,.06); }
+
+    /* ── React GraphCanvas 画布样式 ── */
+    #gc-root { position: absolute; inset: 0; }
+    .gc-wrap { position: relative; width: 100%; height: 100%; overflow: hidden;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(59,130,246,.05), transparent 55%),
+        radial-gradient(circle at 70% 70%, rgba(168,85,247,.04), transparent 50%),
+        #0f1929;
+      background-image:
+        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    .gc-svg { width: 100%; height: 100%; display: block; user-select: none; }
+    .gc-zoom {
+      position: absolute; right: 16px; top: 16px;
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(13,18,32,.9); border: 1px solid var(--border-2);
+      border-radius: var(--radius-md); padding: 4px;
+      backdrop-filter: blur(8px); font-size: 11px; color: var(--text-2);
+      font-family: var(--font-mono); z-index: 5;
+    }
+    .gc-zoom button { background: transparent; border: 0; color: var(--text-2);
+      width: 24px; height: 24px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+    .gc-zoom button:hover { background: rgba(255,255,255,.08); color: #fff; }
+    .gc-zoom span { padding: 0 6px; min-width: 44px; text-align: center; }
+    /* ── 布局切换 Tab（位于缩放面板下方） ── */
+    .gc-layout-tabs {
+      position: absolute; right: 16px; top: 56px;
+      display: flex; gap: 3px;
+      background: rgba(13,18,32,.9); border: 1px solid var(--border-2);
+      border-radius: var(--radius-md); padding: 4px;
+      backdrop-filter: blur(8px); z-index: 5;
+    }
+    .gc-layout-tab {
+      padding: 4px 10px; font-size: 11px; border-radius: 5px;
+      background: transparent; border: 0; color: var(--text-3);
+      cursor: pointer; font-family: var(--font-sans);
+      transition: background .15s, color .15s; white-space: nowrap;
+    }
+    .gc-layout-tab.active { background: rgba(96,165,250,.18); color: #93c5fd; }
+    .gc-layout-tab:hover:not(.active) { background: rgba(255,255,255,.06); color: var(--text-2); }
+    .gc-tip {
+      position: absolute; z-index: 6;
+      background: rgba(13,18,32,.96); border: 1px solid var(--border-2);
+      border-radius: var(--radius-md); padding: 10px 12px;
+      font-size: 11.5px; color: var(--text-1);
+      pointer-events: none; box-shadow: 0 10px 30px rgba(0,0,0,.4);
+      max-width: 240px; backdrop-filter: blur(10px);
+    }
+    .gc-tip-hd { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .gc-tip-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+    .gc-tip-meta { display: flex; gap: 10px; font-size: 10.5px; color: var(--text-3); margin-bottom: 4px; flex-wrap: wrap; }
+    .gc-tip-l { font-family: var(--font-mono); padding: 0 4px; border-radius: 3px; background: rgba(255,255,255,.06); }
+    .gc-tip-state { font-size: 10.5px; color: var(--text-2); letter-spacing: .02em; }
+
+    /* ── 右侧面板（React RightPanel）样式 ── */
+    .rt-empty-wrap { display: flex; flex: 1; align-items: center; justify-content: center; height: 100%; }
+    .rt-empty { color: var(--text-3); font-size: 12px; text-align: center; line-height: 1.6; }
+    .rt-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 10px; border-bottom: 1px solid var(--border-1);
+      background: var(--bg-3); flex-shrink: 0;
+    }
+    .rt-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .rt-x { background: none; border: 0; color: var(--text-3); width: 24px; height: 24px;
+      border-radius: 5px; cursor: pointer; font-size: 15px; line-height: 1; }
+    .rt-x:hover { color: var(--text-1); background: var(--bg-4); }
+    .rt-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .rt-card { background: var(--bg-3); border: 1px solid var(--border-1); border-radius: var(--radius-md); padding: 12px; }
+    .rt-node { display: flex; gap: 12px; align-items: center; }
+    .rt-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      display: grid; place-items: center; flex-shrink: 0;
+      border: 1.5px solid currentColor;
+      background: color-mix(in oklab, currentColor 18%, transparent);
+    }
+    .rt-avatar svg { width: 22px; height: 22px; }
+    .rt-nm { font-size: 14px; font-weight: 600; color: var(--text-1); line-height: 1.3; margin-bottom: 4px; }
+    .rt-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .rt-tag { font-size: 10px; padding: 1.5px 6px; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,.06); color: var(--text-2); font-family: var(--font-mono); }
+    .rt-tag-l { background: var(--blue-dim); color: var(--blue); }
+    .rt-sect { display: flex; flex-direction: column; gap: 8px; }
+    .rt-sect-t { font-size: 11px; color: var(--text-3); letter-spacing: .04em; font-weight: 500; }
+    .rt-mini { background: var(--bg-2); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); padding: 8px; height: 130px; overflow: hidden; }
+    .rt-mini svg { width: 100%; height: 100%; display: block; }
+    /* mini-graph tabs */
+    .mg-tabs { display: flex; gap: 3px; margin-bottom: 6px; }
+    .mg-tab { flex: 1; text-align: center; font-size: 11px; color: var(--text-3); padding: 4px 0;
+      border-radius: var(--radius-sm); cursor: pointer; border: 1px solid transparent;
+      background: rgba(255,255,255,.03); transition: color .15s, background .15s, border-color .15s; user-select: none; }
+    .mg-tab:hover { color: var(--text-2); background: rgba(255,255,255,.06); }
+    .mg-tab.active { color: var(--blue); border-color: var(--blue-dim); background: var(--blue-dim); }
+    /* hover tooltip */
+    .mg-tip { position: fixed; z-index: 9999; background: var(--bg-4); border: 1px solid var(--border-2);
+      border-radius: var(--radius-md); padding: 8px 10px; pointer-events: none;
+      min-width: 150px; max-width: 200px; box-shadow: 0 8px 24px rgba(0,0,0,.55); }
+    .mg-tip-name { font-size: 12px; font-weight: 600; color: var(--text-1); margin-bottom: 5px; line-height: 1.3; }
+    .mg-tip-row { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text-2); flex-wrap: wrap; }
+    .mg-tip-row + .mg-tip-row { margin-top: 4px; }
+    .mg-tip-badge { padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,.07);
+      font-family: var(--font-mono); font-size: 9.5px; }
+    .mg-tip-num { color: var(--text-1); font-weight: 600; font-size: 11px; }
+    .doi-chip { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px;
+      background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.28);
+      border-radius: var(--radius-md); }
+    .doi-dt { font-family: var(--font-mono); font-size: 9.5px; color: #67e8f9;
+      padding: 2px 5px; border-radius: 3px; background: rgba(34,211,238,.14);
+      flex-shrink: 0; line-height: 1.2; }
+    .doi-dc { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .doi-actions { display: flex; justify-content: flex-end; gap: 4px; margin-top: 6px; }
+    .doi-act-btn {
+      width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border-1);
+      color: var(--text-3); cursor: pointer; transition: all .15s;
+    }
+    .doi-act-btn svg { width: 13px; height: 13px; }
+    .doi-act-btn:hover { background: var(--blue-dim); color: var(--blue); border-color: rgba(59,130,246,.4); }
+    .doi-title { font-size: 11.5px; color: #cffafe; line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .doi-key { font-family: var(--font-mono); font-size: 10px; color: rgba(165,243,252,.6); }
+    .rt-edge-list { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; padding-right: 4px; }
+    .rt-edge-row { display: flex; align-items: center; gap: 6px; font-size: 11.5px;
+      padding: 4px 6px; border-radius: 5px; cursor: pointer; }
+    .rt-edge-row:hover { background: rgba(255,255,255,.03); }
+    .rt-edge-rel { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-3);
+      padding: 1px 5px; border-radius: 3px; background: rgba(255,255,255,.04); flex-shrink: 0; }
+    .rt-edge-arr { color: var(--text-3); flex-shrink: 0; }
+    .rt-edge-ds { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .rt-edge-tg { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rt-edge-row:hover .rt-edge-tg { color: var(--text-1); }
+    .rt-actions { display: flex; gap: 8px; padding: 12px 16px;
+      border-top: 1px solid var(--border-1); background: var(--bg-3); flex-shrink: 0; }
+    .rt-edit-icon { background: none; border: 0; color: var(--text-3); width: 24px; height: 24px;
+      border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .rt-edit-icon:hover { color: var(--text-1); background: var(--bg-4); }
+
+    /* ─── 3D 全屏覆盖层 ─── */
+    #overlay-3d {
+      position: fixed; inset: 0; z-index: 1001;
+      background: var(--bg-0); flex-direction: column;
+      display: none;
+    }
+    #overlay-3d:-webkit-full-screen { display: flex; }
+    #overlay-3d:fullscreen { display: flex; }
+    body.mode-3d .right-drawer { z-index: 1010; }
+    #overlay-3d-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 16px; flex-shrink: 0; z-index: 2;
+      background: rgba(13,18,32,.96); border-bottom: 1px solid var(--border-2);
+      backdrop-filter: blur(8px);
+    }
+    #overlay-3d-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 600; color: var(--text-1);
+    }
+    #overlay-3d-hint {
+      font-size: 11px; color: var(--text-3); font-family: var(--font-mono);
+      margin-left: 4px;
+    }
+    #overlay-3d-close {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-sm); background: rgba(255,255,255,.06);
+      border: 1px solid var(--border-1); color: var(--text-2);
+      cursor: pointer; font-size: 15px; transition: background .15s, color .15s;
+    }
+    #overlay-3d-close:hover { background: rgba(255,255,255,.12); color: var(--text-1); }
+    #graph-3d-container { flex: 1; position: relative; overflow: hidden; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+  </style>
+</head>
+<body>
+
+<!-- ── 顶部标题栏 ── -->
+<div class="page-header">
+  <div>
+    <div class="header-title">
+      MINGXUAN_TEST_DATABASE
+      <span style="color:var(--text-3);font-weight:300">·</span>
+      <span style="color:var(--text-2);font-size:15px">草图</span>
+      <span class="badge-version">V2.0 版本</span>
+      <span class="badge-auto">自动生成</span>
+    </div>
+    <div class="header-subtitle">基于本体 · 207 个节点 · 153 条关系 · 请确认后进入编辑</div>
+  </div>
+  <div class="header-stats">
+    <div class="stat-chip blue">
+      <div class="stat-icon">⬡</div>
+      <div class="stat-body"><div class="stat-label">概念节点</div><div class="stat-value">24</div></div>
+    </div>
+    <div class="stat-chip cyan">
+      <div class="stat-icon">⇌</div>
+      <div class="stat-body"><div class="stat-label">来源文献</div><div class="stat-value">14</div></div>
+    </div>
+    <div class="stat-chip purple">
+      <div class="stat-icon">⤳</div>
+      <div class="stat-body"><div class="stat-label">关系边</div><div class="stat-value">14</div></div>
+    </div>
+    <div class="stat-chip amber">
+      <div class="stat-icon">◈</div>
+      <div class="stat-body"><div class="stat-label">节点类型</div><div class="stat-value">14</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Tab 栏 ── -->
+<div class="tab-bar">
+  <div class="tab-item active" onclick="switchTab('graph',this)"><span>⬡</span> 草图预览</div>
+  <div class="tab-item" onclick="switchTab('text',this)"><span>☰</span> 文本视图</div>
+  <div class="tab-item" onclick="switchTab('versions',this)"><span>⊕</span> 版本管理</div>
+  <div class="tab-bar-spacer"></div>
+  <button class="btn-save-version" onclick="window.__showToast?.('版本已保存')">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+      <path d="M3 3h8l2 2v8a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+      <rect x="5" y="3" width="5" height="3" rx=".5" stroke="currentColor" stroke-width="1.2"/>
+      <rect x="5" y="9" width="6" height="4" rx=".5" stroke="currentColor" stroke-width="1.2"/>
+    </svg>
+    保存版本
+  </button>
+</div>
+
+<!-- ── 主体 ── -->
+<div class="main-body">
+
+  <!-- ─── 草图面板 ─── -->
+  <div class="tab-panel active" id="panel-graph">
+    <div class="workspace">
+
+      <!-- 图谱区域（铺满，浮动覆盖物在内部） -->
+      <div class="graph-area" id="graph-area">
+        <!-- React GraphCanvas 挂载点 -->
+        <div id="gc-root"></div>
+
+        <!-- ═══ 旧 SVG 节点注释开始（下方至 </svg> 均为旧内容，已废弃）
+        <g id="edges-layer_OLD_REMOVED">
+            <g class="graph-edge" data-edge="核心预测算法-数据预处理技术">
+              <line x1="450" y1="330" x2="310" y2="420" stroke="#253550" stroke-width="1.2" marker-end="url(#arrow)"/>
+              <text x="365" y="368" fill="#344a6a" font-size="9" text-anchor="middle" transform="rotate(-35,365,368)">has_subclass</text>
+            </g>
+            <g class="graph-edge" data-edge="核心预测算法-长短期记忆网络">
+              <line x1="460" y1="340" x2="490" y2="440" stroke="#253550" stroke-width="1.2" marker-end="url(#arrow)"/>
+              <text x="488" y="388" fill="#344a6a" font-size="9" text-anchor="middle" transform="rotate(75,488,388)">has_subclass</text>
+            </g>
+            <g class="graph-edge" data-edge="核心预测算法-ARIMA">
+              <line x1="440" y1="340" x2="400" y2="500" stroke="#253550" stroke-width="1.2" marker-end="url(#arrow)"/>
+              <text x="412" y="420" fill="#344a6a" font-size="9" text-anchor="middle" transform="rotate(-75,412,420)">has_subclass</text>
+            </g>
+            <g class="graph-edge" data-edge="核心预测算法-参数寻优">
+              <line x1="470" y1="325" x2="590" y2="375" stroke="#253550" stroke-width="1.2" marker-end="url(#arrow)"/>
+              <text x="535" y="344" fill="#344a6a" font-size="9" text-anchor="middle" transform="rotate(25,535,344)">has_subclass</text>
+            </g>
+            <g class="graph-edge" data-edge="数据预处理技术-数据预测模型">
+              <line x1="305" y1="440" x2="440" y2="322" stroke="#1e3a60" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+              <text x="360" y="375" fill="#2a4a72" font-size="9" text-anchor="middle" transform="rotate(-40,360,375)">提供数据给预测模型</text>
+            </g>
+            <g class="graph-edge" data-edge="核心预测算法-单机应用场景">
+              <line x1="445" y1="340" x2="370" y2="490" stroke="#253550" stroke-width="1.2" marker-end="url(#arrow)"/>
+              <text x="396" y="416" fill="#344a6a" font-size="9" text-anchor="middle" transform="rotate(-70,396,416)">应用于场景</text>
+            </g>
+            <g class="graph-edge" data-edge="核心预测算法-不确定性概率分析">
+              <line x1="468" y1="335" x2="620" y2="458" stroke="#253550" stroke-width="1.2" marker-end="url(#arrow)"/>
+              <text x="550" y="390" fill="#344a6a" font-size="9" text-anchor="middle" transform="rotate(38,550,390)">进行不确定性概率分析</text>
+            </g>
+            <g class="graph-edge" data-edge="核心预测算法-确定性指标评估">
+              <line x1="452" y1="342" x2="490" y2="510" stroke="#253550" stroke-width="1.2" marker-end="url(#arrow)"/>
+              <text x="477" y="428" fill="#344a6a" font-size="9" text-anchor="middle" transform="rotate(78,477,428)">被确定性指标评估</text>
+            </g>
+            <g class="graph-edge" data-edge="outer1"><line x1="310" y1="415" x2="190" y2="360" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer2"><line x1="310" y1="415" x2="200" y2="490" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer3"><line x1="593" y1="375" x2="660" y2="308" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer4"><line x1="620" y1="460" x2="728" y2="430" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer5"><line x1="490" y1="618" x2="540" y2="698" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer6"><line x1="100" y1="278" x2="165" y2="348" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer7"><line x1="760" y1="190" x2="665" y2="305" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer8"><line x1="728" y1="430" x2="818" y2="378" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer9"><line x1="450" y1="320" x2="420" y2="218" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer10"><line x1="455" y1="320" x2="540" y2="208" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer11"><line x1="350" y1="200" x2="420" y2="216" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer12"><line x1="150" y1="558" x2="200" y2="490" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+            <g class="graph-edge" data-edge="outer13"><line x1="798" y1="528" x2="730" y2="433" stroke="#1e2d4a" stroke-width="1" marker-end="url(#arrow)"/></g>
+          </g>
+          <g id="nodes-layer">
+            <g class="graph-node peripheral" data-id="p1" onclick="selectNode('p1',event)"><circle cx="95" cy="275" r="18" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="95" y="278" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p2" onclick="selectNode('p2',event)"><circle cx="175" cy="350" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="175" y="353" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p3" onclick="selectNode('p3',event)"><circle cx="205" cy="490" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="205" y="493" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p4" onclick="selectNode('p4',event)"><circle cx="148" cy="558" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="148" y="561" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p5" onclick="selectNode('p5',event)"><circle cx="418" cy="215" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="418" y="218" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p6" onclick="selectNode('p6',event)"><circle cx="540" cy="205" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="540" y="208" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p7" onclick="selectNode('p7',event)"><circle cx="350" cy="198" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="350" y="201" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p8" onclick="selectNode('p8',event)"><circle cx="665" cy="308" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="665" y="311" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p9" onclick="selectNode('p9',event)"><circle cx="760" cy="188" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="760" y="191" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p10" onclick="selectNode('p10',event)"><circle cx="728" cy="432" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="728" y="435" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p11" onclick="selectNode('p11',event)"><circle cx="818" cy="378" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="818" y="381" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p12" onclick="selectNode('p12',event)"><circle cx="798" cy="530" r="16" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="798" y="533" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node peripheral" data-id="p13" onclick="selectNode('p13',event)"><circle cx="540" cy="698" r="14" fill="#0f1729" stroke="#1e2d4a" stroke-width="1.5"/><text x="540" y="701" fill="#344a6a" font-size="9" text-anchor="middle">⬡⬡</text></g>
+            <g class="graph-node" data-id="核心预测算法" onclick="selectNode('核心预测算法',event)">
+              <circle cx="450" cy="330" r="28" fill="#1a2d55" stroke="#3b82f6" stroke-width="2.5"/>
+              <text x="450" y="327" fill="#e2e8f0" font-size="9" text-anchor="middle" font-weight="500">⬡⬡</text>
+              <text x="450" y="370" fill="#94a3b8" font-size="10" text-anchor="middle">核心预测算法</text>
+            </g>
+            <g class="graph-node" data-id="数据预处理技术" onclick="selectNode('数据预处理技术',event)">
+              <circle cx="305" cy="435" r="22" fill="#132040" stroke="#3b82f6" stroke-width="2"/>
+              <text x="305" y="432" fill="#e2e8f0" font-size="9" text-anchor="middle">⬡⬡</text>
+              <text x="305" y="466" fill="#94a3b8" font-size="10" text-anchor="middle">数据预处理技术</text>
+            </g>
+            <g class="graph-node" data-id="长短期记忆网络(LSTM)" onclick="selectNode('长短期记忆网络(LSTM)',event)">
+              <circle cx="560" cy="463" r="22" fill="#132040" stroke="#3b82f6" stroke-width="2"/>
+              <text x="560" y="460" fill="#e2e8f0" font-size="9" text-anchor="middle">⬡⬡</text>
+              <text x="560" y="494" fill="#94a3b8" font-size="10" text-anchor="middle">长短期记忆网络(LST...</text>
+            </g>
+            <g class="graph-node" data-id="参数寻优算法" onclick="selectNode('参数寻优算法',event)">
+              <circle cx="595" cy="375" r="22" fill="#132040" stroke="#3b82f6" stroke-width="2"/>
+              <text x="595" y="372" fill="#e2e8f0" font-size="9" text-anchor="middle">⬡⬡</text>
+              <text x="595" y="406" fill="#94a3b8" font-size="10" text-anchor="middle">参数寻优算法</text>
+            </g>
+            <g class="graph-node" data-id="单机应用场景" onclick="selectNode('单机应用场景',event)">
+              <circle cx="368" cy="492" r="22" fill="#132040" stroke="#3b82f6" stroke-width="2"/>
+              <text x="368" y="489" fill="#e2e8f0" font-size="9" text-anchor="middle">⬡⬡</text>
+              <text x="368" y="522" fill="#94a3b8" font-size="10" text-anchor="middle">单机应用场景</text>
+            </g>
+            <g class="graph-node" data-id="ARIMA与神经网络线性组合模型" onclick="selectNode('ARIMA与神经网络线性组合模型',event)">
+              <circle cx="465" cy="515" r="22" fill="#1a1a3a" stroke="#8b5cf6" stroke-width="2"/>
+              <text x="465" y="512" fill="#e2e8f0" font-size="9" text-anchor="middle">⬡⬡</text>
+              <text x="465" y="545" fill="#94a3b8" font-size="10" text-anchor="middle">ARIMA与神经网络...</text>
+            </g>
+            <g class="graph-node" data-id="确定性评估指标" onclick="selectNode('确定性评估指标',event)">
+              <circle cx="538" cy="545" r="22" fill="#0d2318" stroke="#10b981" stroke-width="2"/>
+              <text x="538" y="542" fill="#e2e8f0" font-size="9" text-anchor="middle">⬡⬡</text>
+              <text x="538" y="574" fill="#94a3b8" font-size="10" text-anchor="middle">确定性评估指标</text>
+            </g>
+            <g class="graph-node" data-id="不确定性概率分析" onclick="selectNode('不确定性概率分析',event)">
+              <circle cx="635" cy="460" r="20" fill="#1a1a0d" stroke="#f59e0b" stroke-width="2"/>
+              <text x="635" y="457" fill="#e2e8f0" font-size="9" text-anchor="middle">⬡⬡</text>
+              <text x="635" y="488" fill="#94a3b8" font-size="10" text-anchor="middle">不确定性概率分析</text>
+            </g>
+            <g class="graph-node" data-id="长短期记忆网络2" onclick="selectNode('长短期记忆网络2',event)">
+              <circle cx="488" cy="618" r="20" fill="#132040" stroke="#3b82f6" stroke-width="2"/>
+              <text x="488" y="615" fill="#e2e8f0" font-size="9" text-anchor="middle">⬡⬡</text>
+              <text x="488" y="646" fill="#94a3b8" font-size="10" text-anchor="middle">长短期记忆网络(LST...</text>
+            </g>
+          </g>
+        </svg> ═══ 旧 SVG 内容结束 -->
+
+        <!-- ── 左侧图谱侧边栏：搜索 + 节点树 ── -->
+        <div class="graph-sidebar" id="graph-sidebar">
+          <div class="sidebar-search">
+            <span class="sidebar-search-icon">🔍</span>
+            <input type="text" placeholder="搜索概念...">
+            <!-- 过滤按钮区域 -->
+            <div class="filter-wrap">
+              <!-- 默认状态 -->
+              <button class="filter-btn" id="filter-btn-normal" onclick="openFilterModal()">⊟ 过滤</button>
+              <!-- 激活状态 -->
+              <div class="filter-active-row" id="filter-active-row" style="display:none">
+                <div class="filter-active-btn-wrap">
+                  <button class="filter-btn is-active" onclick="openFilterModal()">已过滤</button>
+                  <div class="filter-hover-panel">
+                    <div class="fhp-title">当前过滤条件</div>
+                    <div class="fhp-row"><span class="fhp-key">节点类型</span><span class="fhp-val">class、property</span></div>
+                    <div class="fhp-row"><span class="fhp-key">来源文献</span><span class="fhp-val">A survey on knowledge graph embedding</span></div>
+                    <div class="fhp-row"><span class="fhp-key">业务类型</span><span class="fhp-val">algorithm、model</span></div>
+                  </div>
+                </div>
+                <button class="filter-cancel-x" onclick="cancelFilter()" title="取消全部过滤">✕</button>
+              </div>
+            </div>
+          </div>
+          <div class="node-tree" id="node-tree">
+            <div class="tree-item" onclick="selectTreeNode('WindSpeedForecast',this)">
+              <span class="tree-toggle open">▶</span>
+              <span class="tree-dot" style="background:var(--blue)"></span>
+              <span class="tree-name">WindSpeedForecast</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('MeteoEnv',this)">
+              <span class="tree-toggle">▶</span>
+              <span class="tree-dot" style="background:var(--blue)"></span>
+              <span class="tree-name">MeteoEnv</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('WindStation',this)">
+              <span class="tree-toggle">▶</span>
+              <span class="tree-dot" style="background:var(--blue)"></span>
+              <span class="tree-name">WindStation</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('TopoSpace',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--blue)"></span>
+              <span class="tree-name">TopoSpace</span>
+            </div>
+            <div class="tree-item" onclick="selectTreeNode('ForecastModel',this)">
+              <span class="tree-toggle open">▶</span>
+              <span class="tree-dot" style="background:var(--purple)"></span>
+              <span class="tree-name">ForecastModel</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('hasInputData',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--purple)"></span>
+              <span class="tree-name">hasInputData</span>
+            </div>
+            <div class="tree-item" onclick="selectTreeNode('ImagePreprocessing',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--amber)"></span>
+              <span class="tree-name">ImagePreprocessing</span>
+            </div>
+            <div class="tree-item" onclick="selectTreeNode('OutputReport',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--green)"></span>
+              <span class="tree-name">OutputReport</span>
+            </div>
+            <div class="tree-item" onclick="selectTreeNode('核心预测算法',this)">
+              <span class="tree-toggle open">▶</span>
+              <span class="tree-dot" style="background:var(--blue)"></span>
+              <span class="tree-name">核心预测算法</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('数据预处理技术',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--blue)"></span>
+              <span class="tree-name">数据预处理技术</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('长短期记忆网络(LSTM)',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--blue)"></span>
+              <span class="tree-name">长短期记忆网络(LSTM)</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('参数寻优算法',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--blue)"></span>
+              <span class="tree-name">参数寻优算法</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('ARIMA与神经网络线性组合模型',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--blue)"></span>
+              <span class="tree-name">ARIMA与神经网络...</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('确定性评估指标',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--green)"></span>
+              <span class="tree-name">确定性评估指标</span>
+            </div>
+            <div class="tree-item child" onclick="selectTreeNode('不确定性概率分析',this)">
+              <span class="tree-toggle" style="visibility:hidden">▶</span>
+              <span class="tree-dot" style="background:var(--amber)"></span>
+              <span class="tree-name">不确定性概率分析</span>
+            </div>
+            <div class="tree-more">＋71 个节点...</div>
+          </div>
+        </div>
+
+        <!-- ── 侧边栏折叠按钮 ── -->
+        <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="toggleSidebar()">◀</button>
+
+        <!-- ── 底部图例条 ── -->
+        <div class="canvas-legend" id="canvas-legend">
+          <div class="canvas-legend-items" id="canvas-legend-items">
+            <div class="cl-item"><span class="cl-dot" style="background:#22c55e"></span><span>有数据</span></div>
+            <div class="cl-item"><span class="cl-dot" style="background:#8a96ad"></span><span>无数据</span></div>
+            <div class="cl-item"><span class="cl-dot" style="background:#f97316"></span><span>加载中</span></div>
+            <div class="cl-sep"></div>
+            <div class="cl-item"><svg class="cl-icon" viewBox="0 0 16 16" fill="none"><path d="M3 5.5 C3 4 6 3 8 3 C10 3 13 4 13 5.5 L13 10.5 C13 12 10 13 8 13 C6 13 3 12 3 10.5 Z M3 8 C3 9.5 6 10.5 8 10.5 C10 10.5 13 9.5 13 8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>数据</span></div>
+            <div class="cl-item"><svg class="cl-icon" viewBox="0 0 16 16" fill="none"><path d="M3 3 L6 3 L6 6 L3 6 Z M10 3 L13 3 L13 6 L10 6 Z M3 10 L6 10 L6 13 L3 13 Z M10 10 L13 10 L13 13 L10 13 Z M6 4.5 L10 4.5 M6 11.5 L10 11.5 M4.5 6 L4.5 10 M11.5 6 L11.5 10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>算法</span></div>
+            <div class="cl-item"><svg class="cl-icon" viewBox="0 0 16 16" fill="none"><path d="M8 2 L13 5 L13 11 L8 14 L3 11 L3 5 Z M8 2 L8 14 M3 5 L13 11 M13 5 L3 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>模型</span></div>
+            <div class="cl-item"><svg class="cl-icon" viewBox="0 0 16 16" fill="none"><path d="M3 13 L3 9 L5 9 L5 13 M6.5 13 L6.5 6 L8.5 6 L8.5 13 M10 13 L10 3 L12 3 L12 13" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>指标</span></div>
+            <div class="cl-item"><svg class="cl-icon" viewBox="0 0 16 16" fill="none"><path d="M4 3 L12 3 L12 13 L4 13 Z M6 6 L10 6 M6 8.5 L10 8.5 M6 11 L9 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>任务</span></div>
+            <div class="cl-item"><svg class="cl-icon" viewBox="0 0 16 16" fill="none"><path d="M8 2 L13 4.5 L13 8.5 C13 11 11 13 8 14 C5 13 3 11 3 8.5 L3 4.5 Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>约束</span></div>
+          </div>
+          <button class="cl-toggle-btn" id="legend-toggle-btn" onclick="toggleLegend()">◀</button>
+        </div>
+
+        <!-- ── 编辑模式状态按钮（独立浮动） ── -->
+        <div class="edit-mode-float">
+          <button class="btn-edit-status" id="btn-enter-edit" onclick="enterEditMode()">✏ 编辑模式</button>
+          <div id="btn-editing" style="display:none">
+            <div class="edit-active-bar">
+              <div class="edit-active-indicator">
+                <span class="blink-dot"></span>
+                <span>编辑中</span>
+              </div>
+              <button class="btn-edit-undo" title="撤销" disabled>
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8a5 5 0 105-5H5M3 8L3 4M3 8l3 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button class="btn-edit-redo" title="重做" disabled>
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M13 8a5 5 0 10-5-5h3M13 8V4M13 8l-3 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button id="btn-add-rel" class="btn btn-secondary" style="font-size:11px;padding:4px 10px" onclick="toggleRelPick()">⇌ 增加关系</button>
+              <button class="btn btn-secondary" style="font-size:11px;padding:4px 10px" onclick="openModal('add-node-modal')">＋ 新增节点</button>
+              <button class="btn-edit-del" onclick="openDeleteConfirm()">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 5h10M6 5V4h4v1M5 5l.5 8h5L11 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                删除节点
+              </button>
+              <button class="btn-edit-confirm" onclick="exitEditMode(true)">✓</button>
+              <button class="btn-edit-cancel"  onclick="exitEditMode(false)">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="rel-pick-hint">
+          <span class="rel-pick-dot"></span>
+          <span id="rel-pick-hint-text">请点击起始节点（第 1 个）</span>
+        </div>
+
+      </div>
+
+      <!-- 右侧抽屉（内容由 React RightPanel 渲染） -->
+      <div class="right-drawer" id="right-drawer">
+        <div id="rp-root" style="width:360px;height:100%;display:flex;flex-direction:column;overflow:hidden;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 文本视图面板 ─── -->
+  <div class="tab-panel" id="panel-text">
+    <div class="text-view-layout">
+      <div class="json-main">
+        <div class="json-toolbar">
+          <span class="json-line-count">共 985 行</span>
+          <button class="btn btn-primary" style="font-size:12px;padding:5px 14px">导出 JSON</button>
+        </div>
+        <div class="json-body">
+          <table class="json-code-table"><tbody id="json-tbody"></tbody></table>
+        </div>
+      </div>
+      <div class="json-side">
+        <div class="json-side-title">版本信息</div>
+        <div class="json-info-row"><span class="json-info-key">ontology_id</span><span class="json-info-val">01a086fe-ad8a-4ef2-ad40-ee8ee87f41be</span></div>
+        <div class="json-info-row"><span class="json-info-key">version</span><span class="json-info-val" style="color:var(--blue)">V2.0</span></div>
+        <div class="json-info-row"><span class="json-info-key">nodes</span><span class="json-info-val">207</span></div>
+        <div class="json-info-row"><span class="json-info-key">edges</span><span class="json-info-val">153</span></div>
+        <div style="margin-top:8px"><button class="btn btn-primary" style="width:100%;font-size:12px">导出 JSON</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 版本管理面板 ─── -->
+  <div class="tab-panel" id="panel-versions">
+    <div class="version-layout">
+      <div class="version-list-panel">
+        <div class="version-list-title">版本管理</div>
+        <div class="version-list-sub">风力发电预测本体 · 共 4 个版本快照</div>
+        <div class="ver-item selected" onclick="selectVersion(this)">
+          <div class="ver-item-head">
+            <div class="ver-item-left"><span class="ver-num">v2.0</span><span class="badge badge-green">正式版本</span><span class="badge badge-blue">当前</span></div>
+            <span class="ver-time">2026-03-03 14:22 · 张工程师</span>
+          </div>
+          <div class="ver-desc">补充 ForecastModel 的属性关系，修复 hasInputData range 冲突</div>
+          <div class="ver-changes"><span class="ver-change-tag add">+6 概念</span><span class="ver-change-tag add">+11 关系</span><span class="ver-change-tag edit">~3 修改</span><span class="ver-change-tag del">−2 删除</span></div>
+          <div class="ver-actions"><button class="btn btn-ghost" style="font-size:12px;padding:4px 10px">查看</button><button class="btn btn-ghost" style="font-size:12px;padding:4px 10px">导出</button><button class="btn btn-secondary" style="font-size:12px;padding:4px 10px">Diff</button></div>
+        </div>
+        <div class="ver-item" onclick="selectVersion(this)">
+          <div class="ver-item-head"><div class="ver-item-left"><span class="ver-num">v1.2</span></div><span class="ver-time">2026-03-02 16:30 · 张工程师</span></div>
+          <div class="ver-desc">新增 ImagePreprocessing 类及前处理流程关系</div>
+          <div class="ver-changes"><span class="ver-change-tag add">+8 概念</span><span class="ver-change-tag add">+5 关系</span></div>
+          <div class="ver-actions"><button class="btn btn-ghost" style="font-size:12px;padding:4px 10px">查看</button><button class="btn btn-ghost" style="font-size:12px;padding:4px 10px">导出</button><button class="btn btn-secondary" style="font-size:12px;padding:4px 10px">Diff</button><button class="btn btn-danger" style="font-size:12px;padding:4px 10px">回滚至此</button></div>
+        </div>
+        <div class="ver-item" onclick="selectVersion(this)">
+          <div class="ver-item-head"><div class="ver-item-left"><span class="ver-num">v1.1</span></div><span class="ver-time">2026-03-01 10:00 · 张工程师</span></div>
+          <div class="ver-desc">概念层整理，合并重复 Class，删除低置信度节点</div>
+          <div class="ver-changes"><span class="ver-change-tag edit">~12 修改</span><span class="ver-change-tag del">−8 删除</span></div>
+          <div class="ver-actions"><button class="btn btn-ghost" style="font-size:12px;padding:4px 10px">查看</button><button class="btn btn-secondary" style="font-size:12px;padding:4px 10px">Diff</button><button class="btn btn-danger" style="font-size:12px;padding:4px 10px">回滚至此</button></div>
+        </div>
+        <div class="ver-item" onclick="selectVersion(this)">
+          <div class="ver-item-head"><div class="ver-item-left"><span class="ver-num">v1.0</span><span class="badge badge-amber">系统自动生成</span></div><span class="ver-time">2026-03-01 09:00 · 系统</span></div>
+          <div class="ver-desc">基于抽取结果自动生成的初始本体草图</div>
+          <div class="ver-changes"><span class="ver-change-tag add">+73 概念</span><span class="ver-change-tag add">+32 关系</span></div>
+          <div class="ver-actions"><button class="btn btn-ghost" style="font-size:12px;padding:4px 10px">查看</button><button class="btn btn-secondary" style="font-size:12px;padding:4px 10px">Diff</button></div>
+        </div>
+      </div>
+      <div class="version-diff-panel">
+        <div class="diff-panel-title">版本 Diff 预览</div>
+        <div class="diff-compare-bar"><span class="diff-ver-tag old">v1.2 ← 旧</span><span class="diff-arrow">→</span><span class="diff-ver-tag new">v2.0 ← 新</span></div>
+        <div class="diff-code-area">
+          <div class="diff-col">
+            <div class="diff-line">med:ForecastModel</div>
+            <div class="diff-line">  a owl:Class ;</div>
+            <div class="diff-line">  rdfs:label</div>
+            <div class="diff-line">    "DiagModel" .</div>
+            <div class="diff-line removed">med:hasInputData</div>
+            <div class="diff-line removed">  a owl:ObjectProperty ;</div>
+            <div class="diff-line removed">  rdfs:domain</div>
+            <div class="diff-line removed">    med:ForecastModel ;</div>
+            <div class="diff-line removed">  rdfs:range</div>
+            <div class="diff-line removed">    med:ForecastModel .</div>
+            <div class="diff-line">med:generates</div>
+            <div class="diff-line">  a owl:ObjectProperty ;</div>
+          </div>
+          <div class="diff-col">
+            <div class="diff-line">med:ForecastModel</div>
+            <div class="diff-line">  a owl:Class ;</div>
+            <div class="diff-line">  rdfs:label</div>
+            <div class="diff-line">    "DiagModel" .</div>
+            <div class="diff-line added">med:hasInputData</div>
+            <div class="diff-line added">  a owl:ObjectProperty ;</div>
+            <div class="diff-line added">  rdfs:domain</div>
+            <div class="diff-line added">    med:ForecastModel ;</div>
+            <div class="diff-line added">  rdfs:range</div>
+            <div class="diff-line added">    med:WindSpeedForecast .</div>
+            <div class="diff-line">med:generates</div>
+            <div class="diff-line">  a owl:ObjectProperty ;</div>
+          </div>
+        </div>
+        <div class="diff-stats-panel">
+          <div class="diff-stats-title">变更统计</div>
+          <div class="diff-stat-row"><span>新增概念</span><span class="diff-stat-val add">+6</span></div>
+          <div class="diff-stat-row"><span>新增关系</span><span class="diff-stat-val add">+11</span></div>
+          <div class="diff-stat-row"><span>修改节点</span><span class="diff-stat-val edit">~3</span></div>
+          <div class="diff-stat-row"><span>删除节点</span><span class="diff-stat-val del">−2</span></div>
+          <div class="diff-conflict">OWL 冲突修复 <span>✓ 1 处</span></div>
+        </div>
+        <div class="diff-footer">
+          <button class="btn btn-ghost" style="flex:1;font-size:12px">展开完整 Diff</button>
+          <button class="btn btn-danger" style="flex:1;font-size:12px">回滚至选中版本</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-body -->
+
+
+<!-- Modal：新增节点 -->
+<div class="modal-overlay" id="add-node-modal" onclick="handleOverlayClick(event,'add-node-modal')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">新增节点</span><button class="btn-close" onclick="closeModal('add-node-modal')"></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">节点名称 <span style="color:var(--rose)">*</span></label><input class="form-input" type="text" placeholder="请输入节点名称"></div>
+      <div class="form-group"><label class="form-label">节点类型</label><select class="form-select"><option>class（类）</option><option>property（属性）</option><option>instance（实例）</option><option>concept（概念）</option></select></div>
+      <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" rows="3" placeholder="可选描述"></textarea></div>
+      <div class="form-group">
+        <label class="form-label">来源文献</label>
+        <div class="source-group"><div class="source-input-wrap"><input class="form-input" type="text" placeholder="请输入来源文献"></div><button class="remove-source-btn">✕</button></div>
+        <button class="add-source-btn">＋ 添加来源</button>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('add-node-modal')">取消</button><button class="btn btn-primary">确认新增</button></div>
+  </div>
+</div>
+
+<!-- Modal：新增关系 -->
+<div class="modal-overlay" id="add-relation-modal" onclick="handleOverlayClick(event,'add-relation-modal')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">新增关系</span><button class="btn-close" onclick="closeModal('add-relation-modal')"></button></div>
+    <div class="modal-body">
+      <div class="rel-connect-bar"><span class="rel-node-name">差分自回归移动平均模型</span><span class="rel-connect-arrow">→</span><span class="rel-node-name" style="text-align:right">Elman神经网络</span></div>
+      <div class="form-group"><label class="form-label">关系类型（谓词）<span style="color:var(--rose)">*</span></label><input class="form-input" type="text" placeholder="如：包含、属于、连接、利用"></div>
+      <div class="form-group"><label class="form-label">关系描述</label><textarea class="form-textarea" rows="3" placeholder="可选描述"></textarea></div>
+      <div class="form-group">
+        <label class="form-label">来源文献</label>
+        <div class="source-group"><div class="source-input-wrap"><input class="form-input" type="text" placeholder="请输入来源文献"></div><button class="remove-source-btn">✕</button></div>
+        <button class="add-source-btn">＋ 添加来源</button>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('add-relation-modal')">取消</button><button class="btn btn-primary">确认新增</button></div>
+  </div>
+</div>
+
+<!-- Modal：图谱过滤 -->
+<div class="modal-overlay" id="filter-modal" onclick="handleOverlayClick(event,'filter-modal')">
+  <div class="modal filter-modal-inner">
+    <div class="modal-header">
+      <div class="filter-modal-title">
+        <span class="filter-title-bar"></span>
+        <span class="modal-title">图谱过滤</span>
+        <span class="filter-rule-badge" id="filter-rule-count">0 条规则</span>
+      </div>
+      <button class="btn-close" onclick="closeModal('filter-modal')"></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- 维度 1：节点类型 -->
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <div class="filter-section-title">节点类型 <span class="filter-section-sub">type</span></div>
+          <button class="filter-section-clear" id="toggle-btn-type" onclick="toggleSection('type')">全选</button>
+        </div>
+        <div class="filter-check-group">
+          <label class="filter-chip filter-chip-blue"><input type="checkbox" value="class" class="filter-type-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">class</span><span class="filter-chip-desc">类</span></label>
+          <label class="filter-chip filter-chip-green"><input type="checkbox" value="property" class="filter-type-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">property</span><span class="filter-chip-desc">属性</span></label>
+          <label class="filter-chip filter-chip-purple"><input type="checkbox" value="instance" class="filter-type-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">instance</span><span class="filter-chip-desc">实例</span></label>
+          <label class="filter-chip filter-chip-amber"><input type="checkbox" value="concept" class="filter-type-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">concept</span><span class="filter-chip-desc">概念</span></label>
+        </div>
+      </div>
+
+      <!-- 维度 2：来源文献 -->
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <div class="filter-section-title">来源文献 <span class="filter-section-sub">source_references</span></div>
+          <span class="filter-section-hint">样式 · chips</span>
+        </div>
+        <div class="chip-input-wrap" id="chip-input-wrap" onclick="focusChipInput()">
+          <input type="text" class="chip-input" id="chip-input"
+                 placeholder="输入关键词..."
+                 oninput="handleChipInput(this)"
+                 onkeydown="handleChipKeydown(event)"
+                 autocomplete="off">
+        </div>
+        <div class="chip-hint-row">
+          <span class="chip-hint"><kbd>Enter</kbd> 添加</span>
+          <span class="chip-hint-sep">·</span>
+          <span class="chip-hint"><kbd>,</kbd> / <kbd>;</kbd> 分隔</span>
+          <span class="chip-hint-sep">·</span>
+          <span class="chip-hint chip-hint-link">从剪贴板粘贴多条</span>
+          <span class="chip-count" id="chip-count"></span>
+        </div>
+        <div class="chip-dropdown" id="chip-dropdown" style="display:none">
+          <div class="chip-dropdown-header">文献库匹配 · ↑↓ 选择 · ENTER 添加</div>
+          <div class="chip-dropdown-item" onclick="addChipFromDropdown('Graph-augmented retrieval for knowledge intensive tasks')">
+            <span class="chip-dropdown-tag">DOI</span>
+            <div class="chip-dropdown-info">
+              <div class="chip-dropdown-title">Graph-augmented retrieval for knowledge intensive tasks</div>
+              <div class="chip-dropdown-meta">10.1145/3528223.3530127 · KDD · 2023 · Chen, L. &amp; Park, S.</div>
+            </div>
+          </div>
+          <div class="chip-dropdown-item" onclick="addChipFromDropdown('A survey on knowledge graph embedding')">
+            <span class="chip-dropdown-tag">DOI</span>
+            <div class="chip-dropdown-info">
+              <div class="chip-dropdown-title">A survey on knowledge graph embedding</div>
+              <div class="chip-dropdown-meta">10.1016/j.knosys.2021.106564 · KBS · 2021 · Wang, Q. et al.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 维度 3：业务类型 -->
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <div class="filter-section-title">业务类型 <span class="filter-section-sub">business_type</span></div>
+          <button class="filter-section-clear" id="toggle-btn-biz" onclick="toggleSection('biz')">全选</button>
+        </div>
+        <div class="filter-section-note">business_type 为空的节点不参与此维度过滤</div>
+        <div class="filter-check-group">
+          <label class="filter-chip filter-chip-blue"><input type="checkbox" value="data" class="filter-biz-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">data</span><span class="filter-chip-desc">数据</span></label>
+          <label class="filter-chip filter-chip-blue"><input type="checkbox" value="algorithm" class="filter-biz-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">algorithm</span><span class="filter-chip-desc">算法</span></label>
+          <label class="filter-chip filter-chip-blue"><input type="checkbox" value="model" class="filter-biz-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">model</span><span class="filter-chip-desc">模型</span></label>
+          <label class="filter-chip filter-chip-blue"><input type="checkbox" value="metric" class="filter-biz-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">metric</span><span class="filter-chip-desc">指标</span></label>
+          <label class="filter-chip filter-chip-blue"><input type="checkbox" value="task" class="filter-biz-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">task</span><span class="filter-chip-desc">任务</span></label>
+          <label class="filter-chip filter-chip-blue"><input type="checkbox" value="constraint" class="filter-biz-cb" onchange="updateRuleCount()"><span class="filter-chip-check">✓</span><span class="filter-chip-label">constraint</span><span class="filter-chip-desc">约束</span></label>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer filter-modal-footer">
+      <div class="filter-footer-stats">
+        将应用 <span class="filter-stats-num" id="filter-stats-rules">0</span> 条规则，预计命中
+        <span class="filter-stats-hit">1,244</span> / 12,408 节点
+      </div>
+      <div class="filter-footer-actions">
+        <button class="btn btn-ghost" onclick="resetFilter()">重置</button>
+        <button class="btn btn-primary" onclick="confirmFilter()">确认过滤</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal：删除节点确认 -->
+<div class="modal-overlay" id="delete-node-modal" onclick="handleOverlayClick(event,'delete-node-modal')">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <span class="modal-title" style="color:var(--rose)">删除节点</span>
+      <button class="btn-close" onclick="closeModal('delete-node-modal')"></button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(244,63,94,0.06);border:1px solid rgba(244,63,94,0.2);border-radius:var(--radius-md)">
+        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" style="color:var(--rose);flex-shrink:0">
+          <path d="M8 3L14 13H2L8 3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+          <path d="M8 7v3M8 11.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <div style="font-size:12px;color:var(--text-2);line-height:1.6">
+          确认删除节点 <strong id="delete-node-name" style="color:var(--text-1)">—</strong>？<br>
+          <span style="color:var(--text-3)">该操作将同时移除所有关联关系，且无法撤销。</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('delete-node-modal')">取消</button>
+      <button class="btn btn-danger" onclick="closeModal('delete-node-modal');window.__showToast?.('节点已删除')">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal：编辑节点 -->
+<div class="modal-overlay" id="edit-node-modal" onclick="handleOverlayClick(event,'edit-node-modal')">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">编辑节点</span><button class="btn-close" onclick="closeModal('edit-node-modal')"></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">节点名称 <span style="color:var(--rose)">*</span></label><input class="form-input" type="text" value="ICEEMDAN"></div>
+      <div class="form-group"><label class="form-label">节点类型</label><select class="form-select"><option selected>class（类）</option><option>property（属性）</option><option>instance（实例）</option><option>concept（概念）</option></select></div>
+      <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" rows="3">改进的完全集合经验模态分解与自适应噪声，用于风速序列自适应分解</textarea></div>
+      <div class="form-group">
+        <label class="form-label">来源文献</label>
+        <div class="source-group"><div class="source-input-wrap"><input class="form-input" type="text" value="A combined forecasting model for time series..."></div><button class="remove-source-btn">✕</button></div>
+        <button class="add-source-btn">＋ 添加来源</button>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('edit-node-modal')">取消</button><button class="btn btn-primary">保存修改</button></div>
+  </div>
+</div>
+
+
+<script>
+  /* ── Tab 切换 ── */
+  function switchTab(tab, el) {
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  /* ── 编辑模式 ── */
+  function enterEditMode() {
+    document.getElementById('btn-enter-edit').style.display = 'none';
+    document.getElementById('btn-editing').style.display = 'block';
+  }
+  function exitEditMode() {
+    window.__exitRelPickMode?.();
+    document.getElementById('btn-editing').style.display = 'none';
+    document.getElementById('btn-enter-edit').style.display = 'block';
+  }
+
+  /* ── 删除节点确认 ── */
+  function openDeleteConfirm() {
+    const nameEl = document.getElementById('delete-node-name');
+    const sel = window.__currentSelectedLabel || '（请先点击选中一个节点）';
+    if (nameEl) nameEl.textContent = sel;
+    openModal('delete-node-modal');
+  }
+
+  /* ── 增加关系：选节点模式 ── */
+  window.__relPickMode  = false;
+  window.__relPickNodes = [];
+
+  function toggleRelPick() {
+    window.__relPickMode ? window.__exitRelPickMode() : _startRelPick();
+  }
+
+  function _startRelPick() {
+    window.__relPickMode  = true;
+    window.__relPickNodes = [];
+    const btn = document.getElementById('btn-add-rel');
+    if (btn) { btn.textContent = '◉ 取消选择'; btn.classList.add('is-picking'); }
+    _updateRelHint();
+    document.getElementById('rel-pick-hint').style.display = 'flex';
+  }
+
+  window.__exitRelPickMode = function() {
+    window.__relPickMode  = false;
+    window.__relPickNodes = [];
+    const btn = document.getElementById('btn-add-rel');
+    if (btn) { btn.innerHTML = '⇌ 增加关系'; btn.classList.remove('is-picking'); }
+    document.getElementById('rel-pick-hint').style.display = 'none';
+  };
+
+  function _updateRelHint() {
+    const n = (window.__relPickNodes || []).length;
+    const el = document.getElementById('rel-pick-hint-text');
+    if (el) el.textContent = n === 0
+      ? '请点击起始节点（第 1 个）'
+      : '请点击目标节点（第 2 个）';
+  }
+  window._updateRelHint = _updateRelHint;
+
+  /* ── 节点树点击（选中 + 画布居中） ── */
+  function selectTreeNode(id, el) {
+    document.querySelectorAll('.tree-item').forEach(t => t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    if (window.__graphSetSelected) window.__graphSetSelected(id);
+    if (window.__graphCenterNode)  window.__graphCenterNode(id);
+  }
+
+  /* ── 从 window.GRAPH 动态生成节点树（递归三级，含 biz 图标） ── */
+  function buildNodeTree() {
+    const G = window.GRAPH;
+    const treeEl = document.getElementById('node-tree');
+    if (!G || !treeEl) return;
+
+    const SC = { loaded:'#22c55e', empty:'#8a96ad', loading:'#f97316' };
+    /* BIZ 图标路径（与画布 BIZ_ICON 保持一致） */
+    const BI = {
+      data:       'M3 5.5 C3 4 6 3 8 3 C10 3 13 4 13 5.5 L13 10.5 C13 12 10 13 8 13 C6 13 3 12 3 10.5 Z M3 8 C3 9.5 6 10.5 8 10.5 C10 10.5 13 9.5 13 8',
+      algorithm:  'M3 3 L6 3 L6 6 L3 6 Z M10 3 L13 3 L13 6 L10 6 Z M3 10 L6 10 L6 13 L3 13 Z M10 10 L13 10 L13 13 L10 13 Z M6 4.5 L10 4.5 M6 11.5 L10 11.5 M4.5 6 L4.5 10 M11.5 6 L11.5 10',
+      model:      'M8 2 L13 5 L13 11 L8 14 L3 11 L3 5 Z M8 2 L8 14 M3 5 L13 11 M13 5 L3 11',
+      metric:     'M3 13 L3 9 L5 9 L5 13 M6.5 13 L6.5 6 L8.5 6 L8.5 13 M10 13 L10 3 L12 3 L12 13',
+      task:       'M4 3 L12 3 L12 13 L4 13 Z M6 6 L10 6 M6 8.5 L10 8.5 M6 11 L9 11',
+      constraint: 'M8 2 L13 4.5 L13 8.5 C13 11 11 13 8 14 C5 13 3 11 3 8.5 L3 4.5 Z',
+    };
+
+    /* 构建 id→子节点 映射 */
+    const childMap = {};
+    G.edges.forEach(e => { (childMap[e.from] = childMap[e.from]||[]).push(e.to); });
+
+    /* 递归生成 DOM，depth=0 默认展开，depth>0 默认折叠 */
+    function makeItem(node, depth) {
+      const color   = SC[node.state] || '#8a96ad';
+      const kids    = (childMap[node.id]||[])
+                        .map(id => G.nodes.find(n => n.id === id))
+                        .filter(Boolean);
+      const iconSvg = BI[node.biz]
+        ? `<svg class="tree-biz-icon" viewBox="0 0 16 16" fill="none"><path d="${BI[node.biz]}" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+        : '';
+
+      const wrap = document.createElement('div');
+      wrap.className = 'tree-group';
+
+      const row = document.createElement('div');
+      row.className = 'tree-item';
+      row.style.paddingLeft = (10 + depth * 14) + 'px';
+      row.dataset.nid = node.id;
+      row.innerHTML = `<span class="tree-toggle${kids.length && depth === 0 ? ' open' : ''}" style="${kids.length ? '' : 'visibility:hidden'}">▶</span><span class="tree-dot" style="background:${color}"></span>${iconSvg}<span class="tree-name">${node.label}</span>`;
+      /* 点击整行 → 选中节点 */
+      row.addEventListener('click', () => selectTreeNode(node.id, row));
+      wrap.appendChild(row);
+
+      if (kids.length) {
+        const childWrap = document.createElement('div');
+        childWrap.className = 'tree-children';
+        /* L1 默认展开，L2+ 默认折叠 */
+        if (depth > 0) childWrap.style.display = 'none';
+        kids.forEach(c => childWrap.appendChild(makeItem(c, depth + 1)));
+        wrap.appendChild(childWrap);
+
+        /* 切换按钮独立处理，不触发节点选中 */
+        const tog = row.querySelector('.tree-toggle');
+        tog.addEventListener('click', ev => {
+          ev.stopPropagation();
+          const open = tog.classList.toggle('open');
+          childWrap.style.display = open ? '' : 'none';
+        });
+      }
+      return wrap;
+    }
+
+    treeEl.innerHTML = '';
+    G.nodes.filter(n => n.level === 'L1').forEach(n => treeEl.appendChild(makeItem(n, 0)));
+  }
+
+  /* ── 侧边栏折叠 ── */
+  let _sidebarOpen = true;
+  function toggleSidebar() {
+    _sidebarOpen = !_sidebarOpen;
+    const sidebar  = document.getElementById('graph-sidebar');
+    const btn      = document.getElementById('sidebar-toggle-btn');
+    const legend   = document.getElementById('canvas-legend');
+    const ef       = document.querySelector('.edit-mode-float');
+    if (_sidebarOpen) {
+      sidebar.classList.remove('collapsed');
+      if (btn) { btn.style.left = '196px'; btn.textContent = '◀'; }
+      if (ef)  ef.style.left = '212px';
+    } else {
+      sidebar.classList.add('collapsed');
+      if (btn) { btn.style.left = '0px'; btn.textContent = '▶'; }
+      if (ef)  ef.style.left = '16px';
+    }
+  }
+
+  /* ── 图例条折叠 ── */
+  let _legendOpen = true;
+  function toggleLegend() {
+    _legendOpen = !_legendOpen;
+    const legendEl = document.getElementById('canvas-legend');
+    const btn      = document.getElementById('legend-toggle-btn');
+    if (_legendOpen) {
+      legendEl.classList.remove('legend-collapsed');
+      if (btn) btn.textContent = '◀';
+    } else {
+      legendEl.classList.add('legend-collapsed');
+      if (btn) btn.textContent = '▶';
+    }
+  }
+
+  /* buildNodeTree() 在 graph-data.js 加载完毕后调用（见下方 script 块） */
+
+  /* ── Modal ── */
+  function openModal(id)  { document.getElementById(id).classList.add('active'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  /* ── 过滤功能 ── */
+  let filterChips = [];
+
+  function openFilterModal() { openModal('filter-modal'); }
+
+  function updateRuleCount() {
+    const typeCnt = document.querySelectorAll('.filter-type-cb:checked').length;
+    const bizCnt  = document.querySelectorAll('.filter-biz-cb:checked').length;
+    const total   = typeCnt + bizCnt + filterChips.length;
+    const badge   = document.getElementById('filter-rule-count');
+    const statsEl = document.getElementById('filter-stats-rules');
+    if (badge)   badge.textContent  = total + ' 条规则';
+    if (statsEl) statsEl.textContent = total;
+  }
+
+  function toggleSection(type) {
+    const cbs = type === 'type'
+      ? document.querySelectorAll('.filter-type-cb')
+      : document.querySelectorAll('.filter-biz-cb');
+    const allChecked = Array.from(cbs).every(cb => cb.checked);
+    cbs.forEach(cb => cb.checked = !allChecked);
+    const btn = document.getElementById('toggle-btn-' + type);
+    if (btn) btn.textContent = allChecked ? '全选' : '全部取消';
+    updateRuleCount();
+  }
+
+  /* Chip 输入 */
+  function focusChipInput() { document.getElementById('chip-input').focus(); }
+
+  function handleChipInput(input) {
+    document.getElementById('chip-dropdown').style.display = input.value.length > 0 ? 'block' : 'none';
+  }
+
+  function handleChipKeydown(event) {
+    const input = event.target;
+    if (event.key === 'Enter' || event.key === ',' || event.key === ';') {
+      event.preventDefault();
+      const val = input.value.trim().replace(/[,;]+$/, '');
+      if (val) addChip(val);
+      input.value = '';
+      document.getElementById('chip-dropdown').style.display = 'none';
+    } else if (event.key === 'Backspace' && input.value === '' && filterChips.length > 0) {
+      removeChip(filterChips.length - 1);
+    }
+  }
+
+  function addChipFromDropdown(text) {
+    addChip(text);
+    document.getElementById('chip-input').value = '';
+    document.getElementById('chip-dropdown').style.display = 'none';
+  }
+
+  function addChip(text) {
+    if (!text || filterChips.includes(text)) return;
+    filterChips.push(text);
+    renderChips();
+    updateRuleCount();
+  }
+
+  function removeChip(idx) {
+    filterChips.splice(idx, 1);
+    renderChips();
+    updateRuleCount();
+  }
+
+  function renderChips() {
+    const wrap  = document.getElementById('chip-input-wrap');
+    const input = document.getElementById('chip-input');
+    wrap.querySelectorAll('.chip-tag').forEach(t => t.remove());
+    filterChips.forEach((text, i) => {
+      const tag = document.createElement('span');
+      tag.className = 'chip-tag';
+      tag.innerHTML = `<span>${text}</span><button class="chip-tag-remove" onclick="removeChip(${i})">×</button>`;
+      wrap.insertBefore(tag, input);
+    });
+    const countEl = document.getElementById('chip-count');
+    if (countEl) countEl.textContent = filterChips.length > 0 ? filterChips.length + ' 条' : '';
+    input.placeholder = filterChips.length > 0 ? '继续添加...' : '输入关键词...';
+  }
+
+  function resetFilter() {
+    document.querySelectorAll('#filter-modal input[type="checkbox"]').forEach(cb => cb.checked = false);
+    filterChips = [];
+    renderChips();
+    updateRuleCount();
+    cancelFilter();
+    closeModal('filter-modal');
+  }
+
+  function confirmFilter() {
+    closeModal('filter-modal');
+    const keepIds = new Set([
+      'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f',
+      'cls_5975127c0b9b46429530dd24b4854765',
+      'cls_17918592c1fb44e0b265f0d101d2673f',
+      'cls_5bfb517952af498a9a07897f41255651',
+      'cls_f3f1963f70144c368f5cc97f70820110',
+      'cls_d3843d2220504d1499dd35fe1eb5f2f9',
+    ]);
+    if (window.__graphSetFilter) window.__graphSetFilter(keepIds);
+    document.getElementById('filter-btn-normal').style.display = 'none';
+    document.getElementById('filter-active-row').style.display = 'flex';
+  }
+
+  function cancelFilter() {
+    if (window.__graphSetFilter) window.__graphSetFilter(null);
+    document.getElementById('filter-btn-normal').style.display = '';
+    document.getElementById('filter-active-row').style.display = 'none';
+  }
+  function handleOverlayClick(event, id) {
+    if (event.target === document.getElementById(id)) closeModal(id);
+  }
+
+  /* ── 版本选中 ── */
+  function selectVersion(el) {
+    document.querySelectorAll('.ver-item').forEach(v => v.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  /* ── JSON 代码行渲染 ── */
+  (function buildJson() {
+    const lines = [
+      '{',
+      '  <k>"nodes"</k>: [',
+      '    {',
+      '      <k>"id"</k>: <s>"cls_01710b216c2e4fa1ba7183dc2f72fcd5"</s>,',
+      '      <k>"type"</k>: <s>"class"</s>,',
+      '      <k>"name"</k>: <s>"ICEEMDAN"</s>,',
+      '      <k>"description"</k>: <s>"改进的完全集合经验模态分解与自适应噪声，用于风速序列自适应分解"</s>,',
+      '      <k>"source_references"</k>: [',
+      '        <s>"A combined forecasting model for time series Application to short-term wind speed forecasting"</s>',
+      '      ],',
+      '      <k>"range"</k>: <n>null</n>,',
+      '      <k>"data_id"</k>: [],',
+      '      <k>"data_name"</k>: [],',
+      '      <k>"data_summary"</k>: [],',
+      '      <k>"data_resolution"</k>: [],',
+      '      <k>"data_format"</k>: [],',
+      '      <k>"data_open_source"</k>: [],',
+      '      <k>"data_load_progress"</k>: [],',
+      '      <k>"status"</k>: <n>null</n>',
+      '    },',
+      '    {',
+      '      <k>"id"</k>: <s>"cls_025e8e2b7b144b7c85ead9f6377141637"</s>,',
+      '      <k>"type"</k>: <s>"class"</s>,',
+      '      <k>"name"</k>: <s>"WindSpeedForecast"</s>,',
+      '      <k>"description"</k>: <s>"风速预测核心本体类"</s>,',
+      '      <k>"source_references"</k>: [',
+      '        <s>"Short-term wind speed forecasting using wavelet transform"</s>',
+      '      ],',
+      '      <k>"range"</k>: <n>null</n>,',
+      '      <k>"data_id"</k>: [<s>"WS-2024-001"</s>],',
+      '      <k>"data_name"</k>: [<s>"ERA5 风速数据集"</s>],',
+      '      <k>"status"</k>: <s>"loaded"</s>',
+      '    }',
+      '  ],',
+      '  <k>"edges"</k>: [',
+      '    {',
+      '      <k>"id"</k>: <s>"rel_001"</s>,',
+      '      <k>"source"</k>: <s>"cls_01710b216c2e4fa1ba7183dc2f72fcd5"</s>,',
+      '      <k>"target"</k>: <s>"cls_025e8e2b7b144b7c85ead9f6377141637"</s>,',
+      '      <k>"relation"</k>: <s>"has_subclass"</s>,',
+      '      <k>"source_references"</k>: []',
+      '    }',
+      '  ]',
+      '}',
+    ];
+    const tbody = document.getElementById('json-tbody');
+    lines.forEach((raw, i) => {
+      const html = raw
+        .replace(/<k>(.*?)<\/k>/g, '<span class="json-key">$1</span>')
+        .replace(/<s>(.*?)<\/s>/g, '<span class="json-str">$1</span>')
+        .replace(/<n>(.*?)<\/n>/g, '<span class="json-null">$1</span>');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="json-ln">${i+1}</td><td class="json-code-cell">${html}</td>`;
+      tbody.appendChild(tr);
+    });
+  })();
+</script>
+
+<!-- ── 数据层：window.GRAPH ── -->
+<script src="graph-data.js"></script>
+<!-- graph-data.js 已执行完毕，此时 window.GRAPH 已就绪，可以安全构建节点树 -->
+<script>buildNodeTree();</script>
+
+<!-- ── React 画布引擎（内联，避免外部 src 在非独立服务器下加载失败） ── -->
+<script type="text/babel">
+/* GraphCanvas — standalone knowledge-graph visualizer.
+   Props: data {nodes,edges}, tweaks, onSelect, selectedId, filterIds          */
+(function(){
+  const { useEffect, useMemo, useRef, useState, useCallback } = React;
+
+  const W = 1100, H = 720;
+  const SIZE = { L1: 32, L2: 24, L3: 16 };
+  const HUB  = { L1: 1.6, L2: 1.2, L3: 1.0 };
+  const STATE_COLOR = { loaded:'#22c55e', empty:'#8a96ad', loading:'#f97316' };
+
+  /* ─── 圆形轨道布局（等间距 + 轨道拉力 + 排斥防重叠） ─── */
+  function runRingLayout(nodes, edges) {
+    const cx = W/2, cy = H/2;
+    const adj = {};
+    edges.forEach(e => {
+      adj[e.from] = adj[e.from] || new Set();
+      adj[e.to]   = adj[e.to]   || new Set();
+      adj[e.from].add(e.to);
+      adj[e.to].add(e.from);
+    });
+
+    const L1 = nodes.filter(n => n.level === 'L1');
+    const L2 = nodes.filter(n => n.level === 'L2');
+    const L3 = nodes.filter(n => n.level === 'L3');
+    const pos = {}, targetR = {};
+
+    /* ── L1：中心小圆，r=135 ── */
+    const r1 = L1.length <= 1 ? 0 : 135;
+    L1.forEach((n, i) => {
+      const a = (i / Math.max(L1.length, 1)) * Math.PI * 2 - Math.PI / 2;
+      pos[n.id] = { x: cx + Math.cos(a) * r1, y: cy + Math.sin(a) * r1 };
+      targetR[n.id] = r1;
+    });
+
+    /* ── L2：均匀分布在 r=235 轨道，按父节点角度排序使视觉关系更清晰 ── */
+    const r2 = 235;
+    const l2Sorted = L2.map(n => {
+      const parents = [...(adj[n.id]||[])].filter(pid => L1.find(p=>p.id===pid));
+      const pAngle = parents[0] ? Math.atan2(pos[parents[0]].y-cy, pos[parents[0]].x-cx) : 0;
+      return { node: n, pAngle };
+    }).sort((a, b) => a.pAngle - b.pAngle);
+    l2Sorted.forEach(({ node: n }, i) => {
+      const a = (i / L2.length) * Math.PI * 2 - Math.PI / 2;
+      pos[n.id] = { x: cx + Math.cos(a) * r2, y: cy + Math.sin(a) * r2 };
+      targetR[n.id] = r2;
+    });
+
+    /* ── L3：均匀分布在 r=380 轨道，按父节点角度排序 ── */
+    const r3 = 380;
+    const l3Sorted = L3.map(n => {
+      const parents = [...(adj[n.id]||[])].filter(pid => {
+        const p = nodes.find(x=>x.id===pid); return p && p.level !== 'L3';
+      });
+      const pAngle = parents[0] ? Math.atan2(pos[parents[0]].y-cy, pos[parents[0]].x-cx) : 0;
+      return { node: n, pAngle };
+    }).sort((a, b) => a.pAngle - b.pAngle);
+    l3Sorted.forEach(({ node: n }, i) => {
+      const a = (i / L3.length) * Math.PI * 2 - Math.PI / 2;
+      pos[n.id] = { x: cx + Math.cos(a) * r3, y: cy + Math.sin(a) * r3 };
+      targetR[n.id] = r3;
+    });
+
+    /* ── 迭代：排斥防重叠 + 轨道向心拉力 ── */
+    const nR = { L1: 34, L2: 24, L3: 18 };         // 节点渲染半径
+    const GAP = 18;                                  // 节点间最小留白
+    const ORBIT_PULL = 0.12;                         // 轨道拉力强度（0~1）
+    const L1_WEIGHT  = 0.12;                         // L1 节点移动权重（更稳定）
+
+    for (let iter = 0; iter < 120; iter++) {
+      /* 1. 排斥 */
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const ni = nodes[i], nj = nodes[j];
+          const a = pos[ni.id], b = pos[nj.id];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const d  = Math.sqrt(dx*dx + dy*dy) || 0.01;
+          const minD = nR[ni.level] + nR[nj.level] + GAP;
+          if (d < minD) {
+            const push = (minD - d) / 2;
+            const wA = ni.level === 'L1' ? L1_WEIGHT : 0.5;
+            const wB = nj.level === 'L1' ? L1_WEIGHT : 0.5;
+            a.x -= (dx/d) * push * wA * 2;
+            a.y -= (dy/d) * push * wA * 2;
+            b.x += (dx/d) * push * wB * 2;
+            b.y += (dy/d) * push * wB * 2;
+          }
+        }
+      }
+      /* 2. 轨道拉力：将偏离节点拉回目标半径 */
+      nodes.forEach(n => {
+        const p  = pos[n.id];
+        const tr = targetR[n.id];
+        if (!tr) return;                             // L1 单节点在圆心不做拉力
+        const dx = p.x - cx, dy = p.y - cy;
+        const d  = Math.sqrt(dx*dx + dy*dy) || 1;
+        const diff = d - tr;
+        p.x -= (dx/d) * diff * ORBIT_PULL;
+        p.y -= (dy/d) * diff * ORBIT_PULL;
+      });
+    }
+
+    /* ── 圆形边界约束 + 画布安全边距 ── */
+    const MAX_R = 400;
+    nodes.forEach(n => {
+      const p  = pos[n.id];
+      const dx = p.x - cx, dy = p.y - cy;
+      const d  = Math.sqrt(dx*dx + dy*dy);
+      if (d > MAX_R) { p.x = cx + (dx/d)*MAX_R; p.y = cy + (dy/d)*MAX_R; }
+      p.x = Math.max(68, Math.min(W-68, p.x));
+      p.y = Math.max(58, Math.min(H-58, p.y));
+    });
+
+    return { pos, adj };
+  }
+
+  /* ─── 力导向布局（内嵌 D3-force 同款算法，无 CDN 依赖） ──────── *
+   *  Velocity Verlet 积分 + 多体斥力 + 弹簧引力 + 中心力 + 碰撞力  *
+   *  参数与 D3 默认值对齐，渲染层完全不变                            */
+  function runForceLayout(nodes, edges) {
+    const cx = W / 2, cy = H / 2;
+
+    /* 邻接表（供渲染层使用） */
+    const adj = {};
+    edges.forEach(e => {
+      adj[e.from] = adj[e.from] || new Set();
+      adj[e.to]   = adj[e.to]   || new Set();
+      adj[e.from].add(e.to);
+      adj[e.to].add(e.from);
+    });
+
+    /* 模拟节点（含速度），按层级初始化在同心圆上 */
+    const byLevel = { L1: [], L2: [], L3: [] };
+    nodes.forEach(n => { (byLevel[n.level] = byLevel[n.level] || []).push(n); });
+    const sn = nodes.map(n => {
+      const ring    = n.level === 'L1' ? 110 : n.level === 'L2' ? 250 : 370;
+      const arr     = byLevel[n.level];
+      const idx     = arr.indexOf(n);
+      const angle   = (idx / Math.max(arr.length, 1)) * Math.PI * 2 - Math.PI / 2;
+      return { id: n.id, level: n.level,
+               x: cx + Math.cos(angle) * ring,
+               y: cy + Math.sin(angle) * ring,
+               vx: 0, vy: 0 };
+    });
+    const byId = {};
+    sn.forEach(n => { byId[n.id] = n; });
+
+    /* ── 模拟参数 ── */
+    const ALPHA_MIN   = 0.001;
+    const ALPHA_DECAY = 1 - Math.pow(ALPHA_MIN, 1 / 400);
+    const VEL_DECAY   = 0.6;
+    const CHARGE      = -300;   // 适度斥力，不把节点推出画布
+    const DIST_MAX_SQ = 480 * 480;
+    const CENTER_STR  = 0.06;   // 稍强向心，整体居中
+    const COLLIDE_STR = 0.85;
+    const WALL        = 100;    // 软墙触发边距（px）
+    const WALL_STR    = 0.14;   // 软墙推力系数
+    const collideR    = n => n.level === 'L1' ? 52 : n.level === 'L2' ? 44 : 36;
+
+    let alpha = 1;
+
+    while (alpha > ALPHA_MIN) {
+      alpha *= (1 - ALPHA_DECAY);
+
+      /* 1. 多体斥力 */
+      for (let i = 0; i < sn.length; i++) {
+        for (let j = i + 1; j < sn.length; j++) {
+          let dx = sn[j].x - sn[i].x || (Math.random() - 0.5) * 1e-4;
+          let dy = sn[j].y - sn[i].y || (Math.random() - 0.5) * 1e-4;
+          const d2 = dx * dx + dy * dy;
+          if (d2 > DIST_MAX_SQ) continue;
+          const w = CHARGE * alpha / Math.max(d2, 1);
+          sn[i].vx += dx * w;  sn[i].vy += dy * w;
+          sn[j].vx -= dx * w;  sn[j].vy -= dy * w;
+        }
+      }
+
+      /* 2. 弹簧引力（目标距离：父子边 150px/强，业务虚线边 260px/弱） */
+      edges.forEach(e => {
+        const s = byId[e.from], t = byId[e.to];
+        if (!s || !t) return;
+        let dx = (t.x + t.vx) - (s.x + s.vx) || 1e-6;
+        let dy = (t.y + t.vy) - (s.y + s.vy) || 1e-6;
+        const d   = Math.sqrt(dx * dx + dy * dy) || 1e-6;
+        const len = e.dashed ? 260 : 150;
+        const str = e.dashed ? 0.12 : 0.9;
+        const l   = (d - len) / d * str * alpha;
+        s.vx += dx * l * 0.5;  s.vy += dy * l * 0.5;
+        t.vx -= dx * l * 0.5;  t.vy -= dy * l * 0.5;
+      });
+
+      /* 3. 向心力 */
+      let sumX = 0, sumY = 0;
+      sn.forEach(n => { sumX += n.x; sumY += n.y; });
+      const offX = (cx - sumX / sn.length) * CENTER_STR * alpha;
+      const offY = (cy - sumY / sn.length) * CENTER_STR * alpha;
+      sn.forEach(n => { n.vx += offX; n.vy += offY; });
+
+      /* 4. 软墙力：节点进入边距 WALL 内就被推回，防止飞出画布 */
+      sn.forEach(n => {
+        if (n.x < WALL)       n.vx += (WALL - n.x)       * WALL_STR * alpha;
+        if (n.x > W - WALL)   n.vx -= (n.x - (W - WALL)) * WALL_STR * alpha;
+        if (n.y < WALL)       n.vy += (WALL - n.y)       * WALL_STR * alpha;
+        if (n.y > H - WALL)   n.vy -= (n.y - (H - WALL)) * WALL_STR * alpha;
+      });
+
+      /* 5. 碰撞力（迭代 2 次） */
+      for (let it = 0; it < 2; it++) {
+        for (let i = 0; i < sn.length; i++) {
+          for (let j = i + 1; j < sn.length; j++) {
+            const ri = collideR(sn[i]), rj = collideR(sn[j]);
+            let dx = sn[j].x - sn[i].x || 1e-6;
+            let dy = sn[j].y - sn[i].y || 1e-6;
+            const d    = Math.sqrt(dx * dx + dy * dy) || 1e-6;
+            const minD = ri + rj;
+            if (d >= minD) continue;
+            const push = (minD - d) / d * COLLIDE_STR * 0.5;
+            sn[i].vx -= dx * push * rj / minD;
+            sn[i].vy -= dy * push * rj / minD;
+            sn[j].vx += dx * push * ri / minD;
+            sn[j].vy += dy * push * ri / minD;
+          }
+        }
+      }
+
+      /* 6. 应用速度 */
+      sn.forEach(n => {
+        n.vx *= VEL_DECAY;
+        n.vy *= VEL_DECAY;
+        n.x  += n.vx;
+        n.y  += n.vy;
+      });
+    }
+
+    /* ── 等比缩放适配画布（替代硬截断，保留布局结构） ── */
+    const PAD = 80; // 画布内边距
+    let minX =  Infinity, maxX = -Infinity;
+    let minY =  Infinity, maxY = -Infinity;
+    sn.forEach(n => {
+      minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x);
+      minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y);
+    });
+    const rangeX = Math.max(maxX - minX, 1);
+    const rangeY = Math.max(maxY - minY, 1);
+    /* 等比缩放，最多放大到 1.0（不放大，只缩小或保持） */
+    const scale  = Math.min((W - PAD * 2) / rangeX, (H - PAD * 2) / rangeY, 1.0);
+    const baseX  = (W - rangeX * scale) / 2 - minX * scale;
+    const baseY  = (H - rangeY * scale) / 2 - minY * scale;
+
+    const pos = {};
+    sn.forEach(n => {
+      pos[n.id] = {
+        x: Math.max(60, Math.min(W - 60, n.x * scale + baseX)),
+        y: Math.max(50, Math.min(H - 50, n.y * scale + baseY)),
+      };
+    });
+
+    return { pos, adj };
+  }
+
+  /* ─── 业务图标路径（16×16 坐标系，中心为 (8,8)） ─── */
+  const BIZ_ICON = {
+    data:       'M3 5.5 C3 4 6 3 8 3 C10 3 13 4 13 5.5 L13 10.5 C13 12 10 13 8 13 C6 13 3 12 3 10.5 Z M3 8 C3 9.5 6 10.5 8 10.5 C10 10.5 13 9.5 13 8',
+    algorithm:  'M3 3 L6 3 L6 6 L3 6 Z M10 3 L13 3 L13 6 L10 6 Z M3 10 L6 10 L6 13 L3 13 Z M10 10 L13 10 L13 13 L10 13 Z M6 4.5 L10 4.5 M6 11.5 L10 11.5 M4.5 6 L4.5 10 M11.5 6 L11.5 10',
+    model:      'M8 2 L13 5 L13 11 L8 14 L3 11 L3 5 Z M8 2 L8 14 M3 5 L13 11 M13 5 L3 11',
+    metric:     'M3 13 L3 9 L5 9 L5 13 M6.5 13 L6.5 6 L8.5 6 L8.5 13 M10 13 L10 3 L12 3 L12 13',
+    task:       'M4 3 L12 3 L12 13 L4 13 Z M6 6 L10 6 M6 8.5 L10 8.5 M6 11 L9 11',
+    constraint: 'M8 2 L13 4.5 L13 8.5 C13 11 11 13 8 14 C5 13 3 11 3 8.5 L3 4.5 Z',
+  };
+
+  /* ─── 节点形状 ─── */
+  function NodeShape({ node, x, y, r, color, dim, selected, hovered, highlighted }) {
+    const alpha    = dim ? 0.18 : 1;
+    const glowR    = r * HUB[node.level] * 1.5;
+    const sw       = hovered || selected ? 2.0 : 1.5;
+    const iconPath = BIZ_ICON[node.biz];
+    /* L3 节点图标略缩，为圆环留出视觉边距 */
+    const iconS    = node.level === 'L3' ? 1.46 : 1.88;
+    const iconSW   = +(1.25 / iconS).toFixed(2);
+    return (
+      <g style={{ opacity:alpha, transition:'opacity .25s ease' }}>
+        {(selected||hovered||highlighted) && (
+          <circle cx={x} cy={y} r={glowR} fill={color}
+                  opacity={selected?0.35:hovered?0.28:0.16} style={{filter:'blur(12px)'}}/>
+        )}
+        <circle cx={x} cy={y} r={r+3} fill={color} opacity={0.12} style={{filter:'blur(6px)'}}/>
+
+        {/* class → 实心填充（原 instance 造型） */}
+        {node.type==='class' && (
+          <circle cx={x} cy={y} r={r} fill={color} fillOpacity={0.55}
+                  stroke={color} strokeWidth={sw}/>
+        )}
+        {/* property → 虚线圆环（原 concept 造型） */}
+        {node.type==='property' && (
+          <circle cx={x} cy={y} r={r} fill={color} fillOpacity={0.15}
+                  stroke={color} strokeWidth={sw} strokeDasharray="4 3"/>
+        )}
+        {/* 托底：双层同心圆（实心），用于未知 type */}
+        {node.type!=='class' && node.type!=='property' && (<>
+          <circle cx={x} cy={y} r={r}       fill={color} fillOpacity={0.55} stroke={color} strokeWidth={sw}/>
+          <circle cx={x} cy={y} r={r*0.52}  fill={color} fillOpacity={0.8}  stroke={color} strokeWidth={0.8}/>
+        </>)}
+
+        {/* 业务图标（居中于节点圆心） */}
+        {iconPath && (
+          <g transform={`translate(${x - 8*iconS} ${y - 8*iconS}) scale(${iconS})`}
+             pointerEvents="none" opacity={0.92}>
+            <path d={iconPath} fill="none" stroke="rgba(255,255,255,0.88)"
+                  strokeWidth={iconSW} strokeLinecap="round" strokeLinejoin="round"/>
+          </g>
+        )}
+
+        {/* 选中脉冲 */}
+        {selected && (
+          <circle cx={x} cy={y} r={r+6} fill="none" stroke={color} strokeWidth={1.2} opacity={0.7}>
+            <animate attributeName="r" values={`${r+6};${r+14};${r+6}`} dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.7;0;0.7" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        )}
+        {node.state==='loading' && (
+          <circle cx={x} cy={y} r={r} fill={color} fillOpacity={0.4}
+                  stroke={color} strokeWidth={1.5} opacity={0.9}/>
+        )}
+      </g>
+    );
+  }
+
+  /* ─── 边路径 ─── */
+  function edgePath(a, b, curve) {
+    if (!curve) return `M ${a.x} ${a.y} L ${b.x} ${b.y}`;
+    const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+    const dx=b.x-a.x, dy=b.y-a.y;
+    const nx=-dy, ny=dx;
+    const len=Math.sqrt(dx*dx+dy*dy)||1;
+    const off=Math.min(40,len*0.18);
+    return `M ${a.x} ${a.y} Q ${mx+nx/len*off} ${my+ny/len*off} ${b.x} ${b.y}`;
+  }
+
+  /* ─── 主组件 ─── */
+  function GraphCanvas({ data, tweaks, selectedId, onSelect, filterIds }) {
+    const svgRef      = useRef(null);
+    const [hoverId,    setHoverId]    = useState(null);
+    const [hoverEdge,  setHoverEdge]  = useState(null);
+    const [zoom,       setZoom]       = useState(1);
+    const [pan,        setPan]        = useState({ x:0, y:0 });
+    const panRef = useRef({ dragging:false, sx:0, sy:0, ox:0, oy:0 });
+
+    /* ── 布局切换 ── */
+    const [layout,  setLayout]  = useState('ring');
+    const [animPos, setAnimPos] = useState(null);
+    const animPosRef = useRef(null); // 始终持有最新插值位置（供闭包读取）
+    const animRafRef = useRef(null);
+
+    const { pos: ringPos, adj } = useMemo(() => runRingLayout(data.nodes, data.edges), [data]);
+    const { pos: forcePos }     = useMemo(() => runForceLayout(data.nodes, data.edges), [data]);
+
+    /* 首次初始化 animPos */
+    useEffect(() => {
+      if (!animPosRef.current) {
+        animPosRef.current = ringPos;
+        setAnimPos(ringPos);
+      }
+    }, [ringPos]);
+
+    /* 布局切换时平滑插值动画（约 480ms） */
+    useEffect(() => {
+      const targetPos = layout === 'ring' ? ringPos : forcePos;
+      const fromPos   = animPosRef.current || ringPos;
+      if (animRafRef.current) cancelAnimationFrame(animRafRef.current);
+      const duration = 480, start = performance.now();
+      const easeIO = t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+      const tick = (now) => {
+        const t  = Math.min(1, (now - start) / duration);
+        const et = easeIO(t);
+        const np = {};
+        Object.keys(targetPos).forEach(id => {
+          const f = fromPos[id] || targetPos[id];
+          np[id] = { x: f.x + (targetPos[id].x - f.x)*et,
+                     y: f.y + (targetPos[id].y - f.y)*et };
+        });
+        animPosRef.current = np;
+        setAnimPos(np);
+        if (t < 1) animRafRef.current = requestAnimationFrame(tick);
+      };
+      animRafRef.current = requestAnimationFrame(tick);
+      return () => { if (animRafRef.current) cancelAnimationFrame(animRafRef.current); };
+    }, [layout, ringPos, forcePos]); // eslint-disable-line
+
+    /* 渲染时使用插值位置，初始 fallback 到 ringPos */
+    const pos = animPos || ringPos;
+
+    const neighbors = useMemo(() => {
+      if (!selectedId) return null;
+      return new Set([selectedId, ...(adj[selectedId]||new Set())]);
+    }, [selectedId, adj]);
+
+    const hoverNeighbors = useMemo(() => {
+      if (!hoverId || selectedId) return null;
+      return new Set([hoverId, ...(adj[hoverId]||new Set())]);
+    }, [hoverId, selectedId, adj]);
+
+    const onWheel = useCallback((e) => {
+      e.preventDefault();
+      setZoom(z => Math.max(0.4, Math.min(2.4, z*(1-e.deltaY*0.001))));
+    }, []);
+
+    useEffect(() => {
+      const el = svgRef.current;
+      if (!el) return;
+      el.addEventListener('wheel', onWheel, { passive:false });
+      return () => el.removeEventListener('wheel', onWheel);
+    }, [onWheel]);
+
+    /* 暴露"居中到节点"给左侧树点击调用（用 ref 读取最新位置，避免每帧重注册） */
+    useEffect(() => {
+      window.__graphCenterNode = (id) => {
+        const p = (animPosRef.current || ringPos)[id];
+        if (!p) return;
+        setZoom(1);
+        setPan({ x: W/2 - p.x, y: H/2 - p.y });
+      };
+    }, [ringPos]);
+
+    /* 3D 模式：layout === '3d' 时打开全屏覆盖层，切回则销毁 */
+    useEffect(() => {
+      if (layout === '3d') {
+        document.body.classList.add('mode-3d');
+        window.__open3DView?.();
+      } else {
+        document.body.classList.remove('mode-3d');
+        window.__close3DView?.();
+      }
+    }, [layout]);
+
+    /* 暴露关闭回调，供覆盖层关闭按钮重置 React 状态 */
+    useEffect(() => {
+      window.__graphClose3D = () => setLayout('ring');
+      return () => { delete window.__graphClose3D; };
+    }, []);
+
+    const onMouseDown = e => {
+      if (e.target.closest('[data-node]')) return;
+      panRef.current = { dragging:true, sx:e.clientX, sy:e.clientY, ox:pan.x, oy:pan.y, moved:false };
+    };
+    const onMouseMove = e => {
+      if (!panRef.current.dragging) return;
+      const dx = e.clientX - panRef.current.sx, dy = e.clientY - panRef.current.sy;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) panRef.current.moved = true;
+      setPan({ x:panRef.current.ox+dx, y:panRef.current.oy+dy });
+    };
+    const onMouseUp = () => { panRef.current.dragging = false; };
+    /* 点击画布空白处关闭右侧面板（拖拽不触发） */
+    const onSvgClick = e => {
+      if (e.target.closest('[data-node]')) return;
+      if (panRef.current.moved) { panRef.current.moved = false; return; }
+      if (selectedId) onSelect(null);
+    };
+
+    const shouldShowLabel = id => {
+      if (tweaks.labelMode==='always') return true;
+      if (tweaks.labelMode==='selected') return selectedId===id||(neighbors&&neighbors.has(id));
+      if (tweaks.labelMode==='hover')
+        return hoverId===id||(hoverNeighbors&&hoverNeighbors.has(id))||selectedId===id;
+      return true;
+    };
+    const shouldShowEdgeLabel = e => {
+      if (tweaks.edgeLabelMode==='always') return true;
+      return (selectedId&&(e.from===selectedId||e.to===selectedId))
+           ||(hoverId&&(e.from===hoverId||e.to===hoverId))
+           ||(hoverEdge===`${e.from}-${e.to}`);
+    };
+    const isDim = id => {
+      if (filterIds && !filterIds.has(id)) return true;
+      if (selectedId && neighbors) return !neighbors.has(id);
+      return false;
+    };
+
+    const density = tweaks.density==='compact'?0.85:tweaks.density==='loose'?1.15:1;
+
+    return (
+      <div className="gc-wrap" onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}>
+        <svg ref={svgRef} className="gc-svg" viewBox={`0 0 ${W} ${H}`} onMouseDown={onMouseDown} onClick={onSvgClick}>
+          <defs>
+            <marker id="arrow" viewBox="0 -5 10 10" refX="10" refY="0" markerWidth="6" markerHeight="6" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,-4 L8,0 L0,4" fill="#6b7a95" opacity="0.7"/>
+            </marker>
+            <marker id="arrow-hl" viewBox="0 -5 10 10" refX="10" refY="0" markerWidth="6" markerHeight="6" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,-4 L8,0 L0,4" fill="#60a5fa"/>
+            </marker>
+            <radialGradient id="gc-bg" cx="50%" cy="50%" r="60%">
+              <stop offset="0%"   stopColor="rgba(59,130,246,0.06)"/>
+              <stop offset="100%" stopColor="rgba(0,0,0,0)"/>
+            </radialGradient>
+          </defs>
+          <rect x="0" y="0" width={W} height={H} fill="url(#gc-bg)"/>
+          <g transform={`translate(${pan.x} ${pan.y}) scale(${zoom*density})`} style={{transformOrigin:'center'}}>
+            {/* 边 */}
+            {data.edges.map((e,i) => {
+              const a=pos[e.from], b=pos[e.to];
+              if (!a||!b) return null;
+              const eid=`${e.from}-${e.to}`;
+              const filterDim = filterIds ? !(filterIds.has(e.from)&&filterIds.has(e.to)) : false;
+              const dimEdge   = filterDim||(selectedId
+                ? !(neighbors.has(e.from)&&neighbors.has(e.to))
+                : hoverId ? !(hoverNeighbors.has(e.from)&&hoverNeighbors.has(e.to)) : false);
+              const isHL = !dimEdge&&(selectedId&&(e.from===selectedId||e.to===selectedId)||hoverEdge===eid||(hoverId&&hoverNeighbors&&(hoverNeighbors.has(e.from)&&hoverNeighbors.has(e.to))));
+              return (
+                <g key={i} style={{opacity:dimEdge?0.1:1,transition:'opacity .25s'}}>
+                  <path d={edgePath(a,b,tweaks.curveEdges)} fill="none"
+                        stroke={isHL?'#60a5fa':'#6b7a95'} strokeWidth={isHL?1.8:1}
+                        strokeOpacity={isHL?0.9:0.45} strokeDasharray={e.dashed?'4 4':''}
+                        markerEnd={`url(#${isHL?'arrow-hl':'arrow'})`}
+                        onMouseEnter={()=>setHoverEdge(eid)} onMouseLeave={()=>setHoverEdge(null)}
+                        style={{cursor:'pointer'}}/>
+                  <path d={edgePath(a,b,tweaks.curveEdges)} fill="none" stroke="transparent" strokeWidth={14}
+                        onMouseEnter={()=>setHoverEdge(eid)} onMouseLeave={()=>setHoverEdge(null)}/>
+                  {shouldShowEdgeLabel(e) && (()=>{
+                    const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+                    return (
+                      <g pointerEvents="none">
+                        <rect x={mx-e.relation.length*4-4} y={my-9} rx="4" ry="4"
+                              width={e.relation.length*8+8} height={16}
+                              fill="#0f1929" stroke="rgba(96,165,250,.35)" strokeWidth=".5" opacity="0.92"/>
+                        <text x={mx} y={my+3} textAnchor="middle" fontSize="10"
+                              fill="#93c5fd" fontFamily="Noto Sans SC,JetBrains Mono,monospace" letterSpacing=".02em">
+                          {e.relation}
+                        </text>
+                      </g>
+                    );
+                  })()}
+                </g>
+              );
+            })}
+            {/* 节点 */}
+            {data.nodes.map(n => {
+              const p=pos[n.id]; if(!p) return null;
+              const r=SIZE[n.level], color=STATE_COLOR[n.state];
+              const selected=selectedId===n.id, hovered=hoverId===n.id;
+              const highlighted=(neighbors&&neighbors.has(n.id))||(hoverNeighbors&&hoverNeighbors.has(n.id));
+              const dim=isDim(n.id), show=shouldShowLabel(n.id);
+              return (
+                <g key={n.id} data-node={n.id}
+                   onMouseEnter={()=>setHoverId(n.id)} onMouseLeave={()=>setHoverId(null)}
+                   onClick={ev=>{ ev.stopPropagation(); onSelect(n.id===selectedId?null:n.id); }}
+                   style={{cursor:'pointer'}}>
+                  <NodeShape node={n} x={p.x} y={p.y} r={r} color={color}
+                             dim={dim} selected={selected} hovered={hovered} highlighted={highlighted&&!dim}/>
+                  {show && (
+                    <g pointerEvents="none" style={{opacity:dim?0.25:1,transition:'opacity .25s'}}>
+                      <rect x={p.x-Math.min(n.label.length*5+8,90)} y={p.y+r+4}
+                            width={Math.min(n.label.length*10+16,180)} height={18} rx="4" ry="4"
+                            fill="#0f1929" opacity="0.82"/>
+                      <text x={p.x} y={p.y+r+16} textAnchor="middle"
+                            fontSize={n.level==='L1'?12:11}
+                            fill={selected||hovered?'#fff':'#cfd7e6'}
+                            fontWeight={n.level==='L1'?600:500}>
+                        {n.label.length>12?n.label.slice(0,12)+'…':n.label}
+                      </text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+        </svg>
+
+        {/* 缩放控件 */}
+        <div className="gc-zoom">
+          <button onClick={()=>setZoom(z=>Math.min(2.4,z*1.2))}>+</button>
+          <span>{Math.round(zoom*100)}%</span>
+          <button onClick={()=>setZoom(z=>Math.max(0.4,z/1.2))}>−</button>
+          <button onClick={()=>{setZoom(1);setPan({x:0,y:0});}} title="重置">⟲</button>
+        </div>
+
+        {/* 布局切换 */}
+        <div className="gc-layout-tabs">
+          <button className={`gc-layout-tab${layout==='ring'?' active':''}`}
+                  onClick={()=>setLayout('ring')}>轨道</button>
+          <button className={`gc-layout-tab${layout==='force'?' active':''}`}
+                  onClick={()=>setLayout('force')}>力导</button>
+          <button className={`gc-layout-tab${layout==='3d'?' active':''}`}
+                  onClick={()=>setLayout('3d')}>3D</button>
+        </div>
+
+        {/* 悬停 tooltip */}
+        {hoverId && !selectedId && (()=>{
+          const n=data.nodes.find(x=>x.id===hoverId);
+          const p=pos[hoverId];
+          if(!n||!p) return null;
+          const color=STATE_COLOR[n.state];
+          return (
+            <div className="gc-tip" style={{left:p.x*zoom*density+pan.x+20,top:p.y*zoom*density+pan.y-10}}>
+              <div className="gc-tip-hd">
+                <span className="gc-tip-dot" style={{background:color}}/>
+                <b>{n.label}</b>
+              </div>
+              <div className="gc-tip-meta">
+                <span>{{class:'类 Class',property:'属性 Property',instance:'实例 Instance',concept:'概念 Concept'}[n.type]}</span>
+                <span className="gc-tip-l">{n.level}</span>
+                <span>{(adj[n.id]||new Set()).size} 连接</span>
+              </div>
+              <div className="gc-tip-state">
+                {n.state==='loaded'&&'● 有数据'}
+                {n.state==='empty' &&'● 无数据'}
+                {n.state==='loading'&&'● 加载中'}
+                {n.refs&&` · ${n.refs.length} 条文献`}
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    );
+  }
+
+  window.GraphCanvas = GraphCanvas;
+})();
+</script>
+
+<!-- ── React 桥接层：GraphBridge + RightPanel + MiniGraph ── -->
+<script type="text/babel">
+(function () {
+  const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+  /* 状态颜色 / 类型元数据（与 graph-canvas.jsx 保持一致） */
+  const STATE_META = {
+    loaded:  { cn: '有数据', color: '#22c55e' },
+    empty:   { cn: '无数据', color: '#8a96ad' },
+    loading: { cn: '加载中', color: '#f97316' },
+  };
+  const TYPE_META = {
+    class:    { cn: '类',   en: 'Class'    },
+    property: { cn: '属性', en: 'Property' },
+    instance: { cn: '实例', en: 'Instance' },
+    concept:  { cn: '概念', en: 'Concept'  },
+  };
+  const TYPE_ICONS = {
+    class: (
+      <svg viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.3"/>
+        <circle cx="8" cy="8" r="3.5" stroke="currentColor" strokeWidth="1" opacity=".6"/>
+      </svg>
+    ),
+    property: (
+      <svg viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.1"/>
+      </svg>
+    ),
+    instance: (
+      <svg viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" fill="currentColor" fillOpacity=".55" stroke="currentColor" strokeWidth="1.2"/>
+      </svg>
+    ),
+    concept: (
+      <svg viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.3" strokeDasharray="3 2"/>
+      </svg>
+    ),
+  };
+
+  /* ── MiniGraph 布局计算 ── */
+  function computeHopLayout(data, centerId, W, H) {
+    const center = data.nodes.find(n => n.id === centerId);
+    if (!center) return { mnodes: [], medges: [], pos: {} };
+    const allEdges = data.edges.filter(e => e.from === centerId || e.to === centerId);
+    const nbIds = [...new Set(allEdges.map(e => e.from === centerId ? e.to : e.from))];
+    const nb = data.nodes.filter(n => nbIds.includes(n.id));
+    const cx = W / 2, cy = H / 2;
+    const pos = {};
+    pos[centerId] = { x: cx, y: cy };
+    nb.forEach((n, i) => {
+      const a = (i / Math.max(nb.length, 1)) * Math.PI * 2 - Math.PI / 2;
+      pos[n.id] = { x: cx + Math.cos(a) * 55, y: cy + Math.sin(a) * 48 };
+    });
+    return { mnodes: [center, ...nb], medges: allEdges, pos };
+  }
+
+  function computeClusterLayout(data, centerId, W, H) {
+    /* 向上溯源到 L1 根节点 */
+    const parentMap = {};
+    data.edges.filter(e => !e.dashed && e.relation === 'HAS_SUBCLASS')
+              .forEach(e => { parentMap[e.to] = e.from; });
+    let rootId = centerId, cur = centerId;
+    while (parentMap[cur]) {
+      cur = parentMap[cur];
+      rootId = cur;
+      const nd = data.nodes.find(n => n.id === cur);
+      if (nd && nd.level === 'L1') break;
+    }
+    /* BFS 收集所有后代（仅 HAS_SUBCLASS 实线边） */
+    const ids = new Set([rootId]);
+    const queue = [rootId];
+    while (queue.length) {
+      const pid = queue.shift();
+      data.edges.filter(e => !e.dashed && e.from === pid).forEach(e => {
+        if (!ids.has(e.to)) { ids.add(e.to); queue.push(e.to); }
+      });
+    }
+    const mnodes = data.nodes.filter(n => ids.has(n.id));
+    const medges = data.edges.filter(e => !e.dashed && ids.has(e.from) && ids.has(e.to));
+
+    /* ── 分层横排布局 ──────────────────────────────────────────────
+       各 level 占一行，行内节点水平均匀排列，避免轨道法在节点数少时
+       产生退化的竖直/水平直线排列。                                   */
+    const byLevel = {};
+    mnodes.forEach(n => { (byLevel[n.level] = byLevel[n.level] || []).push(n); });
+    const activeLevels = ['L1', 'L2', 'L3'].filter(l => (byLevel[l] || []).length > 0);
+    const rowCount = activeLevels.length;
+    const TOP_PAD = 16, BOT_PAD = 16, L_PAD = 22, R_PAD = 22;
+    const pos = {};
+    activeLevels.forEach((level, rowIdx) => {
+      const nodes = byLevel[level];
+      /* 垂直坐标：单行居中，多行从 TOP_PAD 到 H-BOT_PAD 均匀分布 */
+      const y = rowCount === 1
+        ? H / 2
+        : TOP_PAD + rowIdx * (H - TOP_PAD - BOT_PAD) / (rowCount - 1);
+      /* 水平坐标：单节点居中，多节点铺满可用宽度 */
+      nodes.forEach((n, i) => {
+        const x = nodes.length === 1
+          ? W / 2
+          : L_PAD + i * (W - L_PAD - R_PAD) / (nodes.length - 1);
+        pos[n.id] = { x, y };
+      });
+    });
+
+    return { mnodes, medges, pos, rootId };
+  }
+
+  /* ── MiniGraph：右侧面板中的缩略图 ── */
+  function MiniGraph({ data, centerId, mode, onNavigate }) {
+    const W = 268, H = 130;
+    const [tip, setTip] = useState(null); // { node, clientX, clientY }
+
+    const { mnodes, medges, pos } = useMemo(() => {
+      if (!centerId) return { mnodes: [], medges: [], pos: {} };
+      return mode === 'cluster'
+        ? computeClusterLayout(data, centerId, W, H)
+        : computeHopLayout(data, centerId, W, H);
+    }, [data, centerId, mode]);
+
+    function handleEnter(node, e) {
+      setTip({ node, clientX: e.clientX, clientY: e.clientY });
+    }
+    function handleLeave() { setTip(null); }
+    function handleClick(id) {
+      if (id !== centerId && onNavigate) onNavigate(id);
+    }
+
+    return (
+      <>
+        <div className="rt-mini">
+          <svg viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+            {/* 边 */}
+            {medges.map((e, i) => {
+              const a = pos[e.from], b = pos[e.to];
+              if (!a || !b) return null;
+              return (
+                <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                      stroke="#6b7a95" strokeWidth="1" strokeOpacity=".45"
+                      strokeDasharray={e.dashed ? '3 3' : ''}/>
+              );
+            })}
+            {/* 节点 */}
+            {mnodes.map(n => {
+              const p = pos[n.id];
+              if (!p) return null;
+              const isCenter = n.id === centerId;
+              const col = STATE_META[n.state]?.color || '#8a96ad';
+              const r = isCenter ? 10 : 7;
+              return (
+                <g key={n.id} style={{ cursor: isCenter ? 'default' : 'pointer' }}
+                   onMouseEnter={ev => handleEnter(n, ev)}
+                   onMouseLeave={handleLeave}
+                   onClick={() => handleClick(n.id)}>
+                  {isCenter && (
+                    <circle cx={p.x} cy={p.y} r={15}
+                            fill={col} fillOpacity=".07"
+                            stroke={col} strokeWidth="1.2" strokeOpacity=".4"/>
+                  )}
+                  <circle cx={p.x} cy={p.y} r={r}
+                          fill={col} fillOpacity={isCenter ? .3 : .2}
+                          stroke={col} strokeWidth={isCenter ? 1.5 : 1}/>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+
+        {/* Tooltip（渲染到 body，避免被 overflow:hidden 裁切） */}
+        {tip && ReactDOM.createPortal(
+          (() => {
+            const tn = tip.node;
+            const connCount = data.edges.filter(e => e.from === tn.id || e.to === tn.id).length;
+            const refsCount = tn.refs ? tn.refs.length : 0;
+            const tipW = 175, tipH = 80;
+            const vw = window.innerWidth, vh = window.innerHeight;
+            let left = tip.clientX + 12;
+            let top  = tip.clientY - tipH / 2;
+            if (left + tipW > vw - 8) left = tip.clientX - tipW - 12;
+            if (top < 8) top = 8;
+            if (top + tipH > vh - 8) top = vh - tipH - 8;
+            return (
+              <div className="mg-tip" style={{ left, top }}>
+                <div className="mg-tip-name">{tn.label}</div>
+                <div className="mg-tip-row">
+                  <span className="mg-tip-badge">{TYPE_META[tn.type]?.cn || tn.type}</span>
+                  <span className="mg-tip-badge" style={{ color: 'var(--blue)' }}>{tn.level}</span>
+                  <span className="mg-tip-badge" style={{ color: STATE_META[tn.state]?.color }}>
+                    ● {STATE_META[tn.state]?.cn}
+                  </span>
+                </div>
+                <div className="mg-tip-row">
+                  <span style={{ color: 'var(--text-3)' }}>连接</span>
+                  <span className="mg-tip-num">{connCount}</span>
+                  <span style={{ color: 'var(--text-3)', marginLeft: 6 }}>引用</span>
+                  <span className="mg-tip-num">{refsCount}</span>
+                </div>
+              </div>
+            );
+          })(),
+          document.body
+        )}
+      </>
+    );
+  }
+
+  /* ── RightPanel：节点详情面板 ── */
+  function RightPanel({ data, selectedId, onSelect, onNavigate }) {
+    /* Hook 必须在所有条件返回之前调用 */
+    const [miniTab, setMiniTab] = useState('hop'); // 'hop' | 'cluster'
+
+    if (!selectedId) {
+      return (
+        <div className="rt-empty-wrap">
+          <div className="rt-empty">选中画布中的节点<br/>查看详情、关联关系与文献</div>
+        </div>
+      );
+    }
+    const n = data.nodes.find(x => x.id === selectedId);
+    if (!n) return null;
+
+    const related = data.edges
+      .map(e => {
+        if (e.from === selectedId) return { other: e.to,   rel: e.relation, dir: 'out' };
+        if (e.to   === selectedId) return { other: e.from, rel: e.relation, dir: 'in'  };
+        return null;
+      })
+      .filter(Boolean);
+
+    const stateColor = STATE_META[n.state].color;
+
+    return (
+      <>
+        <div className="rt-hd">
+          <div className="rt-title">节点详情</div>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <button className="rt-edit-icon" onClick={() => openModal('edit-node-modal')} title="编辑节点">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <button className="rt-x" onClick={() => onSelect(null)}>×</button>
+          </div>
+        </div>
+
+        <div className="rt-body">
+          {/* 节点卡片 */}
+          <div className="rt-card">
+            <div className="rt-node" style={{ color: stateColor }}>
+              <div className="rt-avatar">{TYPE_ICONS[n.type]}</div>
+              <div style={{ minWidth: 0 }}>
+                <div className="rt-nm">{n.label}</div>
+                <div className="rt-tags">
+                  <span className="rt-tag">{TYPE_META[n.type].cn} · {TYPE_META[n.type].en}</span>
+                  <span className="rt-tag rt-tag-l">{n.level}</span>
+                  <span className="rt-tag" style={{ color: stateColor }}>● {STATE_META[n.state].cn}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 缩略图（1-hop / 簇） */}
+          <div className="rt-sect">
+            <div className="mg-tabs">
+              <div className={`mg-tab${miniTab === 'hop' ? ' active' : ''}`}
+                   onClick={() => setMiniTab('hop')}>1-hop 邻域</div>
+              <div className={`mg-tab${miniTab === 'cluster' ? ' active' : ''}`}
+                   onClick={() => setMiniTab('cluster')}>簇</div>
+            </div>
+            <MiniGraph data={data} centerId={selectedId} mode={miniTab} onNavigate={onNavigate}/>
+          </div>
+
+          {/* 关联文献 */}
+          {n.refs && n.refs.length > 0 && (
+            <div className="rt-sect">
+              <div className="rt-sect-t">关联文献 · {n.refs.length}</div>
+              {n.refs.map((r, i) => (
+                <div key={i} className="doi-chip">
+                  <span className="doi-dt">{(r.type || 'DOI').toUpperCase()}</span>
+                  <div className="doi-dc">
+                    <div className="doi-title">{r.title}</div>
+                    <div className="doi-key">{r.key}</div>
+                    <div className="doi-actions">
+                      {/* 查看 */}
+                      <button className="doi-act-btn" title="查看文献"
+                              onClick={() => window.__showToast?.('调用文献查看组件')}>
+                        <svg viewBox="0 0 16 16" fill="none">
+                          <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"
+                                stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+                          <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3"/>
+                        </svg>
+                      </button>
+                      {/* 过滤 */}
+                      <button className="doi-act-btn" title="过滤关联节点"
+                              onClick={() => window.__openFilterWithRef?.(r.title)}>
+                        <svg viewBox="0 0 16 16" fill="none">
+                          <path d="M2 4h12M4.5 8h7M7 12h2"
+                                stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 语义关系 */}
+          <div className="rt-sect">
+            <div className="rt-sect-t">语义关系 · {related.length}</div>
+            <div className="rt-edge-list">
+              {related.map((r, i) => {
+                const other = data.nodes.find(x => x.id === r.other);
+                if (!other) return null;
+                return (
+                  <div key={i} className="rt-edge-row" onClick={() => onSelect(r.other)}>
+                    <span className="rt-edge-rel">{r.rel}</span>
+                    <span className="rt-edge-arr">{r.dir === 'out' ? '→' : '←'}</span>
+                    <span className="rt-edge-ds" style={{ background: STATE_META[other.state].color }}/>
+                    <span className="rt-edge-tg">{other.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+      </>
+    );
+  }
+
+  /* ── GraphBridge：统一管理 selectedId / filterIds，桥接 Canvas ↔ RightPanel ── */
+  const TWEAKS = { curveEdges: true, labelMode: 'always', edgeLabelMode: 'hover', density: 'standard' };
+
+  function GraphBridge() {
+    const [selectedId, setSelectedId] = useState(null);
+    const [filterIds,  setFilterIds]  = useState(null);
+
+    const handleSelect = useCallback((id) => {
+      if (window.__relPickMode && id) {
+        window.__relPickNodes = window.__relPickNodes || [];
+        if (window.__relPickNodes.includes(id)) return;
+        window.__relPickNodes.push(id);
+        setSelectedId(id);
+        window._updateRelHint?.();
+        if (window.__relPickNodes.length >= 2) {
+          setTimeout(() => {
+            window.__exitRelPickMode?.();
+            openModal('add-relation-modal');
+          }, 120);
+        }
+        return;
+      }
+      setSelectedId(id);
+    }, []);
+
+    useEffect(() => {
+      window.__graphSetSelected = handleSelect;
+      window.__graphSetFilter   = setFilterIds;
+    }, [handleSelect]);
+
+    useEffect(() => {
+      const drawer = document.getElementById('right-drawer');
+      if (!drawer) return;
+      selectedId ? drawer.classList.add('open') : drawer.classList.remove('open');
+      const node = window.GRAPH?.nodes?.find(n => n.id === selectedId);
+      window.__currentSelectedLabel = node ? node.label : null;
+    }, [selectedId]);
+
+    function handleNavigate(id) {
+      setSelectedId(id);
+      requestAnimationFrame(() => {
+        if (window.__graphCenterNode) window.__graphCenterNode(id);
+      });
+    }
+
+    return (
+      <>
+        <GraphCanvas
+          data={window.GRAPH}
+          tweaks={TWEAKS}
+          selectedId={selectedId}
+          onSelect={handleSelect}
+          filterIds={filterIds}
+        />
+        {ReactDOM.createPortal(
+          <RightPanel
+            data={window.GRAPH}
+            selectedId={selectedId}
+            onSelect={handleSelect}
+            onNavigate={handleNavigate}
+          />,
+          document.getElementById('rp-root')
+        )}
+      </>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('gc-root')).render(<GraphBridge/>);
+})();
+</script>
+
+<!-- ─── 3D 全屏覆盖层 ─── -->
+<div id="overlay-3d" style="display:none;">
+  <div id="overlay-3d-hd">
+    <div id="overlay-3d-title">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="color:#93c5fd">
+        <path d="M8 2L14 5.5V10.5L8 14L2 10.5V5.5L8 2Z M8 2V14 M2 5.5L14 10.5 M14 5.5L2 10.5"
+              stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+      3D 图谱视图
+      <span id="overlay-3d-hint">左键平移 · 右键旋转 · 滚轮缩放</span>
+    </div>
+    <button id="overlay-3d-close" onclick="window.__close3DView?.(); window.__graphClose3D?.();">✕</button>
+  </div>
+  <div id="graph-3d-container"></div>
+</div>
+
+<!-- ─── 3D 视图控制器 ─── -->
+<script>
+(function () {
+  const STATE_COLOR = { loaded: '#22c55e', empty: '#8a96ad', loading: '#f97316' };
+  /* nodeVal 决定球体大小，取半径的平方以匹配库内 sqrt 换算 */
+  const LEVEL_VAL = { L1: 49, L2: 25, L3: 12 };
+
+  function initForceGraph3D() {
+    const overlay   = document.getElementById('overlay-3d');
+    const container = document.getElementById('graph-3d-container');
+    if (!overlay || !container) return;
+    container.innerHTML = '';
+
+    const G = window.GRAPH;
+    if (!G) return;
+
+    const graphData = {
+      nodes: G.nodes.map(n => ({ ...n })),
+      links: G.edges.map(e => ({
+        source: e.from, target: e.to, relation: e.relation, dashed: !!e.dashed
+      }))
+    };
+
+    const graph = ForceGraph3D()(container)
+      .width(container.offsetWidth)
+      .height(container.offsetHeight)
+      .backgroundColor('#080c18')
+      .showNavInfo(false)
+      .graphData(graphData)
+      /* ── 节点 ── */
+      .nodeId('id')
+      .nodeLabel('label')
+      .nodeColor(n  => STATE_COLOR[n.state]  || '#8a96ad')
+      .nodeVal(n    => LEVEL_VAL[n.level]    || 12)
+      .nodeOpacity(0.88)
+      /* ── 连线 ── */
+      .linkColor(l  => l.dashed ? 'rgba(107,122,149,0.28)' : 'rgba(148,163,184,0.65)')
+      .linkWidth(l  => l.dashed ? 0 : 1.0)
+      .linkOpacity(1)
+      /* ── 动态粒子流 ── */
+      .linkDirectionalParticles(l       => l.dashed ? 0 : 2)
+      .linkDirectionalParticleSpeed(    0.0035)
+      .linkDirectionalParticleWidth(    2)
+      .linkDirectionalParticleColor(() => 'rgba(96,165,250,0.9)')
+      /* ── 点击节点联动右侧面板 ── */
+      .onNodeClick(node => {
+        if (window.__graphSetSelected) window.__graphSetSelected(node.id);
+      });
+
+    /* 自动适应视野 */
+    setTimeout(() => graph.zoomToFit(700, 80), 600);
+
+    /* 鼠标键位互换：左键=平移(PAN=2)，右键=旋转(ROTATE=0) */
+    const ctrl = graph.controls();
+    if (ctrl) ctrl.mouseButtons = { LEFT: 2, MIDDLE: 1, RIGHT: 0 };
+
+    /* 响应容器尺寸变化 */
+    const ro = new ResizeObserver(() =>
+      graph.width(container.offsetWidth).height(container.offsetHeight)
+    );
+    ro.observe(container);
+
+    window.__3dGraph     = graph;
+    window.__3dResizeObs = ro;
+  }
+
+  window.__open3DView = function () {
+    const overlay   = document.getElementById('overlay-3d');
+    const container = document.getElementById('graph-3d-container');
+    if (!overlay || !container) return;
+
+    /* 先显示 overlay，再请求真全屏 */
+    overlay.style.display = 'flex';
+
+    const doFullscreen = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    };
+
+    /* 动态加载库 */
+    if (typeof ForceGraph3D !== 'undefined') {
+      initForceGraph3D();
+      doFullscreen();
+      return;
+    }
+
+    container.innerHTML =
+      '<div style="color:var(--text-3);margin:auto;font-size:13px;padding:40px;display:flex;align-items:center;gap:8px">' +
+      '<span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> 正在加载 3D 引擎…</div>';
+
+    const s = document.createElement('script');
+    s.src   = 'https://cdn.jsdelivr.net/npm/3d-force-graph@1';
+    s.onload  = () => { container.innerHTML = ''; initForceGraph3D(); doFullscreen(); };
+    s.onerror = () => {
+      container.innerHTML =
+        '<div style="color:#f97316;margin:auto;font-size:13px;padding:40px">3D 库加载失败，请检查网络连接后重试</div>';
+    };
+    document.head.appendChild(s);
+  };
+
+  window.__close3DView = function () {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+    const overlay = document.getElementById('overlay-3d');
+    if (overlay) overlay.style.display = 'none';
+    if (window.__3dResizeObs) { window.__3dResizeObs.disconnect(); window.__3dResizeObs = null; }
+    if (window.__3dGraph)     {
+      try { window.__3dGraph._destructor?.(); } catch (_) {}
+      window.__3dGraph = null;
+    }
+  };
+
+  /* 退出全屏时也关闭 3D overlay */
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      const overlay = document.getElementById('overlay-3d');
+      if (overlay && overlay.style.display !== 'none') {
+        overlay.style.display = 'none';
+        document.body.classList.remove('mode-3d');
+        if (window.__3dResizeObs) { window.__3dResizeObs.disconnect(); window.__3dResizeObs = null; }
+        if (window.__3dGraph) { try { window.__3dGraph._destructor?.(); } catch(_){} window.__3dGraph = null; }
+        /* 把 React layout 切回轨道 */
+        const orbitBtn = document.querySelector('.layout-tab[data-layout="ring"]');
+        if (orbitBtn) orbitBtn.click();
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>
