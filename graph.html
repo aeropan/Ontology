@@ -853,6 +853,19 @@
     .rt-edit-icon { background: none; border: 0; color: var(--text-3); width: 24px; height: 24px;
       border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .rt-edit-icon:hover { color: var(--text-1); background: var(--bg-4); }
+    /* 节点描述 */
+    .rt-desc { font-size: 12px; color: var(--text-2); line-height: 1.7;
+      margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-1); }
+    /* 挂载数据 */
+    .rt-sect-hd { display: flex; align-items: center; justify-content: space-between; }
+    .rt-dataset-card { position: relative; background: var(--bg-2); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; }
+    .rt-dataset-badge { position: absolute; top: 8px; right: 8px; }
+    .rt-dataset-name { font-size: 12px; font-weight: 600; color: var(--text-1); line-height: 1.4; padding-right: 56px; }
+    .rt-dataset-id { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); }
+    .rt-dataset-row { font-size: 11px; color: var(--text-2); line-height: 1.55; }
+    .rt-dataset-label { color: var(--text-3); font-size: 10.5px; margin-right: 3px; }
+    .rt-dataset-empty { font-size: 11px; color: var(--text-3); padding: 8px 0; text-align: center; }
 
     /* ─── 3D 全屏覆盖层 ─── */
     #overlay-3d {
@@ -2754,6 +2767,9 @@
                 </div>
               </div>
             </div>
+            {n.description && (
+              <div className="rt-desc">{n.description}</div>
+            )}
           </div>
 
           {/* 缩略图（1-hop / 簇） */}
@@ -2820,6 +2836,46 @@
               })}
             </div>
           </div>
+
+          {/* 挂载数据 */}
+          {(() => {
+            const stateBadgeClass = n.state === 'loaded' ? 'badge-green' : n.state === 'loading' ? 'badge-amber' : '';
+            const datasets = n.datasets || [];
+            return (
+              <div className="rt-sect">
+                <div className="rt-sect-hd">
+                  <div className="rt-sect-t">挂载数据{datasets.length > 0 ? ` · ${datasets.length}` : ''}</div>
+                  <span className={`badge ${stateBadgeClass}`}>{STATE_META[n.state].cn}</span>
+                </div>
+                {datasets.length > 0 ? datasets.map((ds, i) => (
+                  <div key={i} className="rt-dataset-card">
+                    <div className="rt-dataset-badge">
+                      <span className="badge badge-green">有数据</span>
+                    </div>
+                    <div className="rt-dataset-name">{ds.name}</div>
+                    <div className="rt-dataset-id">{ds.id}</div>
+                    {ds.summary && (
+                      <div className="rt-dataset-row">
+                        <span className="rt-dataset-label">摘要</span>{ds.summary}
+                      </div>
+                    )}
+                    {ds.resolution && (
+                      <div className="rt-dataset-row">
+                        <span className="rt-dataset-label">分辨率</span>{ds.resolution}
+                      </div>
+                    )}
+                    {ds.format && (
+                      <div className="rt-dataset-row">
+                        <span className="rt-dataset-label">格式</span>{ds.format}
+                      </div>
+                    )}
+                  </div>
+                )) : (
+                  <div className="rt-dataset-empty">暂无挂载数据</div>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
       </>
