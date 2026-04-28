@@ -148,6 +148,40 @@ window.renderPageTopbar = renderPageTopbar;
 
 
 /* ============================================================
+   Toast 提示（showToast）
+   ============================================================
+   依赖：styles/shared.css 中的 #toast-container / .toast 样式
+   页面需包含 <div id="toast-container"></div>，
+   或由本函数首次调用时自动创建。
+
+   调用示例：
+     showToast('操作成功')
+     showToast('数据挂载中…', 2200)
+     setTimeout(() => showToast('挂载完成，为 1 个节点挂载数据'), 2000)
+   ============================================================ */
+
+function showToast(msg, duration = 2800) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('out');
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+  }, duration);
+}
+
+// 挂载到 window 供非模块页面直接调用
+window.showToast = showToast;
+
+
+/* ============================================================
    组件注册区
    新增组件时在此处 export，并遵循上方调用规范
    ============================================================ */
