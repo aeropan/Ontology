@@ -31,6 +31,22 @@
   comp.destroy()  // 销毁并清理事件监听
   ```
 - 页面专属的一次性组件无需放入此文件，直接写在页面 `<script>` 内即可
+- **新建页面**时，`<head>` 必须同时引入：
+  ```html
+  <link rel="stylesheet" href="styles/shared.css">
+  <script src="scripts/components.js"></script>
+  ```
+
+### Toast 提示（showToast）
+- 样式已定义在 `styles/shared.css`，函数已定义在 `scripts/components.js`
+- 页面引入 `components.js` 后直接调用 `window.showToast(msg, duration?)`，**禁止**在页面内自行实现
+- 页面需包含 `<div id="toast-container"></div>`（或由 `showToast` 首次调用时自动创建）
+- 调用示例：
+  ```js
+  window.showToast('操作成功')                          // 默认 2.8s 后消失
+  window.showToast('数据挂载中…', 2200)                 // 自定义时长
+  setTimeout(() => window.showToast('挂载完成'), 2000)  // 延迟连续提示
+  ```
 
 ## 颜色层级与组件规范（重要）
 
