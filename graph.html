@@ -3223,6 +3223,52 @@
       }))
     };
 
+    /* 获取 Three.js 引用（3d-force-graph CDN bundle 会将 THREE 暴露为全局） */
+    const THREE = window.THREE;
+
+    /* 生成节点文字 Sprite（Canvas 贴图，始终朝向摄像机） */
+    function makeNodeLabelSprite(node) {
+      if (!THREE) return null;
+      const DPR    = 2;          // 高清缩放
+      const cw     = 256 * DPR;
+      const ch     = 40  * DPR;
+      const canvas = document.createElement('canvas');
+      canvas.width  = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(DPR, DPR);
+
+      /* 半透明圆角背景 */
+      const W = 256, H = 40, R = 5;
+      ctx.fillStyle = 'rgba(8,12,24,0.72)';
+      ctx.beginPath();
+      ctx.moveTo(R, 0); ctx.lineTo(W-R, 0); ctx.arcTo(W,0,W,R,R);
+      ctx.lineTo(W, H-R); ctx.arcTo(W,H,W-R,H,R);
+      ctx.lineTo(R, H); ctx.arcTo(0,H,0,H-R,R);
+      ctx.lineTo(0, R); ctx.arcTo(0,0,R,0,R);
+      ctx.closePath(); ctx.fill();
+
+      /* 标签文字 */
+      ctx.font      = '14px "Noto Sans SC",sans-serif';
+      ctx.fillStyle = '#cbd5e1';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(node.label, W/2, H/2, W - 12);
+
+      const texture  = new THREE.CanvasTexture(canvas);
+      const material = new THREE.SpriteMaterial({ map: texture, depthWrite: false, transparent: true });
+      const sprite   = new THREE.Sprite(material);
+
+      /* 世界坐标宽高：16 × 2.5 单位 */
+      sprite.scale.set(16, 2.5, 1);
+
+      /* 定位到球体正下方（nodeRelSize=2 时半径 = 2*∛nodeVal） */
+      const nodeR = 2 * Math.cbrt(LEVEL_VAL[node.level] || 12);
+      sprite.position.set(0, -(nodeR + 2.8), 0);
+
+      return sprite;
+    }
+
     const graph = ForceGraph3D()(container)
       .width(container.offsetWidth)
       .height(container.offsetHeight)
@@ -3231,10 +3277,14 @@
       .graphData(graphData)
       /* ── 节点 ── */
       .nodeId('id')
-      .nodeLabel('label')
+      .nodeLabel('')                               // 关闭默认 tooltip（改用 3D 文字）
       .nodeColor(n  => STATE_COLOR[n.state]  || '#8a96ad')
-      .nodeVal(n    => LEVEL_VAL[n.level]    || 12)
+      .nodeVal(n    => LEVEL_VAL[n.level]    || 12) // 保持不变，维持节点间距
+      .nodeRelSize(2)                              // 默认 4 → 2，视觉半径缩小 50%
       .nodeOpacity(0.88)
+      /* ── 节点文字标签 ── */
+      .nodeThreeObjectExtend(true)                 // 叠加到默认球体上，不替换
+      .nodeThreeObject(node => makeNodeLabelSprite(node) || new THREE.Object3D())
       /* ── 连线 ── */
       .linkColor(l  => l.dashed ? 'rgba(107,122,149,0.28)' : 'rgba(148,163,184,0.65)')
       .linkWidth(l  => l.dashed ? 0 : 1.0)
