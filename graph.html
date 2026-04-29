@@ -3284,7 +3284,11 @@
       .nodeOpacity(0.88)
       /* ── 节点文字标签 ── */
       .nodeThreeObjectExtend(true)                 // 叠加到默认球体上，不替换
-      .nodeThreeObject(node => makeNodeLabelSprite(node) || new THREE.Object3D())
+      .nodeThreeObject(node => {
+        const sprite = makeNodeLabelSprite(node);
+        // 若 THREE 未加载则返回空 Group（避免 undefined 引发 3d-force-graph 报错）
+        return sprite || (THREE ? new THREE.Group() : undefined);
+      })
       /* ── 连线 ── */
       .linkColor(l  => l.dashed ? 'rgba(107,122,149,0.28)' : 'rgba(148,163,184,0.65)')
       .linkWidth(l  => l.dashed ? 0 : 1.0)
@@ -3330,25 +3334,41 @@
       }
     };
 
-    /* 动态加载库 */
-    if (typeof ForceGraph3D !== 'undefined') {
-      initForceGraph3D();
-      doFullscreen();
-      return;
-    }
+    /* 动态加载库：Three.js → 3d-force-graph（顺序加载确保 window.THREE 可用） */
+    const loadScript = (src, cb, errCb) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload  = cb;
+      s.onerror = errCb || cb; // 加载失败也继续（标签只是不显示）
+      document.head.appendChild(s);
+    };
+
+    const runGraph = () => { container.innerHTML = ''; initForceGraph3D(); doFullscreen(); };
+    const loadFG   = () => {
+      if (typeof ForceGraph3D !== 'undefined') { runGraph(); return; }
+      loadScript(
+        'https://cdn.jsdelivr.net/npm/3d-force-graph@1',
+        runGraph,
+        () => {
+          container.innerHTML =
+            '<div style="color:#f97316;margin:auto;font-size:13px;padding:40px">3D 库加载失败，请检查网络连接后重试</div>';
+        }
+      );
+    };
 
     container.innerHTML =
       '<div style="color:var(--text-3);margin:auto;font-size:13px;padding:40px;display:flex;align-items:center;gap:8px">' +
       '<span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> 正在加载 3D 引擎…</div>';
 
-    const s = document.createElement('script');
-    s.src   = 'https://cdn.jsdelivr.net/npm/3d-force-graph@1';
-    s.onload  = () => { container.innerHTML = ''; initForceGraph3D(); doFullscreen(); };
-    s.onerror = () => {
-      container.innerHTML =
-        '<div style="color:#f97316;margin:auto;font-size:13px;padding:40px">3D 库加载失败，请检查网络连接后重试</div>';
-    };
-    document.head.appendChild(s);
+    /* 先加载 Three.js（提供 window.THREE），再加载 3d-force-graph */
+    if (typeof ForceGraph3D !== 'undefined') {
+      /* 两个库都已加载，直接初始化 */
+      runGraph();
+    } else if (!window.THREE) {
+      loadScript('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js', loadFG);
+    } else {
+      loadFG();
+    }
   };
 
   window.__close3DView = function () {
