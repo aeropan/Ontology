@@ -41,9 +41,9 @@ window.GRAPH = {
       refs:[{type:'doi', key:'10.1038/s41586-023-06924-6', title:'Emergent abilities of large language models at trillion-parameter scale'},
             {type:'doi', key:'10.1109/TKDE.2022.3193012',  title:'A survey on knowledge graph embedding'}],
       datasets:[
-        { id:'KG-16', name:'美国 NREL 2006 年陆上 + 海上风电场 SCADA 级实测风速数据（替代目标风场 SCADA 数据）', summary:'NREL风电场SCADA级观测样本，可作为目标风场SCADA替代训练数据。', resolution:'时：10min（与 SCADA 标准采样粒度完全一致）；空：陆上 + 海上风电场（80m 轮毂高度单点观测）', format:'CSV（结构化时序数据，符合 SCADA 数据存储规范）' },
-        { id:'KG-17', name:'风电场风机功率输出实测数据', summary:'风机/场站功率输出实测时间序列，用于模型训练、验证与回测。', resolution:'时：10-15min；\n空：单风机', format:'CSV/数据库表' },
-        { id:'UV-0011', name:'NOAA KABI/KABE 气象站 10 分钟实测风速数据', summary:'NOAA 旗下 KABI、KABE 气象站 10 分钟采样风速数据，含样本熵等特征分析', resolution:'时：5min (原始) / 10min (论文)；空：站点级（KABI、KABE 两个气象站）美国境内 KABI、KABE 两个气象站（NOAA 官方实测站点，数据代表性强）注：官方原始数据其实是 5', format:'CSV/TXT' }
+        { id:'KG-16', name:'美国 NREL 2006 年陆上 + 海上风电场 SCADA 级实测风速数据（替代目标风场 SCADA 数据）', summary:'NREL风电场SCADA级观测样本，可作为目标风场SCADA替代训练数据。', resolution:'时：10min（与 SCADA 标准采样粒度完全一致）；空：陆上 + 海上风电场（80m 轮毂高度单点观测）', format:'CSV（结构化时序数据，符合 SCADA 数据存储规范）',state:'empty' },
+        { id:'KG-17', name:'风电场风机功率输出实测数据', summary:'风机/场站功率输出实测时间序列，用于模型训练、验证与回测。', resolution:'时：10-15min；\n空：单风机', format:'CSV/数据库表', state:'loaded' },
+        { id:'UV-0011', name:'NOAA KABI/KABE 气象站 10 分钟实测风速数据', summary:'NOAA 旗下 KABI、KABE 气象站 10 分钟采样风速数据，含样本熵等特征分析', resolution:'时：5min (原始) / 10min (论文)；空：站点级（KABI、KABE 两个气象站）美国境内 KABI、KABE 两个气象站（NOAA 官方实测站点，数据代表性强）注：官方原始数据其实是 5', format:'CSV/TXT',state:'empty' }
       ] },
     { id:'cls_daa8b9fff2d84c50ad444d9fac909929', label:'NWP风速数据',          type:'class',    level:'L2', state:'loaded',  biz:'data',
       description:'数值天气预报系统提供的大尺度宏观气象风速预报。',
@@ -97,9 +97,15 @@ window.GRAPH = {
   ],
   edges: [
     // 层级继承关系 (HAS_SUBCLASS)
-    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_5bfb517952af498a9a07897f41255651', relation:'HAS_SUBCLASS' },
-    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_17918592c1fb44e0b265f0d101d2673f', relation:'HAS_SUBCLASS' },
-    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_5975127c0b9b46429530dd24b4854765', relation:'HAS_SUBCLASS' },
+    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_5bfb517952af498a9a07897f41255651', relation:'HAS_SUBCLASS',
+      description:'核心预测算法类包含 ARIMA 与神经网络组合作为子类，继承算法族的基本预测接口与评估规范。',
+      refs:[{type:'doi', key:'10.1038/s41586-023-06924-6', title:'Emergent abilities of large language models at trillion-parameter scale'}] },
+    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_17918592c1fb44e0b265f0d101d2673f', relation:'HAS_SUBCLASS',
+      description:'BP 神经网络风速估算作为核心预测算法的子类，实现了基于反向传播的非线性风速映射能力。',
+      refs:[{type:'doi', key:'10.1109/TKDE.2022.3193012', title:'A survey on knowledge graph embedding'}] },
+    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_5975127c0b9b46429530dd24b4854765', relation:'HAS_SUBCLASS',
+      description:'长短期记忆网络（LSTM）作为核心预测算法的子类，利用门控机制捕捉风速时间序列的长程依赖。',
+      refs:[{type:'doi', key:'10.1162/neco.1997.9.8.1735', title:'Long Short-Term Memory'}] },
     { from:'cls_92bad7cb7c5243faa317288ae70a3714', to:'cls_daa8b9fff2d84c50ad444d9fac909929', relation:'HAS_SUBCLASS' },
     { from:'cls_92bad7cb7c5243faa317288ae70a3714', to:'cls_06c6a2e4ee514378ae94df345a769d3a', relation:'HAS_SUBCLASS' },
     { from:'cls_92bad7cb7c5243faa317288ae70a3714', to:'cls_adb0801679a046aaaf7f4971950ae3d4', relation:'HAS_SUBCLASS' },
@@ -114,12 +120,23 @@ window.GRAPH = {
     { from:'cls_c75a72040e844cb0971ecdae5a6ee6ad', to:'cls_64422b5d77d948b19f8e0d95e8cbc37c', relation:'HAS_SUBCLASS' },
 
     // 业务逻辑关联 (Dashed represents cross-context logic)
-    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_c75a72040e844cb0971ecdae5a6ee6ad', relation:'应用于场景', dashed:true },
-    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_28d7f03aba7c4987a9ca25a37aed7858', relation:'进行不确定性分析', dashed:true },
-    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_8835c5ad33ee4568ac112a55e98c4bad', relation:'被确定性指标评估', dashed:true },
-    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_f3f1963f70144c368f5cc97f70820110', relation:'被优化算法寻优', dashed:true },
-    { from:'cls_92bad7cb7c5243faa317288ae70a3714', to:'cls_431a98e997ed425ca22088c70942e9cd', relation:'经过预处理', dashed:true },
-    { from:'cls_431a98e997ed425ca22088c70942e9cd', to:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', relation:'提供数据输入', dashed:true },
+    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_c75a72040e844cb0971ecdae5a6ee6ad', relation:'应用于场景', dashed:true,
+      description:'核心预测算法被部署于单机风电机组的实时发电预测场景，驱动机组调度与功率控制策略。',
+      refs:[{type:'doi', key:'10.1016/j.rser.2019.04.057', title:'A review of wind speed forecasting'}] },
+    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_28d7f03aba7c4987a9ca25a37aed7858', relation:'进行不确定性分析', dashed:true,
+      description:'预测模型的输出结果接入不确定性分析模块，量化预测区间与置信度，为调度决策提供风险度量。',
+      refs:[{type:'doi', key:'10.1038/s41586-023-06924-6', title:'Emergent abilities of large language models at trillion-parameter scale'}] },
+    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_8835c5ad33ee4568ac112a55e98c4bad', relation:'被确定性指标评估', dashed:true,
+      description:'使用 RMSE、MAE 等确定性误差统计指标对预测值与实测值的偏差进行系统性评估。' },
+    { from:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', to:'cls_f3f1963f70144c368f5cc97f70820110', relation:'被优化算法寻优', dashed:true,
+      description:'超参数优化算法系统搜索核心预测模型的最优参数组合，以最小化验证集预测误差为目标。',
+      refs:[{type:'doi', key:'10.1145/3528223.3530127', title:'Graph-augmented retrieval for knowledge intensive tasks'}] },
+    { from:'cls_92bad7cb7c5243faa317288ae70a3714', to:'cls_431a98e997ed425ca22088c70942e9cd', relation:'经过预处理', dashed:true,
+      description:'原始气象与 SCADA 特征数据须经过归一化、缺失值填补、去噪等预处理步骤后才可供预测模型使用。',
+      refs:[{type:'doi', key:'10.1109/TKDE.2022.3193012', title:'A survey on knowledge graph embedding'}] },
+    { from:'cls_431a98e997ed425ca22088c70942e9cd', to:'cls_15b2c9ed4c6447a49fb0fc95e57d9f4f', relation:'提供数据输入', dashed:true,
+      description:'经过清洗与特征提取的高质量训练数据作为输入，直接驱动预测模型的参数学习与推理过程。',
+      refs:[{type:'doi', key:'10.1162/neco.1997.9.8.1735', title:'Long Short-Term Memory'}] },
     { from:'cls_92bad7cb7c5243faa317288ae70a3714', to:'prop_39a1598bf6ab4794b01e0c92d667259f', relation:'has_property', dashed:true },
     { from:'cls_28d7f03aba7c4987a9ca25a37aed7858', to:'prop_45964a82145d487e8f7026fea1cdb927', relation:'has_property', dashed:true }
   ]
