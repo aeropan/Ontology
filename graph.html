@@ -1534,16 +1534,19 @@
   <!-- ─── 提示词管理面板（全屏覆盖，与文本视图同层） ─── -->
   <div class="tab-panel" id="panel-prompt">
     <div class="text-view-layout">
-      <!-- 左侧：代码编辑主区 -->
+      <!-- 代码编辑主区（全宽，无右侧面板） -->
       <div class="json-main">
         <div class="json-toolbar" style="justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:12px">
+          <div style="display:flex;align-items:center;gap:16px">
             <button class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="closePromptPanel()">← 返回</button>
-            <span class="json-line-count">提示词模板编辑</span>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <span style="font-size:13px;font-weight:600;color:var(--text-1)">风力发电提示词模板v1.1</span>
+              <span style="font-size:11px;color:var(--text-3)">修改于 2026-04-28 &nbsp;·&nbsp; 图谱工程师</span>
+            </div>
           </div>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-secondary" style="font-size:12px;padding:5px 14px" onclick="openSavePromptModal()">保存提示词</button>
-            <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openExtractConfirm('panel-prompt')">用新提示词重新抽取 →</button>
+            <button class="btn btn-secondary" style="font-size:12px;padding:5px 14px" onclick="openSavePromptModal(false)">保存为提示词模板</button>
+            <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openSavePromptModal(true)">保存提示词模板并重新抽取</button>
           </div>
         </div>
         <!-- 行号 + textarea 编辑区 -->
@@ -1586,26 +1589,6 @@
     { "from": "WindSpeed", "to": "InputFeature", "relation": "IS_FEATURE_OF", "type": "semantic" }
   ]
 }</textarea>
-        </div>
-      </div>
-      <!-- 右侧：信息面板 -->
-      <div class="json-side">
-        <div class="json-side-title">提示词信息</div>
-        <div class="json-info-row"><span class="json-info-key">template_id</span><span class="json-info-val">tpl_wind_extract_v1</span></div>
-        <div class="json-info-row"><span class="json-info-key">version</span><span class="json-info-val" style="color:var(--blue)">v1.2</span></div>
-        <div class="json-info-row"><span class="json-info-key">domain</span><span class="json-info-val">气候 / 地理</span></div>
-        <div class="json-info-row"><span class="json-info-key">last_used</span><span class="json-info-val">2026-04-28</span></div>
-        <div class="json-info-row"><span class="json-info-key">占位符</span><span class="json-info-val">{context}, {domain}</span></div>
-        <div style="margin-top:4px;padding-top:12px;border-top:1px solid var(--border-1)">
-          <div style="font-size:11px;color:var(--text-3);line-height:1.6">
-            支持变量占位符：<br>
-            <code style="color:var(--blue)">{context}</code> — 输入文本<br>
-            <code style="color:var(--blue)">{domain}</code> — 领域范围
-          </div>
-        </div>
-        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
-          <button class="btn btn-secondary" style="width:100%;font-size:12px" onclick="openSavePromptModal()">保存提示词</button>
-          <button class="btn btn-primary" style="width:100%;font-size:12px" onclick="openExtractConfirm('panel-prompt')">用新提示词重新抽取 →</button>
         </div>
       </div>
     </div>
@@ -1785,21 +1768,6 @@
       <button class="btn-close" onclick="closeMountModal()"></button>
     </div>
     <div class="modal-body" style="gap:14px">
-      <div class="form-group">
-        <label class="form-label">目标节点</label>
-        <select class="form-select" id="mount-target-node">
-          <option value="">— 请选择节点 —</option>
-          <option>核心预测算法</option>
-          <option>输入特征数据</option>
-          <option>单机历史风速序列</option>
-          <option>NWP风速数据</option>
-          <option>数据预处理技术</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">数据集名称</label>
-        <input type="text" class="form-input" placeholder="例：ERA5 再分析风速数据 2000-2023"/>
-      </div>
       <div class="form-group">
         <label class="form-label">上传数据文件</label>
         <div class="upload-zone" id="upload-zone" onclick="triggerFileInput()">
@@ -2323,7 +2291,10 @@
   }
 
   /* ── 保存提示词弹窗 ── */
-  function openSavePromptModal() {
+  // thenExtract: true = 保存后继续执行跳转抽取逻辑
+  let _savePromptThenExtract = false;
+  function openSavePromptModal(thenExtract = false) {
+    _savePromptThenExtract = !!thenExtract;
     document.getElementById('save-prompt-name').value = '';
     document.getElementById('save-prompt-desc').value = '';
     openModal('save-prompt-modal');
@@ -2336,6 +2307,11 @@
     }
     closeModal('save-prompt-modal');
     window.showToast?.('保存成功');
+    // 如果是"保存并重新抽取"流程，保存完成后直接跳转
+    if (_savePromptThenExtract) {
+      _savePromptThenExtract = false;
+      window.location.href = 'main.html?page=ke-review';
+    }
   }
 
   /* ── 过滤功能 ── */
