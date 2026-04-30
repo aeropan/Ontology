@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文献上传管理 · 本体智见平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
+  <script src="scripts/components.js"></script>
+  <style>
+    /* ── 页面基础 ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-0);
+      font-family: var(--font-sans);
+      color: var(--text-1);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 64px; /* 为固定底栏留空 */
+    }
+
+    /* ── 步骤条 ── */
+    .step-bar {
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border-1);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      height: 48px;
+      flex-shrink: 0;
+    }
+    .step-bar-inner {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .step { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); flex-shrink: 0; }
+    .step.done  { color: var(--green); }
+    .step.active{ color: var(--blue); font-weight: 600; }
+    .step-dot {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 1.5px solid currentColor;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; flex-shrink: 0;
+    }
+    .step.done  .step-dot { background: rgba(16,185,129,.12); }
+    .step.active .step-dot { background: rgba(59,130,246,.12); }
+    .step-conn { flex: 1; height: 1px; background: var(--border-1); margin: 0 10px; }
+    .step-conn.done { background: var(--green); opacity: .4; }
+
+    /* ── 主内容区 ── */
+    .page-wrap {
+      flex: 1;
+      display: flex;
+      gap: 16px;
+      padding: 24px 32px 16px;
+      min-height: 0;
+    }
+
+    /* ── 左侧：上传区 + 列表 ── */
+    .left-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    /* 页面标题行 */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .page-title { font-size: 20px; font-weight: 700; }
+    .page-title span { color: var(--blue); }
+    .page-sub { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+
+    /* 上传区 + 从文献库选择 并排 */
+    .upload-row {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    /* 缩小后的上传区（原大小 × 0.7） */
+    .upload-zone-sm {
+      flex: 1;
+      border: 1.5px dashed var(--border-2);
+      border-radius: var(--radius-md);
+      background: var(--bg-2);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .upload-zone-sm:hover { border-color: var(--blue); background: var(--blue-dim); }
+    .upload-zone-sm .uz-icon { color: var(--text-3); flex-shrink: 0; }
+    .upload-zone-sm .uz-text { font-size: 12px; color: var(--text-2); }
+    .upload-zone-sm .uz-hint { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+    .upload-zone-sm .uz-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      font-size: 11px;
+      padding: 4px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: var(--font-sans);
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .upload-zone-sm .uz-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* 从文献库选择卡片 */
+    .lib-select-zone {
+      width: 200px;
+      flex-shrink: 0;
+      border: 1.5px solid var(--border-1);
+      border-radius: var(--radius-md);
+      background: var(--bg-2);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .lib-select-zone:hover { border-color: var(--blue); background: var(--blue-dim); }
+    .lib-select-zone .lsz-icon { color: var(--text-3); }
+    .lib-select-zone .lsz-text { font-size: 12px; color: var(--text-2); text-align: center; }
+    .lib-select-zone .lsz-hint { font-size: 10px; color: var(--text-3); }
+
+    /* ── 文献列表卡片 ── */
+    .table-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-3);
+      flex-shrink: 0;
+    }
+    .table-header-title { font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .table-count { font-size: 11px; color: var(--text-3); margin-left: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: var(--bg-3);
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-2);
+      text-align: left;
+      border-bottom: 1px solid var(--border-1);
+      white-space: nowrap;
+    }
+    td {
+      padding: 9px 14px;
+      font-size: 12px;
+      border-bottom: 1px solid var(--border-1);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr.clickable { cursor: pointer; }
+    tr.clickable:hover td { background: rgba(59,130,246,.04); }
+    tr.selected td { background: rgba(59,130,246,.07); }
+    .action-link { color: var(--blue); cursor: pointer; font-size: 11px; transition: opacity .15s; }
+    .action-link:hover { opacity: .7; }
+    .action-link.danger { color: var(--rose); }
+    .method-badge {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 10px;
+    }
+    .method-upload { background: rgba(59,130,246,.12); color: var(--blue); }
+    .method-lib    { background: rgba(139,92,246,.12); color: var(--purple); }
+
+    /* 分页 */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-1);
+      flex-shrink: 0;
+    }
+    .pg-btn {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-1);
+      background: none;
+      color: var(--text-2);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all .15s;
+    }
+    .pg-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .pg-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .pg-btn:disabled { opacity: .35; cursor: default; }
+
+    /* ── 右侧：文献预览区 ── */
+    .preview-col {
+      width: 35%;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      align-self: flex-start;
+      position: sticky;
+      top: 24px;
+    }
+    .preview-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-3);
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .preview-body { padding: 16px; }
+    .preview-empty {
+      padding: 40px 16px;
+      text-align: center;
+      color: var(--text-3);
+      font-size: 12px;
+    }
+    .preview-title { font-size: 13px; font-weight: 600; color: var(--text-1); line-height: 1.5; margin-bottom: 10px; }
+    .preview-meta { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .preview-meta-row { display: flex; gap: 8px; font-size: 11px; }
+    .preview-meta-key { color: var(--text-3); flex-shrink: 0; width: 56px; }
+    .preview-meta-val { color: var(--text-2); }
+    .preview-divider { height: 1px; background: var(--border-1); margin: 12px 0; }
+    .preview-abstract-title { font-size: 11px; color: var(--text-3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+    .preview-abstract { font-size: 12px; color: var(--text-2); line-height: 1.7; }
+
+    /* ── 固定底栏 ── */
+    .fixed-footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg-1);
+      border-top: 1px solid var(--border-1);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+    }
+    .footer-info { font-size: 12px; color: var(--text-3); }
+    .footer-info strong { color: var(--text-1); }
+    .footer-actions { display: flex; gap: 10px; }
+
+    /* ── 模态框覆盖层 ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--bg-3);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-4);
+      flex-shrink: 0;
+    }
+    .modal-title { font-size: 14px; font-weight: 600; }
+    .modal-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border-1);
+      background: var(--bg-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .modal-footer-right { display: flex; gap: 8px; }
+    .modal-selected-hint { font-size: 12px; color: var(--text-3); }
+    .modal-selected-hint strong { color: var(--blue); }
+
+    /* 上传弹窗 */
+    .upload-zone-modal {
+      border: 1.5px dashed var(--border-2);
+      border-radius: var(--radius-md);
+      background: var(--bg-2);
+      padding: 32px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .upload-zone-modal:hover { border-color: var(--blue); background: var(--blue-dim); }
+    .upload-zone-modal .uz-m-icon { color: var(--text-3); }
+    .upload-zone-modal .uz-m-text { font-size: 14px; color: var(--text-1); font-weight: 500; }
+    .upload-zone-modal .uz-m-hint { font-size: 11px; color: var(--text-3); }
+    .upload-zone-modal .uz-m-hint span { color: var(--blue); }
+    .upload-status { font-size: 12px; color: var(--text-3); }
+
+    /* 从文献库选取弹窗 */
+    .lib-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+    .lib-search input {
+      background: none; border: none; outline: none;
+      font-size: 12px; color: var(--text-1);
+      font-family: var(--font-sans); flex: 1;
+    }
+    .lib-search input::placeholder { color: var(--text-3); }
+    .lib-list { display: flex; flex-direction: column; gap: 0; max-height: 380px; overflow-y: auto; }
+    .lib-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 4px;
+      border-bottom: 1px solid var(--border-1);
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .lib-item:last-child { border-bottom: none; }
+    .lib-item:hover { background: rgba(255,255,255,.02); }
+    .lib-item.checked { background: var(--blue-dim); }
+    .lib-cb {
+      width: 16px; height: 16px; border-radius: 4px;
+      border: 1.5px solid var(--border-2);
+      background: var(--bg-2);
+      flex-shrink: 0; margin-top: 2px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .12s;
+    }
+    .lib-item.checked .lib-cb {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .lib-item-title { font-size: 12px; font-weight: 500; color: var(--text-1); margin-bottom: 3px; line-height: 1.4; }
+    .lib-item-meta { font-size: 10px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+
+<!-- 步骤进度条 -->
+<div class="step-bar">
+  <div class="step-bar-inner">
+    <div class="step done">
+      <div class="step-dot">✓</div>
+      <span>新建任务</span>
+    </div>
+    <div class="step-conn done"></div>
+    <div class="step active">
+      <div class="step-dot">2</div>
+      <span>文献上传</span>
+    </div>
+    <div class="step-conn"></div>
+    <div class="step">
+      <div class="step-dot">3</div>
+      <span>文献质检</span>
+    </div>
+    <div class="step-conn"></div>
+    <div class="step">
+      <div class="step-dot">4</div>
+      <span>抽取配置</span>
+    </div>
+    <div class="step-conn"></div>
+    <div class="step">
+      <div class="step-dot">5</div>
+      <span>确认结果</span>
+    </div>
+  </div>
+</div>
+
+<!-- 主内容 -->
+<div class="page-wrap">
+
+  <!-- 左侧 -->
+  <div class="left-col">
+
+    <div class="page-header">
+      <div>
+        <div class="page-title">文献<span>管理</span></div>
+        <div class="page-sub">风力发电预测本体 v2 · 当前 <strong id="lit-total">24</strong> 篇文献</div>
+      </div>
+    </div>
+
+    <!-- 上传区 + 从文献库选择 -->
+    <div class="upload-row">
+      <!-- 缩小版上传区 -->
+      <div class="upload-zone-sm" onclick="openUploadModal()">
+        <div class="uz-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 4v12M8 8l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="uz-text">拖拽 PDF 文献到此处，或点击上传</div>
+          <div class="uz-hint">支持批量上传，单文件最大 50MB</div>
+        </div>
+        <button class="uz-btn" onclick="event.stopPropagation();openUploadModal()">选择文件</button>
+      </div>
+      <!-- 从文献库选择 -->
+      <div class="lib-select-zone" onclick="openLibModal()">
+        <div class="lsz-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M4 6h16M4 10h16M4 14h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="18" cy="17" r="3" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M20.5 19.5l2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="lsz-text">从文献库中选择</div>
+        <div class="lsz-hint">从已入库文献中添加</div>
+      </div>
+    </div>
+
+    <!-- 文献列表 -->
+    <div class="table-card">
+      <div class="table-header">
+        <span class="table-header-title">已上传文献</span>
+        <span class="table-count" id="table-count-label">共 24 篇 · 第 1/3 页</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40%">文献标题</th>
+            <th>来源/作者</th>
+            <th>方式</th>
+            <th>年份</th>
+            <th>大小</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="lit-tbody"></tbody>
+      </table>
+      <div class="pagination" id="lit-pagination"></div>
+    </div>
+  </div>
+
+  <!-- 右侧：预览区 -->
+  <div class="preview-col" id="preview-col">
+    <div class="preview-header">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+        <path d="M4 2h6l3 3v9a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+        <path d="M9 2v4h3M5 8h6M5 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      文献预览
+    </div>
+    <div id="preview-content">
+      <div class="preview-empty">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="margin:0 auto 8px;display:block;opacity:.3">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        点击列表中的文献查看详情
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<!-- 固定底栏 -->
+<div class="fixed-footer">
+  <div class="footer-info">共 <strong id="footer-total">24</strong> 篇文献 · 全部解析完成</div>
+  <div class="footer-actions">
+    <button class="btn btn-ghost" onclick="window.location.href='main.html?page=ke-tasks'">← 返回</button>
+    <button class="btn btn-primary" onclick="window.location.href='ke_qa.html'">下一步：文献质检 →</button>
+  </div>
+</div>
+
+<!-- Modal：上传文献 -->
+<div class="modal-overlay" id="upload-modal" onclick="if(event.target===this)closeModal('upload-modal')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">添加文献</div>
+      </div>
+      <button class="btn-close" onclick="closeModal('upload-modal')"></button>
+    </div>
+    <div class="modal-body">
+      <div class="upload-zone-modal" onclick="document.getElementById('file-input').click()">
+        <div class="uz-m-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+        </div>
+        <div class="uz-m-text">拖拽文件到此处，或点击选择文件</div>
+        <div class="uz-m-hint">支持 <span>PDF / Word</span> 格式 &nbsp;单文件 ≤ 50 MB &nbsp;单次 ≤ 20 个</div>
+      </div>
+      <input type="file" id="file-input" accept=".pdf,.docx,.doc" multiple style="display:none" onchange="handleUploadSelect(this)">
+      <div class="upload-status" id="upload-status">未选择文件</div>
+    </div>
+    <div class="modal-footer">
+      <div></div>
+      <div class="modal-footer-right">
+        <button class="btn btn-ghost" onclick="closeModal('upload-modal')">取消</button>
+        <button class="btn btn-primary" onclick="confirmUpload()">确认添加</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal：从文献库中添加 -->
+<div class="modal-overlay" id="lib-modal" onclick="if(event.target===this)closeModal('lib-modal')">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">从文献库中添加</div>
+        <div class="modal-sub">选择已入库文献添加到本次任务</div>
+      </div>
+      <button class="btn-close" onclick="closeModal('lib-modal')"></button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <div class="lib-search">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <input type="text" placeholder="搜索文献标题、作者、期刊…" oninput="filterLibList(this.value)">
+      </div>
+      <div class="lib-list" id="lib-list"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-selected-hint">已选 <strong id="lib-selected-count">0</strong> 篇文献</div>
+      <div class="modal-footer-right">
+        <button class="btn btn-ghost" onclick="closeModal('lib-modal')">取消</button>
+        <button class="btn btn-primary" onclick="confirmLibAdd()">添加所选文献</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+  /* ── 演示数据 ── */
+  const LIT_DATA = [
+    { id:1, title:'A deep learning-based evolutionary model for short-term wind speed forecasting', source:'Energy Conversion', method:'upload', year:2024, size:'2.4MB' },
+    { id:2, title:'The study and application of a novel hybrid forecasting model – wind speed case study', source:'Applied Energy', method:'lib', year:2023, size:'1.8MB' },
+    { id:3, title:'Forecasting Wind Speed using Artificial Neural Networks', source:'ICACER 2024', method:'upload', year:2024, size:'3.1MB' },
+    { id:4, title:'Wind speed prediction using LSTM and ARIMA time series analysis models', source:'Turkish Journal', method:'lib', year:2023, size:'2.7MB' },
+    { id:5, title:'Hybrid deep learning model for wind power forecasting in complex terrains', source:'Renewable Energy', method:'upload', year:2024, size:'1.5MB' },
+    { id:6, title:'Probabilistic wind power forecasting using deep neural networks', source:'IEEE Trans.', method:'lib', year:2022, size:'2.2MB' },
+    { id:7, title:'Short-term wind speed forecasting with stacked autoencoders', source:'Energy & AI', method:'upload', year:2023, size:'1.9MB' },
+    { id:8, title:'Multivariable LSTM model for offshore wind power prediction', source:'Ocean Eng.', method:'upload', year:2024, size:'3.3MB' },
+    { id:9, title:'Data-driven approach for wind turbine performance assessment', source:'Appl. Energy', method:'lib', year:2022, size:'2.1MB' },
+    { id:10, title:'Attention-based CNN-LSTM for wind energy forecasting', source:'Applied Energy', method:'lib', year:2023, size:'2.0MB' },
+    { id:11, title:'ERA5 reanalysis wind data applications in renewable energy', source:'ECMWF Tech.', method:'lib', year:2022, size:'1.6MB' },
+    { id:12, title:'Decomposition-based ensemble forecasting for wind power', source:'Int. J. Elec.', method:'upload', year:2023, size:'2.8MB' },
+    { id:13, title:'Transfer learning for cross-site wind power prediction', source:'Sustain. Energy', method:'lib', year:2024, size:'1.4MB' },
+    { id:14, title:'Physics-informed neural networks for wind field simulation', source:'J. Comput. Phys.', method:'upload', year:2023, size:'3.5MB' },
+    { id:15, title:'Graph neural network approach to spatio-temporal wind forecasting', source:'IEEE TPWRS', method:'lib', year:2024, size:'2.3MB' },
+    { id:16, title:'Wavelet transform combined with ARIMA for wind power prediction', source:'Energies', method:'lib', year:2022, size:'1.7MB' },
+    { id:17, title:'Numerical weather prediction bias correction using neural networks', source:'Atmos. Res.', method:'upload', year:2024, size:'2.9MB' },
+    { id:18, title:'Offshore wind energy potential assessment using ERA5 and satellite data', source:'Renewable Energy', method:'lib', year:2023, size:'2.5MB' },
+    { id:19, title:'Convolutional neural network for spatial wind speed pattern recognition', source:'IEEE TPWRS', method:'upload', year:2024, size:'1.8MB' },
+    { id:20, title:'Random forest ensemble for short-term wind power interval forecasting', source:'Appl. Energy', method:'lib', year:2022, size:'2.0MB' },
+    { id:21, title:'Seasonal decomposition of wind speed time series for improved forecasting', source:'Energy Conversion', method:'upload', year:2023, size:'1.5MB' },
+    { id:22, title:'Extreme learning machine for very short-term wind speed estimation', source:'Neurocomputing', method:'lib', year:2022, size:'1.3MB' },
+    { id:23, title:'Multi-step wind power prediction with temporal convolutional network', source:'Energy', method:'upload', year:2023, size:'2.6MB' },
+    { id:24, title:'Bayesian deep learning for probabilistic wind power forecasting', source:'Appl. Energy', method:'lib', year:2024, size:'2.2MB' },
+  ];
+
+  const LIB_DATA = [
+    { id:101, title:'Comparative study of machine learning algorithms for wind speed prediction', source:'Energy Reports', year:2024 },
+    { id:102, title:'Long short-term memory networks for multi-step wind speed forecasting', source:'Applied Sciences', year:2023 },
+    { id:103, title:'Wavelet transform combined with ARIMA for wind power prediction', source:'Energies', year:2022 },
+    { id:104, title:'Numerical weather prediction bias correction using neural networks', source:'Atmospheric Research', year:2024 },
+    { id:105, title:'Offshore wind energy potential assessment using ERA5 and satellite data', source:'Renewable Energy', year:2023 },
+    { id:106, title:'Convolutional neural network for spatial wind speed pattern recognition', source:'IEEE TPWRS', year:2024 },
+    { id:107, title:'Random forest ensemble for short-term wind power interval forecasting', source:'Applied Energy', year:2022 },
+    { id:108, title:'Seasonal decomposition of wind speed time series for improved forecasting', source:'Energy Conversion', year:2023 },
+  ];
+
+  const PREVIEW_DATA = {
+    1: { abstract: 'This paper proposes an evolutionary deep learning model combining convolutional neural networks and LSTM units for short-term wind speed forecasting. The model employs a novel training strategy based on evolutionary algorithms to optimize hyperparameters, achieving state-of-the-art performance on multiple wind farm datasets.' },
+    2: { abstract: 'A hybrid forecasting model integrating statistical and machine learning approaches is presented. The model combines ARIMA for trend capture with a gradient boosting regressor for residual correction, demonstrating superior accuracy across seasonal variations in wind speed.' },
+    3: { abstract: 'This study applies artificial neural networks to wind speed forecasting using meteorological inputs including temperature, pressure, and humidity. Multiple network architectures are evaluated, and results indicate that deeper networks with attention mechanisms outperform shallow models.' },
+    4: { abstract: 'A comparative study of LSTM and ARIMA models for multi-horizon wind speed prediction is conducted. The paper finds that LSTM significantly outperforms ARIMA for forecast horizons exceeding 3 hours, while ARIMA remains competitive for very short-term predictions.' },
+    5: { abstract: 'Complex terrain introduces significant challenges for wind power forecasting. This paper develops a hybrid deep learning model that incorporates terrain features via a topography encoder, substantially improving forecast accuracy in mountainous wind farm environments.' },
+  };
+
+  /* ── 分页状态 ── */
+  const PAGE_SIZE = 10;
+  let currentPage = 1;
+  let selectedLitId = null;
+  let libSelected = new Set();
+
+  /* ── 渲染表格 ── */
+  function renderTable() {
+    const total = LIT_DATA.length;
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const items = LIT_DATA.slice(start, start + PAGE_SIZE);
+
+    document.getElementById('lit-total').textContent = total;
+    document.getElementById('footer-total').textContent = total;
+    document.getElementById('table-count-label').textContent =
+      `共 ${total} 篇 · 第 ${currentPage}/${totalPages} 页`;
+
+    const tbody = document.getElementById('lit-tbody');
+    tbody.innerHTML = items.map(r => `
+      <tr class="clickable${r.id === selectedLitId ? ' selected' : ''}" onclick="selectLit(${r.id})">
+        <td style="font-weight:500;color:var(--text-1);max-width:0">
+          <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.title}">${r.title}</div>
+        </td>
+        <td style="color:var(--text-2)">${r.source}</td>
+        <td><span class="method-badge method-${r.method}">${r.method === 'upload' ? '上传' : '文献库'}</span></td>
+        <td>${r.year}</td>
+        <td style="color:var(--text-3);font-family:var(--font-mono);font-size:11px">${r.size}</td>
+        <td>
+          <span class="action-link" onclick="event.stopPropagation();selectLit(${r.id})">预览</span>
+          &nbsp;
+          <span class="action-link danger" onclick="event.stopPropagation();removeLit(${r.id})">删除</span>
+        </td>
+      </tr>`).join('');
+
+    renderPagination(totalPages);
+  }
+
+  function renderPagination(totalPages) {
+    const pg = document.getElementById('lit-pagination');
+    if (totalPages <= 1) { pg.innerHTML = ''; return; }
+    let html = `<button class="pg-btn" onclick="gotoPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="pg-btn${i===currentPage?' active':''}" onclick="gotoPage(${i})">${i}</button>`;
+    }
+    html += `<button class="pg-btn" onclick="gotoPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+    pg.innerHTML = html;
+  }
+
+  function gotoPage(p) {
+    const total = Math.ceil(LIT_DATA.length / PAGE_SIZE);
+    if (p < 1 || p > total) return;
+    currentPage = p;
+    renderTable();
+  }
+
+  /* ── 选中文献 → 右侧预览 ── */
+  function selectLit(id) {
+    selectedLitId = id;
+    renderTable();
+    const lit = LIT_DATA.find(r => r.id === id);
+    const extra = PREVIEW_DATA[id] || {};
+    document.getElementById('preview-content').innerHTML = `
+      <div class="preview-body">
+        <div class="preview-title">${lit.title}</div>
+        <div class="preview-meta">
+          <div class="preview-meta-row"><span class="preview-meta-key">来源</span><span class="preview-meta-val">${lit.source}</span></div>
+          <div class="preview-meta-row"><span class="preview-meta-key">年份</span><span class="preview-meta-val">${lit.year}</span></div>
+          <div class="preview-meta-row"><span class="preview-meta-key">大小</span><span class="preview-meta-val">${lit.size}</span></div>
+          <div class="preview-meta-row"><span class="preview-meta-key">方式</span><span class="preview-meta-val">${lit.method === 'upload' ? '上传' : '从文献库添加'}</span></div>
+        </div>
+        ${extra.abstract ? `
+          <div class="preview-divider"></div>
+          <div class="preview-abstract-title">摘要</div>
+          <div class="preview-abstract">${extra.abstract}</div>` : ''}
+      </div>`;
+  }
+
+  /* ── 删除文献 ── */
+  function removeLit(id) {
+    const idx = LIT_DATA.findIndex(r => r.id === id);
+    if (idx !== -1) LIT_DATA.splice(idx, 1);
+    if (selectedLitId === id) {
+      selectedLitId = null;
+      document.getElementById('preview-content').innerHTML =
+        '<div class="preview-empty">点击列表中的文献查看详情</div>';
+    }
+    const total = Math.ceil(LIT_DATA.length / PAGE_SIZE);
+    if (currentPage > total) currentPage = Math.max(1, total);
+    renderTable();
+    window.showToast?.('已移除该文献');
+  }
+
+  /* ── 上传弹窗 ── */
+  function openUploadModal() {
+    document.getElementById('upload-status').textContent = '未选择文件';
+    document.getElementById('upload-modal').classList.add('active');
+  }
+  function handleUploadSelect(input) {
+    const files = Array.from(input.files);
+    document.getElementById('upload-status').textContent =
+      files.length ? `已选择 ${files.length} 个文件` : '未选择文件';
+  }
+  function confirmUpload() {
+    closeModal('upload-modal');
+    window.showToast?.('文献上传成功');
+  }
+
+  /* ── 文献库弹窗 ── */
+  let filteredLib = [...LIB_DATA];
+
+  function openLibModal() {
+    libSelected = new Set();
+    filteredLib = [...LIB_DATA];
+    renderLibList();
+    document.getElementById('lib-selected-count').textContent = '0';
+    document.getElementById('lib-modal').classList.add('active');
+  }
+  function filterLibList(q) {
+    const kw = q.toLowerCase();
+    filteredLib = kw ? LIB_DATA.filter(r =>
+      r.title.toLowerCase().includes(kw) || r.source.toLowerCase().includes(kw)
+    ) : [...LIB_DATA];
+    renderLibList();
+  }
+  function renderLibList() {
+    document.getElementById('lib-list').innerHTML = filteredLib.map(r => `
+      <div class="lib-item${libSelected.has(r.id) ? ' checked' : ''}" onclick="toggleLib(${r.id})">
+        <div class="lib-cb">${libSelected.has(r.id) ? '✓' : ''}</div>
+        <div>
+          <div class="lib-item-title">${r.title}</div>
+          <div class="lib-item-meta">${r.source} &nbsp;·&nbsp; ${r.year}</div>
+        </div>
+      </div>`).join('');
+  }
+  function toggleLib(id) {
+    libSelected.has(id) ? libSelected.delete(id) : libSelected.add(id);
+    document.getElementById('lib-selected-count').textContent = libSelected.size;
+    renderLibList();
+  }
+  function confirmLibAdd() {
+    closeModal('lib-modal');
+    window.showToast?.(`已添加 ${libSelected.size} 篇文献`);
+  }
+
+  /* ── 通用关闭 ── */
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  /* ── 初始化 ── */
+  renderTable();
+</script>
+</body>
+</html>
