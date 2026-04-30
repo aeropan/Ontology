@@ -15,11 +15,13 @@
       background: var(--bg-0);
       font-family: var(--font-sans);
       color: var(--text-1);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      padding-bottom: 64px;
     }
+
+    /* ── 步骤条 ── */
     .step-bar {
       background: var(--bg-1);
       border-bottom: 1px solid var(--border-1);
@@ -45,14 +47,393 @@
     .step-conn { flex: 1; height: 1px; background: var(--border-1); margin: 0 10px; }
     .step-conn.done { background: var(--green); opacity: .4; }
 
+    /* ── 主内容区 ── */
     .page-wrap {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      flex-direction: column; gap: 16px; padding: 40px 32px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 20px 32px 0;
+      overflow: hidden;
+      min-height: 0;
     }
-    .placeholder-icon { color: var(--text-3); opacity: .3; }
-    .placeholder-title { font-size: 16px; color: var(--text-3); font-weight: 500; }
-    .placeholder-sub { font-size: 12px; color: var(--text-3); }
 
+    /* ── 顶部信息卡 ── */
+    .info-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: stretch;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .info-left {
+      flex: 1;
+      display: flex;
+      align-items: stretch;
+      padding: 18px 0 18px 24px;
+    }
+    .info-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0 24px;
+      border-left: 1px solid var(--border-1);
+    }
+    .info-item:first-child { border-left: none; padding-left: 0; }
+    .info-label { font-size: 11px; color: var(--text-3); }
+    .info-value { font-size: 17px; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .info-value.num { color: var(--blue); font-family: var(--font-mono); font-size: 26px; }
+
+    /* 主分割线 */
+    .info-divider {
+      width: 2px;
+      background: var(--border-2);
+      margin: 12px 0;
+      flex-shrink: 0;
+    }
+
+    .info-right {
+      flex: 1;
+      display: flex;
+      align-items: stretch;
+      padding: 18px 24px 18px 0;
+    }
+    .info-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0 24px;
+      border-left: 1px solid var(--border-1);
+    }
+    .info-section:first-child { padding-left: 24px; }
+    .info-action-btn {
+      margin-top: 8px;
+      font-size: 11px;
+      padding: 4px 10px;
+      height: auto;
+      line-height: 1.6;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      width: fit-content;
+    }
+
+    /* ── 文献列表卡片 ── */
+    .lit-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      margin-bottom: 80px;
+      overflow: hidden;
+    }
+    .lit-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-3);
+      flex-shrink: 0;
+    }
+    .lit-header-title { font-size: 13px; font-weight: 600; flex-shrink: 0; }
+    .lit-filter-btns { display: flex; gap: 6px; }
+    .lit-filter-btn {
+      background: none;
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      font-size: 11px;
+      padding: 3px 10px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all .15s;
+    }
+    .lit-filter-btn:hover { border-color: var(--blue); color: var(--blue); }
+    .lit-sel-label { margin-left: auto; font-size: 11px; color: var(--text-3); white-space: nowrap; }
+
+    /* 表格 */
+    .table-scroll-wrap { flex: 1; overflow-y: auto; min-height: 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: var(--bg-3);
+      padding: 8px 14px;
+      font-size: 11px; font-weight: 500;
+      color: var(--text-2); text-align: left;
+      border-bottom: 1px solid var(--border-1);
+      white-space: nowrap;
+      position: sticky; top: 0; z-index: 1;
+    }
+    td {
+      padding: 9px 14px; font-size: 12px;
+      border-bottom: 1px solid var(--border-1);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(59,130,246,.025); }
+
+    /* 评分 & 状态标签 */
+    .ke-score-cell { display: flex; align-items: center; gap: 8px; }
+    .ke-score-bar  { width: 60px; height: 4px; background: var(--bg-0); border-radius: 2px; flex-shrink: 0; }
+    .ke-score-fill { height: 100%; border-radius: 2px; }
+    .ke-score-num  { font-size: 11px; font-family: var(--font-mono); font-weight: 600; min-width: 24px; }
+    .ke-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 20px;
+      font-size: 10px; font-weight: 500; white-space: nowrap;
+    }
+    .ke-badge-pass   { background: var(--green-dim); color: var(--green); }
+    .ke-badge-review { background: var(--amber-dim); color: var(--amber); }
+    .ke-badge-reject { background: var(--rose-dim);  color: var(--rose);  }
+    .ke-btn-detail {
+      padding: 3px 10px; border-radius: 5px;
+      background: var(--bg-3); border: 1px solid var(--border-1);
+      color: var(--text-2); font-size: 11px; cursor: pointer;
+      font-family: inherit; transition: all .15s;
+    }
+    .ke-btn-detail:hover { color: var(--blue); border-color: var(--blue); }
+
+    /* ── 详情抽屉 ── */
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 400;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .drawer-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .detail-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 400px;
+      background: var(--bg-3);
+      border-left: 1px solid var(--border-2);
+      transform: translateX(100%);
+      transition: transform .3s ease;
+      z-index: 401;
+      display: flex; flex-direction: column;
+    }
+    .detail-drawer.active { transform: translateX(0); }
+
+    .drawer-head {
+      padding: 18px 20px 16px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-4);
+      flex-shrink: 0;
+    }
+    .drawer-head-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 10px; margin-bottom: 14px;
+    }
+    .drawer-doc-title { font-size: 13px; font-weight: 600; color: var(--text-1); line-height: 1.55; flex: 1; }
+    .drawer-close-btn {
+      width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+      background: var(--bg-3); border: 1px solid var(--border-1);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text-3); transition: all .15s;
+      font-size: 16px; font-family: inherit; line-height: 1;
+    }
+    .drawer-close-btn:hover { color: var(--text-1); background: var(--bg-2); }
+
+    .drawer-score-row { display: flex; align-items: flex-end; justify-content: space-between; }
+    .drawer-score-big { font-size: 34px; font-weight: 700; font-family: var(--font-mono); line-height: 1; }
+    .drawer-score-cap { font-size: 10px; color: var(--text-3); margin-top: 3px; }
+
+    .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .drawer-section { margin-bottom: 20px; }
+    .drawer-section:last-child { margin-bottom: 0; }
+    .drawer-section-title {
+      font-size: 10px; font-weight: 600; color: var(--text-3);
+      letter-spacing: .8px; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .dim-item { margin-bottom: 10px; }
+    .dim-item:last-child { margin-bottom: 0; }
+    .dim-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .dim-label { font-size: 12px; color: var(--text-2); }
+    .dim-value { font-size: 11px; font-family: var(--font-mono); font-weight: 600; }
+    .dim-bar  { height: 5px; background: var(--bg-0); border-radius: 3px; }
+    .dim-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+    .drawer-text-block {
+      font-size: 12px; color: var(--text-2); line-height: 1.75;
+      background: var(--bg-2); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); padding: 12px 14px;
+    }
+    .drawer-foot {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-1);
+      background: var(--bg-4);
+      flex-shrink: 0;
+    }
+    .ke-btn-toggle {
+      width: 100%; padding: 10px 16px; border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: all .15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .ke-btn-toggle.selected { background: var(--blue); color: #fff; border: none; }
+    .ke-btn-toggle.selected:hover { opacity: .85; }
+    .ke-btn-toggle.unselected {
+      background: var(--bg-3); color: var(--text-3); border: 1px solid var(--border-1);
+    }
+    .ke-btn-toggle.unselected:hover { color: var(--text-2); border-color: var(--border-2); }
+
+    /* ── 设置抽屉 ── */
+    .settings-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 400;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .settings-overlay.active { opacity: 1; pointer-events: auto; }
+
+    .settings-drawer {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 420px;
+      background: var(--bg-3);
+      border-left: 1px solid var(--border-2);
+      transform: translateX(100%);
+      transition: transform .3s ease;
+      z-index: 401;
+      display: flex; flex-direction: column;
+    }
+    .settings-drawer.active { transform: translateX(0); }
+
+    .settings-head {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-4);
+      display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0;
+    }
+    .settings-title {
+      font-size: 14px; font-weight: 600;
+      border-left: 3px solid var(--blue);
+      padding-left: 10px;
+      flex: 1;
+    }
+    .settings-body {
+      flex: 1; overflow-y: auto;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 22px;
+    }
+    .cfg-section { display: flex; flex-direction: column; gap: 14px; }
+    .cfg-section-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border-1); padding-bottom: 8px;
+    }
+    .cfg-section-title { font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .6px; }
+    .cfg-section-tag   { font-size: 10px; color: var(--text-3); font-family: var(--font-mono); }
+    .cfg-row { display: flex; flex-direction: column; gap: 6px; }
+    .cfg-label {
+      font-size: 11px; color: var(--text-2); font-weight: 500;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cfg-label-val { font-family: var(--font-mono); color: var(--text-1); font-weight: 600; font-size: 12px; }
+    .cfg-sub { font-size: 10px; color: var(--text-3); }
+
+    .cfg-select {
+      background: var(--bg-2); border: 1px solid var(--border-1);
+      border-radius: var(--radius-sm); padding: 8px 12px;
+      font-size: 12px; color: var(--text-1); font-family: var(--font-sans);
+      outline: none; cursor: pointer; width: 100%; transition: border-color .15s;
+    }
+    .cfg-select:focus { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-dim); }
+
+    .cfg-input {
+      background: var(--bg-2); border: 1px solid var(--border-1);
+      border-radius: var(--radius-sm); padding: 8px 12px;
+      font-size: 12px; color: var(--text-1); font-family: var(--font-mono);
+      outline: none; width: 100%; transition: border-color .15s;
+    }
+    .cfg-input:focus { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-dim); }
+
+    .cfg-range { width: 100%; accent-color: var(--blue); cursor: pointer; }
+
+    /* 代码编辑器 */
+    .code-editor {
+      display: flex;
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      height: 200px;
+    }
+    .code-linenos {
+      background: var(--bg-1); color: var(--text-3);
+      padding: 12px 8px; font-family: var(--font-mono); font-size: 11px;
+      line-height: 1.65; text-align: right; min-width: 36px;
+      border-right: 1px solid var(--border-1);
+      overflow: hidden; user-select: none; flex-shrink: 0; white-space: pre;
+    }
+    .code-ta {
+      flex: 1; background: var(--bg-0); border: none; outline: none;
+      padding: 12px; font-family: var(--font-mono); font-size: 11px;
+      line-height: 1.65; color: var(--text-1); resize: none; overflow-y: auto;
+    }
+
+    /* 复选框组 */
+    .cb-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cb-item {
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer; font-size: 12px; color: var(--text-2); transition: color .15s;
+    }
+    .cb-item:hover { color: var(--text-1); }
+    .cb-item input[type="checkbox"] { accent-color: var(--blue); width: 14px; height: 14px; cursor: pointer; }
+
+    .settings-foot {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border-1);
+      background: var(--bg-4);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    /* ── 本体列表（弹窗内） ── */
+    .ont-search {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-2); border: 1px solid var(--border-1);
+      border-radius: var(--radius-sm); padding: 8px 12px;
+    }
+    .ont-search input {
+      background: none; border: none; outline: none;
+      font-size: 12px; color: var(--text-1); font-family: var(--font-sans); flex: 1;
+    }
+    .ont-search input::placeholder { color: var(--text-3); }
+    .ont-list { display: flex; flex-direction: column; max-height: 360px; overflow-y: auto; }
+    .ont-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 6px;
+      border-bottom: 1px solid var(--border-1);
+      cursor: pointer; transition: background .12s;
+      border-radius: var(--radius-sm);
+    }
+    .ont-item:last-child { border-bottom: none; }
+    .ont-item:hover { background: rgba(255,255,255,.025); }
+    .ont-item.selected { background: var(--blue-dim); }
+    .ont-icon {
+      width: 38px; height: 38px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .ont-info { flex: 1; min-width: 0; }
+    .ont-name { font-size: 13px; font-weight: 600; color: var(--text-1); margin-bottom: 3px; }
+    .ont-meta { font-size: 11px; color: var(--text-3); }
+    .ont-check {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 1.5px solid var(--border-2); background: var(--bg-2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .15s; font-size: 11px; color: #fff;
+    }
+    .ont-item.selected .ont-check { background: var(--blue); border-color: var(--blue); }
+
+    /* ── 固定底栏 ── */
     .fixed-footer {
       position: fixed; bottom: 0; left: 0; right: 0;
       background: var(--bg-1); border-top: 1px solid var(--border-1);
@@ -60,11 +441,14 @@
       display: flex; align-items: center; justify-content: space-between;
       z-index: 100;
     }
-    .footer-actions { display: flex; gap: 10px; margin-left: auto; }
+    .footer-info { font-size: 12px; color: var(--text-3); }
+    .footer-info strong { color: var(--text-1); }
+    .footer-actions { display: flex; gap: 10px; }
   </style>
 </head>
 <body>
 
+<!-- 步骤条 -->
 <div class="step-bar">
   <div class="step-bar-inner">
     <div class="step done"><div class="step-dot">✓</div><span>新建任务</span></div>
@@ -79,23 +463,611 @@
   </div>
 </div>
 
+<!-- 主内容 -->
 <div class="page-wrap">
-  <div class="placeholder-icon">
-    <svg width="64" height="64" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-    </svg>
+
+  <!-- 顶部信息卡 -->
+  <div class="info-card">
+    <div class="info-left">
+      <div class="info-item">
+        <div class="info-label">抽取任务名称</div>
+        <div class="info-value">风力发电预测</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">任务领域</div>
+        <div class="info-value">风力发电</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">参与文献数</div>
+        <div class="info-value num" id="info-doc-count">20</div>
+      </div>
+    </div>
+
+    <div class="info-divider"></div>
+
+    <div class="info-right">
+      <div class="info-section">
+        <div class="info-label">本体基座</div>
+        <div class="info-value" style="font-size:14px" id="info-ontology">风力发电预测本体 V1.0</div>
+        <button class="btn btn-ghost info-action-btn" onclick="openOntologyModal()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          选择本体底座
+        </button>
+      </div>
+      <div class="info-section">
+        <div class="info-label">配置参数</div>
+        <div class="info-value" style="font-size:14px" id="info-cfg-label">默认配置</div>
+        <button class="btn btn-ghost info-action-btn" onclick="openSettingsDrawer()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          抽取配置
+        </button>
+      </div>
+    </div>
   </div>
-  <div class="placeholder-title">抽取配置</div>
-  <div class="placeholder-sub">此页面内容待开发</div>
+
+  <!-- 文献列表 -->
+  <div class="lit-card">
+    <div class="lit-header">
+      <span class="lit-header-title">选择参与抽取的文献</span>
+      <div class="lit-filter-btns">
+        <button class="lit-filter-btn" onclick="litToggleAll()">全选 / 取消全选</button>
+        <button class="lit-filter-btn" onclick="litSelectByQuality('pass')">高质量</button>
+        <button class="lit-filter-btn" onclick="litSelectByQuality('review')">中等质量</button>
+      </div>
+      <span class="lit-sel-label" id="lit-sel-label">已选 — / — 篇</span>
+    </div>
+    <div class="table-scroll-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:36px">
+              <input type="checkbox" id="cb-all" style="accent-color:var(--blue);cursor:pointer"
+                onchange="litToggleAllCb(this.checked)">
+            </th>
+            <th>文献标题</th>
+            <th style="width:60px">年份</th>
+            <th style="width:150px">综合评分</th>
+            <th style="width:120px">状态</th>
+            <th style="width:60px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="cfg-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<!-- 固定底栏 -->
+<div class="fixed-footer">
+  <div class="footer-info">已选 <strong id="footer-sel-count">—</strong> / <strong id="footer-total">—</strong> 篇文献参与抽取</div>
+  <div class="footer-actions">
+    <button class="btn btn-ghost" onclick="openRecheckConfirm()">← 重新质检</button>
+    <button class="btn btn-primary" onclick="window.location.href='main.html?page=ke-review'">开始抽取 →</button>
+  </div>
 </div>
 
-<div class="fixed-footer">
-  <div class="footer-actions">
-    <button class="btn btn-ghost" onclick="window.location.href='ke_qa.html'">← 上一步</button>
-    <button class="btn btn-primary" onclick="window.location.href='main.html?page=ke-review'">下一步：确认结果 →</button>
+<!-- ── 重新质检确认 ── -->
+<div class="modal-overlay" id="recheck-modal" onclick="if(event.target===this)closeModal('recheck-modal')">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title">重新质检确认</div>
+      <button class="btn-close" onclick="closeModal('recheck-modal')"></button>
+    </div>
+    <div class="modal-body" style="padding:20px 24px">
+      <p style="font-size:13px;color:var(--text-2);line-height:1.75">
+        是否要重新质检？重新质检将对所有文献重新运行质检流程，当前结果将被覆盖。
+      </p>
+      <p style="font-size:12px;color:var(--amber);margin-top:10px">⚠ 此操作预计花费 3~5 分钟，请确认。</p>
+    </div>
+    <div class="modal-footer">
+      <div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('recheck-modal')">取消</button>
+        <button class="btn btn-danger" onclick="goRecheck()">确认重新质检</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 选择本体弹窗 ── -->
+<div class="modal-overlay" id="ont-modal" onclick="if(event.target===this)closeModal('ont-modal')">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">选择行业本体</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px">从本体中心选择已配置的行业本体，作为业务本体的构建基础</div>
+      </div>
+      <button class="btn-close" onclick="closeModal('ont-modal')"></button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <div class="ont-search">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M10.5 10.5l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <input type="text" placeholder="搜索本体名称、领域…" id="ont-search-input" oninput="renderOntList(this.value)">
+      </div>
+      <div class="ont-list" id="ont-list"></div>
+    </div>
+    <div class="modal-footer">
+      <div style="font-size:12px;color:var(--text-3)">已选：<span id="ont-sel-name" style="color:var(--blue)">—</span></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('ont-modal')">取消</button>
+        <button class="btn btn-primary" onclick="confirmOntology()">确认选择</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 详情抽屉 ── -->
+<div class="drawer-overlay" id="detail-overlay" onclick="closeDetailDrawer()"></div>
+<div class="detail-drawer" id="detail-drawer">
+  <div class="drawer-head">
+    <div class="drawer-head-top">
+      <div class="drawer-doc-title" id="drawer-title">—</div>
+      <button class="drawer-close-btn" onclick="closeDetailDrawer()">×</button>
+    </div>
+    <div class="drawer-score-row">
+      <div id="drawer-badge"></div>
+      <div style="text-align:right">
+        <div class="drawer-score-big" id="drawer-score">—</div>
+        <div class="drawer-score-cap">综合评分</div>
+      </div>
+    </div>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-section">
+      <div class="drawer-section-title">三维评估</div>
+      <div class="dim-item">
+        <div class="dim-label-row"><span class="dim-label">相关性</span><span class="dim-value" id="dim-rel-v">—</span></div>
+        <div class="dim-bar"><div class="dim-fill" id="dim-rel-f"></div></div>
+      </div>
+      <div class="dim-item">
+        <div class="dim-label-row"><span class="dim-label">时效性</span><span class="dim-value" id="dim-tim-v">—</span></div>
+        <div class="dim-bar"><div class="dim-fill" id="dim-tim-f"></div></div>
+      </div>
+      <div class="dim-item">
+        <div class="dim-label-row"><span class="dim-label">权威度</span><span class="dim-value" id="dim-aut-v">—</span></div>
+        <div class="dim-bar"><div class="dim-fill" id="dim-aut-f"></div></div>
+      </div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">质检说明</div>
+      <div class="drawer-text-block" id="drawer-note">—</div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">采样内容预览（前 3 页）</div>
+      <div class="drawer-text-block" id="drawer-preview">—</div>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <button class="ke-btn-toggle unselected" id="drawer-sel-btn" onclick="toggleDrawerSelect()">未选择</button>
+  </div>
+</div>
+
+<!-- ── 抽取设置抽屉 ── -->
+<div class="settings-overlay" id="settings-overlay" onclick="closeSettingsDrawer()"></div>
+<div class="settings-drawer" id="settings-drawer">
+  <div class="settings-head">
+    <div class="settings-title">抽取设置</div>
+    <button class="drawer-close-btn" onclick="closeSettingsDrawer()">×</button>
+  </div>
+  <div class="settings-body">
+
+    <!-- 模型参数 -->
+    <div class="cfg-section">
+      <div class="cfg-section-hd">
+        <span class="cfg-section-title">模型参数</span>
+        <span class="cfg-section-tag">model</span>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">推理模型</label>
+        <select class="cfg-select" id="cfg-model" onchange="onSettingsChange()">
+          <option value="claude35">Claude Sonnet 4.5 &nbsp;通用·高质量</option>
+          <option value="gpt4o">GPT-4o &nbsp;通用·高质量</option>
+          <option value="gpt4t">GPT-4 Turbo &nbsp;高性能</option>
+          <option value="local">本地模型 &nbsp;低延迟</option>
+        </select>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">
+          温度 (Temperature)
+          <span class="cfg-label-val" id="cfg-temp-val">0.20</span>
+        </label>
+        <input type="range" class="cfg-range" id="cfg-temp" min="0" max="1" step="0.01" value="0.20"
+          oninput="document.getElementById('cfg-temp-val').textContent=parseFloat(this.value).toFixed(2);onSettingsChange()">
+        <div class="cfg-sub">越低越稳定保守，越高输出越发散</div>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">最大输出 Token</label>
+        <input type="number" class="cfg-input" id="cfg-tokens" value="4096" min="512" max="32768" step="512" oninput="onSettingsChange()">
+      </div>
+    </div>
+
+    <!-- Prompt 模板 -->
+    <div class="cfg-section">
+      <div class="cfg-section-hd">
+        <span class="cfg-section-title">Prompt 模板</span>
+        <span class="cfg-section-tag">prompt</span>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">模板选择</label>
+        <select class="cfg-select" id="cfg-template" onchange="onTemplateChange(this.value)">
+          <option value="general">通用本体</option>
+          <option value="academic">学术抽取</option>
+          <option value="event">事件图谱</option>
+          <option value="custom">自定义</option>
+        </select>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">Prompt 内容</label>
+        <div class="code-editor">
+          <pre class="code-linenos" id="prompt-linenos">1</pre>
+          <textarea class="code-ta" id="prompt-ta" spellcheck="false" oninput="onPromptInput()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 抽取范围 -->
+    <div class="cfg-section">
+      <div class="cfg-section-hd">
+        <span class="cfg-section-title">抽取范围</span>
+        <span class="cfg-section-tag">scope</span>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">节点类型</label>
+        <div class="cb-group">
+          <label class="cb-item"><input type="checkbox" checked onchange="onSettingsChange()"> 类</label>
+          <label class="cb-item"><input type="checkbox" checked onchange="onSettingsChange()"> 属性</label>
+          <label class="cb-item"><input type="checkbox" checked onchange="onSettingsChange()"> 实例</label>
+          <label class="cb-item"><input type="checkbox" checked onchange="onSettingsChange()"> 概念</label>
+        </div>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">业务类型</label>
+        <div class="cb-group">
+          <label class="cb-item"><input type="checkbox" checked onchange="onSettingsChange()"> 数据</label>
+          <label class="cb-item"><input type="checkbox" checked onchange="onSettingsChange()"> 算法</label>
+          <label class="cb-item"><input type="checkbox" checked onchange="onSettingsChange()"> 模型</label>
+          <label class="cb-item"><input type="checkbox" checked onchange="onSettingsChange()"> 指标</label>
+          <label class="cb-item"><input type="checkbox" checked onchange="onSettingsChange()"> 任务</label>
+          <label class="cb-item"><input type="checkbox" onchange="onSettingsChange()"> 约束</label>
+        </div>
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">
+          抽取深度
+          <span class="cfg-label-val" id="cfg-depth-val">3 度</span>
+        </label>
+        <input type="range" class="cfg-range" id="cfg-depth" min="1" max="5" step="1" value="3"
+          oninput="document.getElementById('cfg-depth-val').textContent=this.value+' 度';onSettingsChange()">
+      </div>
+      <div class="cfg-row">
+        <label class="cfg-label">
+          置信度阈值
+          <span class="cfg-label-val" id="cfg-conf-val">≥ 0.65</span>
+        </label>
+        <input type="range" class="cfg-range" id="cfg-conf" min="0" max="1" step="0.01" value="0.65"
+          oninput="document.getElementById('cfg-conf-val').textContent='≥ '+parseFloat(this.value).toFixed(2);onSettingsChange()">
+        <div class="cfg-sub">低于此值的实体/关系将被丢弃</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="settings-foot">
+    <button class="btn btn-ghost" style="font-size:12px" onclick="resetSettings()">恢复默认</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeSettingsDrawer()">取消</button>
+      <button class="btn btn-primary" onclick="applySettings()">应用配置</button>
+    </div>
   </div>
 </div>
 
 <div id="toast-container"></div>
+
+<script>
+  /* ══════════════════════════════════════
+     文献数据
+  ══════════════════════════════════════ */
+  const LIT_DOCS = [
+    { title:'A deep learning-based evolutionary model for short-term wind speed forecasting', src:'Energy Conversion', year:2024, score:92, status:'pass',   rel:95, tim:90, auth:88, note:'文献内容与风电预测主题高度相关，数据来源权威，方法论完整，建议优先纳入抽取。', preview:'This paper proposes a novel evolutionary deep learning architecture combining LSTM with genetic algorithms for short-term wind speed forecasting. Experiments on three wind farm datasets demonstrate RMSE reduction of 18% compared to baseline models.' },
+    { title:'The study and application of a novel hybrid forecasting model – wind speed case study', src:'Applied Energy', year:2023, score:88, status:'pass',   rel:90, tim:87, auth:85, note:'混合预测模型兼顾统计与机器学习优势，实验充分，适合抽取方法论与对比分析相关知识。', preview:'A hybrid model combining ARIMA and gradient boosting regressors is proposed. The model adapts its weighting strategy seasonally, outperforming single-method baselines across all test periods.' },
+    { title:'Forecasting Wind Speed using Artificial Neural Networks', src:'ICACER 2024', year:2024, score:85, status:'pass',   rel:88, tim:92, auth:79, note:'使用多层神经网络对风速进行预测，实验设计规范，结论可信。', preview:'Multi-layer artificial neural networks are deployed for wind speed forecasting. The study tests MLP, RBF and ELM variants across 12 meteorological stations.' },
+    { title:'Wind speed prediction using LSTM and ARIMA time series analysis models', src:'Turkish Journal', year:2023, score:83, status:'pass',   rel:85, tim:86, auth:77, note:'融合 LSTM 与 ARIMA，时间序列建模方法成熟，实验结论稳健。', preview:'LSTM and ARIMA models are compared and combined for wind speed time series prediction with weighted ensemble strategy dynamically adjusting model contributions.' },
+    { title:'Hybrid deep learning model for wind power forecasting in complex terrains', src:'Renewable Energy', year:2024, score:91, status:'pass',   rel:93, tim:89, auth:90, note:'复杂地形下的风功率预测，融合地形编码模块，创新性强。', preview:'A hybrid deep learning model incorporates terrain features via a topography encoder, substantially improving forecast accuracy in mountainous wind farm environments.' },
+    { title:'Probabilistic wind power forecasting using deep neural networks', src:'IEEE Trans.', year:2022, score:79, status:'pass',   rel:82, tim:76, auth:80, note:'概率预测框架完整，不确定性量化方法有创新，数据稍旧但方法仍具参考价值。', preview:'Deep neural networks generate probabilistic forecasts via quantile regression and Monte Carlo dropout. Evaluated on NREL wind integration datasets.' },
+    { title:'Short-term wind speed forecasting with stacked autoencoders', src:'Energy & AI', year:2023, score:77, status:'pass',   rel:80, tim:82, auth:70, note:'堆叠自编码器用于特征提取，方法有一定新颖性，但权威期刊发表信息待确认。', preview:'Stacked autoencoders extract latent representations from raw wind speed sequences. Reduces input dimensionality by 60% while retaining predictive signal.' },
+    { title:'Transformer-based model for spatio-temporal wind forecasting', src:'Applied Energy', year:2023, score:90, status:'pass',   rel:93, tim:88, auth:86, note:'Transformer 架构用于时空风速预测，模型性能优秀，引用量快速增长。', preview:'Transformer with spatial attention captures dependencies across wind farm nodes simultaneously. SOTA results on SDWPF benchmark. Model and data splits publicly released.' },
+    { title:'Physics-informed neural networks for wind simulation', src:'J. Comput.', year:2024, score:87, status:'pass',   rel:90, tim:88, auth:82, note:'物理信息神经网络用于风场仿真，方法融合物理先验，创新性强。', preview:'Physics-informed neural networks incorporate Navier–Stokes equations as soft constraints. Model learns wind field dynamics with reduced labelled data requirements.' },
+    { title:'Graph neural network approach to wind farm optimization', src:'IEEE Trans.', year:2024, score:84, status:'pass',   rel:87, tim:90, auth:78, note:'图神经网络应用于风场优化，拓扑结构建模合理，适合提取空间关系特征。', preview:'Graph neural networks model wind farm topology for layout optimization and power maximization. Node embeddings encode turbine positions and meteorological inputs.' },
+    { title:'ERA5 reanalysis data in wind resource assessment', src:'Wind Energy', year:2023, score:80, status:'pass',   rel:83, tim:80, auth:76, note:'ERA5 数据应用于风资源评估，数据源权威，与平台核心数据来源高度一致。', preview:'ERA5 reanalysis data is systematically compared against met-mast observations across 120 sites globally. Bias correction methodologies benchmarked, RMSE within 0.8 m/s.' },
+    { title:'Real-time wind forecasting with online learning', src:'Expert Syst.', year:2023, score:82, status:'pass',   rel:85, tim:84, auth:76, note:'在线学习框架适合实时应用场景，工程落地价值较高。', preview:'Online learning algorithms adapt forecast models in real-time without full retraining. Latency under 50 ms per update enables integration with SCADA control loops.' },
+    { title:'Numerical weather prediction enhanced by machine learning', src:'Atmos. Res.', year:2023, score:81, status:'pass',   rel:84, tim:82, auth:78, note:'NWP 与机器学习融合，数据质量高，方法兼顾物理机制和统计学习。', preview:'Machine learning post-processing corrects systematic biases in NWP wind forecasts. Skill scores improve across all forecast horizons from 1 h to 48 h.' },
+    { title:'Extreme gradient boosting for wind power prediction', src:'Energy Rep.', year:2022, score:72, status:'review', rel:75, tim:68, auth:74, note:'XGBoost 方法成熟，但发表年份较早，在现有基准上的表现有待对比，建议复审。', preview:'XGBoost is applied to wind power prediction with Bayesian hyperparameter optimisation. Compared against RF and SVR; no deep learning baselines included.' },
+    { title:'Ensemble learning methods for renewable energy forecasting', src:'Energies', year:2021, score:63, status:'review', rel:65, tim:58, auth:70, note:'集成学习综述性内容较多，原创方法贡献有限，2021 年发表时效性下降。', preview:'Survey and application of ensemble learning methods for renewable energy forecasting. Covers wind and solar domains with comparative table of 34 papers.' },
+    { title:'Multi-step ahead wind speed forecasting using wavelet decomposition', src:'Energy', year:2022, score:70, status:'review', rel:73, tim:66, auth:72, note:'小波分解辅助多步预测，思路清晰，但与现有深度学习方法相比竞争力一般。', preview:'Wavelet decomposition separates wind speed into trend and fluctuation components. Competitive with ARIMA variants but underperforms LSTM on horizons beyond 6 hours.' },
+    { title:'Bayesian deep learning for wind speed estimation', src:'Neural Net.', year:2021, score:58, status:'review', rel:62, tim:52, auth:64, note:'贝叶斯方法理论完整，但发表较早，在大规模数据场景下的性能尚待验证。', preview:'Bayesian deep learning provides uncertainty-aware wind speed estimates via variational inference. Evaluated on an 18-month dataset; scalability to large wind farms untested.' },
+    { title:'Review of wake effect models for wind farm layout optimization', src:'Energies', year:2021, score:38, status:'reject', rel:40, tim:35, auth:42, note:'综述性文献，缺乏原创性数据，且时效性较差，不建议使用。', preview:'Reviews Jensen, Gaussian and dynamic wake models for wind farm layout. Catalogues 28 models but introduces no novel methodology. Citations pre-2019.' },
+    { title:'Statistical downscaling of wind speed from global climate models', src:'Clim. Dyn.', year:2020, score:35, status:'reject', rel:38, tim:30, auth:40, note:'2020 年发表，统计降尺度方法已被深度学习大幅超越，时效性严重不足。', preview:'Statistical downscaling derives local wind speed from GCM outputs using transfer functions. Methodology superseded by recent diffusion-based downscaling.' },
+    { title:'Adaptive neuro-fuzzy inference for wind power prediction', src:'Soft Comput.', year:2020, score:48, status:'reject', rel:52, tim:38, auth:50, note:'ANFIS 方法发表于 2020 年，已被深度学习取代，不建议纳入。', preview:'ANFIS combines neural network learning with fuzzy logic for wind power prediction. Performance lags modern deep learning by 30%+ on equivalent datasets.' },
+  ];
+  // pass/review 默认选中，reject 不选
+  LIT_DOCS.forEach(d => { d.selected = d.status !== 'reject'; });
+
+  /* ── 状态辅助 ── */
+  const statusColor = s => s==='pass' ? 'var(--green)' : s==='review' ? 'var(--amber)' : 'var(--rose)';
+  const statusBadge = s => s==='pass' ? 'ke-badge-pass' : s==='review' ? 'ke-badge-review' : 'ke-badge-reject';
+  const statusLabel = s => s==='pass' ? '✓ 已通过' : s==='review' ? '△ 建议复审' : '× 不建议使用';
+
+  /* ── 渲染列表 ── */
+  function renderTable() {
+    const tbody = document.getElementById('cfg-tbody');
+    tbody.innerHTML = LIT_DOCS.map((d, i) => {
+      const c = statusColor(d.status);
+      return `<tr>
+        <td style="text-align:center">
+          <input type="checkbox" id="cb-${i}" style="accent-color:var(--blue);cursor:pointer"
+            ${d.selected?'checked':''} onchange="toggleDoc(${i},this.checked)">
+        </td>
+        <td style="font-size:12px;font-weight:500;max-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+            title="${d.title}">${d.title}</td>
+        <td style="font-size:11px;font-family:var(--font-mono)">${d.year}</td>
+        <td>
+          <div class="ke-score-cell">
+            <div class="ke-score-bar"><div class="ke-score-fill" style="width:${d.score}%;background:${c}"></div></div>
+            <span class="ke-score-num" style="color:${c}">${d.score}</span>
+          </div>
+        </td>
+        <td><span class="ke-badge ${statusBadge(d.status)}">${statusLabel(d.status)}</span></td>
+        <td><button class="ke-btn-detail" onclick="openDetailDrawer(${i})">详情</button></td>
+      </tr>`;
+    }).join('');
+    updateSelCount();
+  }
+
+  /* ── 选中控制 ── */
+  function toggleDoc(idx, checked) {
+    LIT_DOCS[idx].selected = checked;
+    updateSelCount();
+    if (detailIdx === idx) updateDrawerSelBtn(checked);
+  }
+  function litToggleAllCb(checked) {
+    LIT_DOCS.forEach((d, i) => {
+      d.selected = checked;
+      const cb = document.getElementById('cb-'+i);
+      if (cb) cb.checked = checked;
+    });
+    updateSelCount();
+    if (detailIdx >= 0) updateDrawerSelBtn(LIT_DOCS[detailIdx].selected);
+  }
+  function litToggleAll() {
+    const anyOff = LIT_DOCS.some(d => !d.selected);
+    litToggleAllCb(anyOff);
+    document.getElementById('cb-all').checked = anyOff;
+  }
+  function litSelectByQuality(minStatus) {
+    LIT_DOCS.forEach((d, i) => {
+      d.selected = minStatus === 'pass' ? d.status === 'pass' : d.status !== 'reject';
+      const cb = document.getElementById('cb-'+i);
+      if (cb) cb.checked = d.selected;
+    });
+    document.getElementById('cb-all').checked = false;
+    updateSelCount();
+  }
+  function updateSelCount() {
+    const sel   = LIT_DOCS.filter(d => d.selected).length;
+    const total = LIT_DOCS.length;
+    document.getElementById('lit-sel-label').textContent    = `已选 ${sel} / ${total} 篇`;
+    document.getElementById('footer-sel-count').textContent = sel;
+    document.getElementById('footer-total').textContent     = total;
+    document.getElementById('info-doc-count').textContent   = sel;
+  }
+
+  /* ══════════════════════════════════════
+     详情抽屉
+  ══════════════════════════════════════ */
+  let detailIdx = -1;
+
+  function openDetailDrawer(idx) {
+    closeSettingsDrawer();   // 互斥
+    detailIdx = idx;
+    const d = LIT_DOCS[idx];
+    const c = statusColor(d.status);
+
+    document.getElementById('drawer-title').textContent = d.title;
+    document.getElementById('drawer-score').textContent  = d.score;
+    document.getElementById('drawer-score').style.color  = c;
+    document.getElementById('drawer-badge').innerHTML    =
+      `<span class="ke-badge ${statusBadge(d.status)}">${statusLabel(d.status)}</span>`;
+
+    setDim('rel', d.rel, c);
+    setDim('tim', d.tim, c);
+    setDim('aut', d.auth, c);
+
+    document.getElementById('drawer-note').textContent    = d.note;
+    document.getElementById('drawer-preview').textContent = d.preview;
+    updateDrawerSelBtn(d.selected);
+
+    document.getElementById('detail-overlay').classList.add('active');
+    document.getElementById('detail-drawer').classList.add('active');
+  }
+
+  function setDim(key, val, color) {
+    document.getElementById(`dim-${key}-v`).textContent       = val;
+    document.getElementById(`dim-${key}-v`).style.color       = color;
+    document.getElementById(`dim-${key}-f`).style.width       = val + '%';
+    document.getElementById(`dim-${key}-f`).style.background  = color;
+  }
+
+  function closeDetailDrawer() {
+    document.getElementById('detail-overlay').classList.remove('active');
+    document.getElementById('detail-drawer').classList.remove('active');
+    detailIdx = -1;
+  }
+
+  function toggleDrawerSelect() {
+    if (detailIdx < 0) return;
+    LIT_DOCS[detailIdx].selected = !LIT_DOCS[detailIdx].selected;
+    updateDrawerSelBtn(LIT_DOCS[detailIdx].selected);
+    const cb = document.getElementById('cb-'+detailIdx);
+    if (cb) cb.checked = LIT_DOCS[detailIdx].selected;
+    updateSelCount();
+  }
+
+  function updateDrawerSelBtn(sel) {
+    const btn = document.getElementById('drawer-sel-btn');
+    btn.className  = 'ke-btn-toggle ' + (sel ? 'selected' : 'unselected');
+    btn.textContent = sel ? '✓ 已选择' : '未选择';
+  }
+
+  /* ══════════════════════════════════════
+     设置抽屉
+  ══════════════════════════════════════ */
+  const EXTRACT_PROMPTS = {
+    general:  `# 通用本体抽取\n\n排取层级最深 {{depth}} 层\n\n## 输入文献\n标题：{{title}}\n摘要：{{abstract}}\n正文：{{content}}\n\n## 输出\n请严格按照 schema 输出，不要包含任何解释性文字。\n\n插入变量：{{title}} {{abstract}} {{content}}\n             {{node_types}} {{biz_types}} {{depth}} {{confidence}}`,
+    academic: `# 学术抽取\n\n专注于学术概念、方法论和实验结论的知识提取。\n\n## 输入文献\n标题：{{title}}\n摘要：{{abstract}}\n正文：{{content}}\n\n## 输出格式\n以 JSON Schema 格式输出实体和关系列表，\n区分定义型、方法型和结论型节点。`,
+    event:    `# 事件图谱\n\n专注于事件、时间点、地点和参与方的结构化提取。\n\n## 输入文献\n标题：{{title}}\n摘要：{{abstract}}\n正文：{{content}}\n\n## 输出要求\n提取事件链和因果关系，\n输出为三元组格式：(主体, 谓语, 客体)。`,
+    custom:   '',
+  };
+
+  function openSettingsDrawer() {
+    closeDetailDrawer();    // 互斥
+    document.getElementById('settings-overlay').classList.add('active');
+    document.getElementById('settings-drawer').classList.add('active');
+  }
+
+  function closeSettingsDrawer() {
+    document.getElementById('settings-overlay').classList.remove('active');
+    document.getElementById('settings-drawer').classList.remove('active');
+  }
+
+  function onSettingsChange() { /* 预留：可在此标记"已修改" */ }
+
+  function onTemplateChange(val) {
+    const ta = document.getElementById('prompt-ta');
+    ta.value = EXTRACT_PROMPTS[val] || '';
+    updateLineNos();
+  }
+
+  function onPromptInput() {
+    updateLineNos();
+    // 内容改动后自动切为"自定义"
+    const sel = document.getElementById('cfg-template');
+    if (sel.value !== 'custom') {
+      const ta = document.getElementById('prompt-ta');
+      if (ta.value !== EXTRACT_PROMPTS[sel.value]) sel.value = 'custom';
+    }
+  }
+
+  function updateLineNos() {
+    const ta   = document.getElementById('prompt-ta');
+    const pre  = document.getElementById('prompt-linenos');
+    const lines = (ta.value.match(/\n/g) || []).length + 1;
+    pre.textContent = Array.from({length: lines}, (_, i) => i + 1).join('\n');
+    pre.scrollTop   = ta.scrollTop;
+  }
+
+  function applySettings() {
+    const modelMap = { claude35:'Claude Sonnet 4.5', gpt4o:'GPT-4o', gpt4t:'GPT-4 Turbo', local:'本地模型' };
+    const tplMap   = { general:'通用本体', academic:'学术抽取', event:'事件图谱', custom:'自定义' };
+    const model = modelMap[document.getElementById('cfg-model').value];
+    const depth = document.getElementById('cfg-depth').value + ' 度';
+    const tpl   = tplMap[document.getElementById('cfg-template').value];
+    document.getElementById('info-cfg-label').textContent = `${model} · ${depth} · ${tpl}`;
+    closeSettingsDrawer();
+    window.showToast?.('配置已应用');
+  }
+
+  function resetSettings() {
+    document.getElementById('cfg-model').value   = 'claude35';
+    document.getElementById('cfg-temp').value    = 0.20;
+    document.getElementById('cfg-temp-val').textContent  = '0.20';
+    document.getElementById('cfg-tokens').value  = 4096;
+    document.getElementById('cfg-depth').value   = 3;
+    document.getElementById('cfg-depth-val').textContent = '3 度';
+    document.getElementById('cfg-conf').value    = 0.65;
+    document.getElementById('cfg-conf-val').textContent  = '≥ 0.65';
+    document.getElementById('cfg-template').value = 'general';
+    onTemplateChange('general');
+    window.showToast?.('已恢复默认配置');
+  }
+
+  /* ══════════════════════════════════════
+     本体选择弹窗
+  ══════════════════════════════════════ */
+  const ONT_DATA = [
+    { id:1, name:'风力发电预测本体 V1.0', domain:'新能源',  concepts:79,  relations:43, date:'2026-03-01', icon:'🌬️', bg:'rgba(59,130,246,.18)' },
+    { id:2, name:'灾害预警知识图谱 v1',   domain:'气象',    concepts:62,  relations:38, date:'2026-02-28', icon:'⚡', bg:'rgba(245,158,11,.18)' },
+    { id:3, name:'金融风控实体本体 v1',   domain:'金融',    concepts:91,  relations:55, date:'2026-02-25', icon:'💰', bg:'rgba(16,185,129,.18)' },
+    { id:4, name:'药物靶点关系本体 v2',   domain:'生物医药', concepts:134, relations:89, date:'2026-02-20', icon:'🧬', bg:'rgba(139,92,246,.18)' },
+    { id:5, name:'工业设备故障诊断 v1',   domain:'工业',    concepts:48,  relations:31, date:'2026-02-15', icon:'⚙️', bg:'rgba(107,114,128,.18)' },
+  ];
+  let ontSelected = 1;
+
+  function openOntologyModal() {
+    document.getElementById('ont-search-input').value = '';
+    renderOntList('');
+    document.getElementById('ont-modal').classList.add('active');
+  }
+
+  function renderOntList(q) {
+    const kw  = q.toLowerCase();
+    const filtered = kw
+      ? ONT_DATA.filter(o => o.name.toLowerCase().includes(kw) || o.domain.toLowerCase().includes(kw))
+      : ONT_DATA;
+    document.getElementById('ont-list').innerHTML = filtered.map(o => `
+      <div class="ont-item${o.id===ontSelected?' selected':''}" onclick="selectOnt(${o.id})">
+        <div class="ont-icon" style="background:${o.bg}">${o.icon}</div>
+        <div class="ont-info">
+          <div class="ont-name">${o.name}</div>
+          <div class="ont-meta">${o.domain} &nbsp;·&nbsp; ${o.concepts} 个概念 &nbsp;·&nbsp; ${o.relations} 条关系 &nbsp;·&nbsp; ${o.date}</div>
+        </div>
+        <div class="ont-check">${o.id===ontSelected?'✓':''}</div>
+      </div>`).join('');
+    const sel = ONT_DATA.find(o => o.id===ontSelected);
+    document.getElementById('ont-sel-name').textContent = sel ? sel.name : '—';
+  }
+
+  function selectOnt(id) {
+    ontSelected = id;
+    renderOntList(document.getElementById('ont-search-input').value);
+  }
+
+  function confirmOntology() {
+    const sel = ONT_DATA.find(o => o.id===ontSelected);
+    if (sel) document.getElementById('info-ontology').textContent = sel.name;
+    closeModal('ont-modal');
+    window.showToast?.('本体底座已更新');
+  }
+
+  /* ── 重新质检 ── */
+  function openRecheckConfirm() {
+    document.getElementById('recheck-modal').classList.add('active');
+  }
+  function goRecheck() {
+    closeModal('recheck-modal');
+    window.location.href = 'ke_qa.html';
+  }
+
+  /* ── 通用关闭 ── */
+  function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+  /* ── 初始化 ── */
+  document.addEventListener('DOMContentLoaded', () => {
+    const ta  = document.getElementById('prompt-ta');
+    const pre = document.getElementById('prompt-linenos');
+    ta.value  = EXTRACT_PROMPTS.general;
+    updateLineNos();
+    ta.addEventListener('scroll', () => { pre.scrollTop = ta.scrollTop; });
+    renderTable();
+  });
+</script>
 </body>
 </html>
