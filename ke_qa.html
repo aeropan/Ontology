@@ -15,10 +15,10 @@
       background: var(--bg-0);
       font-family: var(--font-sans);
       color: var(--text-1);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      padding-bottom: 64px;
     }
 
     /* ── 步骤条 ── */
@@ -52,13 +52,13 @@
     /* ── 主内容 ── */
     .page-wrap {
       flex: 1;
-      padding: 28px 32px 20px;
+      padding: 28px 40px;
+      padding-bottom: 80px; /* 为固定底栏留空 */
       display: flex;
       flex-direction: column;
       gap: 20px;
-      max-width: 920px;
-      width: 100%;
-      margin: 0 auto;
+      overflow-y: auto;
+      min-height: 0;
     }
 
     .page-header { display: flex; flex-direction: column; gap: 4px; }
@@ -66,20 +66,23 @@
     .page-title span { color: var(--blue); }
     .page-sub { font-size: 12px; color: var(--text-3); }
 
-    /* ── 模式选择卡片 ── */
+    /* ── 模式选择卡片（紧凑水平条） ── */
     .mode-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 10px;
     }
     .mode-card {
       background: var(--bg-2);
       border: 1.5px solid var(--border-1);
-      border-radius: var(--radius-lg);
-      padding: 18px 20px;
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
       cursor: pointer;
       position: relative;
       transition: border-color .2s, background .2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .mode-card:hover { border-color: var(--border-2); background: var(--bg-3); }
     .mode-card.selected {
@@ -87,21 +90,22 @@
       background: var(--blue-dim);
     }
     .mode-check {
-      position: absolute; top: 12px; right: 12px;
-      width: 18px; height: 18px;
+      width: 16px; height: 16px;
       border-radius: 50%;
       background: var(--blue);
       color: #fff;
-      font-size: 10px;
+      font-size: 9px;
       display: none;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
+      margin-left: 4px;
     }
     .mode-card.selected .mode-check { display: flex; }
-    .mode-icon { font-size: 22px; margin-bottom: 10px; }
-    .mode-title { font-size: 14px; font-weight: 600; color: var(--text-1); margin-bottom: 5px; }
-    .mode-desc { font-size: 11px; color: var(--text-2); line-height: 1.5; margin-bottom: 8px; }
-    .mode-time { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); }
+    .mode-icon { font-size: 18px; flex-shrink: 0; line-height: 1; }
+    .mode-title { font-size: 13px; font-weight: 600; color: var(--text-1); flex-shrink: 0; white-space: nowrap; }
+    .mode-desc { font-size: 11px; color: var(--text-2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mode-time { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); flex-shrink: 0; white-space: nowrap; }
 
     /* ── 配置区 ── */
     .config-card {
@@ -295,15 +299,82 @@
     .footer-est strong { color: var(--text-1); }
     .footer-actions { display: flex; gap: 10px; }
 
-    /* ── 执行蒙层 ── */
-    .processing-overlay {
+    /* ── 进度条蒙层 ── */
+    .progress-overlay {
       display: none;
       position: fixed; inset: 0;
-      background: rgba(8,12,24,.7);
+      background: rgba(8,12,24,.75);
       z-index: 200;
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(3px);
+      align-items: center;
+      justify-content: center;
     }
-    .processing-overlay.active { display: block; }
+    .progress-overlay.active { display: flex; }
+
+    /* 进度卡片 */
+    .progress-modal {
+      background: var(--bg-3);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      padding: 32px 40px 28px;
+      width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      text-align: center;
+    }
+    .progress-modal-title { font-size: 15px; font-weight: 600; color: var(--text-1); }
+    .progress-modal-sub { font-size: 12px; color: var(--text-3); margin-top: -10px; }
+    .progress-bar-wrap { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+    .progress-bar-track {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      border-radius: 4px;
+      transition: width .1s linear;
+    }
+    .progress-bar-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-3);
+      font-family: var(--font-mono);
+    }
+    .progress-actions { display: flex; gap: 10px; margin-top: 4px; }
+
+    /* 暂停确认弹窗（叠在进度蒙层上方） */
+    .qa-confirm-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    .qa-confirm-overlay.active { display: flex; }
+    .qa-confirm-box {
+      background: var(--bg-4);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px 24px;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .qa-confirm-title { font-size: 14px; font-weight: 600; }
+    .qa-confirm-sub { font-size: 12px; color: var(--text-3); line-height: 1.6; }
+    .qa-confirm-actions { display: flex; gap: 8px; }
 
     /* 页面内容整体禁用 */
     body.processing .page-wrap,
@@ -453,8 +524,38 @@
   </div>
 </div>
 
-<!-- 执行蒙层 -->
-<div class="processing-overlay" id="processing-overlay"></div>
+<!-- 进度条弹窗 -->
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-modal">
+    <div class="progress-modal-title">质检进行中…</div>
+    <div class="progress-modal-sub" id="progress-sub">正在分析文献，请稍候</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar-fill"></div>
+      </div>
+      <div class="progress-bar-meta">
+        <span id="progress-pct">0%</span>
+        <span id="progress-remain">预计剩余 3 秒…</span>
+      </div>
+    </div>
+    <div class="progress-actions">
+      <button class="btn btn-ghost" onclick="pauseOrCancelQA()">暂停</button>
+      <button class="btn btn-secondary" onclick="pauseOrCancelQA()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 暂停确认弹窗 -->
+<div class="qa-confirm-overlay" id="qa-confirm-overlay">
+  <div class="qa-confirm-box">
+    <div class="qa-confirm-title">质检已暂停</div>
+    <div class="qa-confirm-sub">当前进度已保留。<br>选择继续以恢复质检，或取消并返回配置页。</div>
+    <div class="qa-confirm-actions">
+      <button class="btn btn-ghost" onclick="cancelQA()">取消质检</button>
+      <button class="btn btn-primary" onclick="resumeQA()">继续质检</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast-container"></div>
 
@@ -639,8 +740,14 @@
   }
 
   /* ══════════════════════════════════════
-     执行质检（下一步）
+     执行质检（进度条）
   ══════════════════════════════════════ */
+  const QA_TOTAL_MS    = 3000;  // 模拟总时长 3 秒
+  const QA_INTERVAL_MS = 50;    // 每 50ms 更新一次进度
+  let qaTimer    = null;
+  let qaProgress = 0;
+  let qaPaused   = false;
+
   function startQA() {
     // 校验：快速/高级模式下警告线 ≤ 采纳线
     if (currentMode !== 'skip' && warnVal > acceptVal) {
@@ -648,17 +755,58 @@
       return;
     }
 
-    // 页面置灰 + 蒙层
+    // 页面内容置灰 + 显示进度弹窗
     document.body.classList.add('processing');
-    document.getElementById('processing-overlay').classList.add('active');
-
-    // Toast 提示
+    document.getElementById('progress-overlay').classList.add('active');
     window.showToast?.('质检中，预计3~5分钟', 3500);
 
-    // 3秒后跳转
-    setTimeout(() => {
-      window.location.href = 'ke_extract_config.html';
-    }, 3000);
+    qaProgress = 0;
+    qaPaused   = false;
+    updateProgressUI(0);
+
+    qaTimer = setInterval(() => {
+      if (qaPaused) return;
+      qaProgress = Math.min(100, qaProgress + (QA_INTERVAL_MS / QA_TOTAL_MS) * 100);
+      updateProgressUI(qaProgress);
+      if (qaProgress >= 100) {
+        clearInterval(qaTimer);
+        setTimeout(() => { window.location.href = 'ke_extract_config.html'; }, 400);
+      }
+    }, QA_INTERVAL_MS);
+  }
+
+  function updateProgressUI(pct) {
+    const rounded  = Math.round(pct);
+    const remSec   = Math.max(0, Math.ceil((1 - pct / 100) * QA_TOTAL_MS / 1000));
+    document.getElementById('progress-bar-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent      = rounded + '%';
+    document.getElementById('progress-remain').textContent   =
+      pct < 100 ? `预计剩余 ${remSec} 秒…` : '质检完成，正在跳转…';
+    document.getElementById('progress-sub').textContent =
+      pct < 30  ? '正在分析文献，请稍候' :
+      pct < 70  ? '质量评分计算中…' :
+      pct < 100 ? '汇总质检报告…' : '完成';
+  }
+
+  /* 暂停 / 取消按钮 → 弹出确认框并暂停计时 */
+  function pauseOrCancelQA() {
+    qaPaused = true;
+    document.getElementById('qa-confirm-overlay').classList.add('active');
+  }
+
+  /* 继续质检 */
+  function resumeQA() {
+    qaPaused = false;
+    document.getElementById('qa-confirm-overlay').classList.remove('active');
+  }
+
+  /* 取消并返回上一步 */
+  function cancelQA() {
+    clearInterval(qaTimer);
+    document.getElementById('qa-confirm-overlay').classList.remove('active');
+    document.getElementById('progress-overlay').classList.remove('active');
+    document.body.classList.remove('processing');
+    window.location.href = 'ke_literature.html';
   }
 
   /* ══════════════════════════════════════

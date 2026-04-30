@@ -16,10 +16,10 @@
       background: var(--bg-0);
       font-family: var(--font-sans);
       color: var(--text-1);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      padding-bottom: 64px; /* 为固定底栏留空 */
     }
 
     /* ── 步骤条 ── */
@@ -59,8 +59,10 @@
       flex: 1;
       display: flex;
       gap: 16px;
-      padding: 24px 32px 16px;
+      padding: 24px 32px;
+      padding-bottom: 80px; /* 为固定底栏留空 */
       min-height: 0;
+      overflow: hidden;
     }
 
     /* ── 左侧：上传区 + 列表 ── */
@@ -70,6 +72,7 @@
       flex-direction: column;
       gap: 16px;
       min-width: 0;
+      min-height: 0;
     }
 
     /* 页面标题行 */
@@ -153,6 +156,13 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0;
+    }
+    /* 表格滚动容器 */
+    .table-scroll-wrap {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
     }
     .table-header {
       display: flex;
@@ -225,21 +235,26 @@
 
     /* ── 右侧：文献预览区 ── */
     .preview-col {
-      width: 35%;
+      width: 42%;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      gap: 0;
       background: var(--bg-2);
       border: 1px solid var(--border-1);
       border-radius: var(--radius-md);
       overflow: hidden;
-      align-self: flex-start;
-      position: sticky;
-      top: 24px;
+      align-self: stretch;
+      min-height: 0;
+      transition: width .3s ease, opacity .25s ease, border-width .3s ease;
+    }
+    .preview-col.collapsed {
+      width: 0;
+      opacity: 0;
+      border-width: 0;
+      pointer-events: none;
     }
     .preview-header {
-      padding: 12px 16px;
+      padding: 10px 12px 10px 16px;
       border-bottom: 1px solid var(--border-1);
       background: var(--bg-3);
       font-size: 13px;
@@ -247,8 +262,48 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-shrink: 0;
     }
-    .preview-body { padding: 16px; }
+    /* 折叠按钮（预览面板右上角） */
+    .preview-collapse-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-3);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      transition: color .15s, background .15s;
+      flex-shrink: 0;
+    }
+    .preview-collapse-btn:hover { color: var(--text-1); background: rgba(255,255,255,.06); }
+    /* 展开悬浮按钮（面板折叠时显示在右侧） */
+    .preview-fab {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+      border-right: none;
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+      color: var(--text-2);
+      cursor: pointer;
+      padding: 10px 7px;
+      display: none;
+      align-items: center;
+      z-index: 50;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .preview-fab:hover { color: var(--blue); border-color: var(--blue); background: var(--blue-dim); }
+    .preview-body {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
     .preview-empty {
       padding: 40px 16px;
       text-align: center;
@@ -474,19 +529,22 @@
         <span class="table-header-title">已上传文献</span>
         <span class="table-count" id="table-count-label">共 24 篇 · 第 1/3 页</span>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th style="width:40%">文献标题</th>
-            <th>来源/作者</th>
-            <th>方式</th>
-            <th>年份</th>
-            <th>大小</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="lit-tbody"></tbody>
-      </table>
+      <!-- 列表滚动区域 -->
+      <div class="table-scroll-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40%">文献标题</th>
+              <th>来源/作者</th>
+              <th>方式</th>
+              <th>年份</th>
+              <th>大小</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="lit-tbody"></tbody>
+        </table>
+      </div>
       <div class="pagination" id="lit-pagination"></div>
     </div>
   </div>
@@ -499,6 +557,12 @@
         <path d="M9 2v4h3M5 8h6M5 10.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
       </svg>
       文献预览
+      <!-- 折叠按钮 -->
+      <button class="preview-collapse-btn" id="preview-collapse-btn" onclick="togglePreview()" title="收起预览">
+        <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+          <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
     <div id="preview-content">
       <div class="preview-empty">
@@ -512,6 +576,13 @@
   </div>
 
 </div><!-- /page-wrap -->
+
+<!-- 预览面板展开悬浮按钮（面板收纳时显示） -->
+<button class="preview-fab" id="preview-fab" onclick="togglePreview()" title="展开文献预览">
+  <svg width="13" height="13" viewBox="0 0 12 12" fill="none">
+    <path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
 
 <!-- 固定底栏 -->
 <div class="fixed-footer">
@@ -780,6 +851,14 @@
   /* ── 通用关闭 ── */
   function closeModal(id) {
     document.getElementById(id).classList.remove('active');
+  }
+
+  /* ── 预览面板折叠/展开 ── */
+  function togglePreview() {
+    const col = document.getElementById('preview-col');
+    const fab = document.getElementById('preview-fab');
+    const isCollapsed = col.classList.toggle('collapsed');
+    fab.style.display = isCollapsed ? 'flex' : 'none';
   }
 
   /* ── 初始化 ── */
