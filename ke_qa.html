@@ -52,12 +52,11 @@
     /* ── 主内容 ── */
     .page-wrap {
       flex: 1;
-      padding: 28px 40px;
-      padding-bottom: 80px; /* 为固定底栏留空 */
+      padding: 28px 40px 0;
       display: flex;
       flex-direction: column;
       gap: 20px;
-      overflow-y: auto;
+      overflow: hidden;
       min-height: 0;
     }
 
@@ -113,6 +112,11 @@
       border: 1px solid var(--border-1);
       border-radius: var(--radius-lg);
       overflow: hidden;
+      flex: 1;           /* 撑满 page-wrap 剩余高度 */
+      min-height: 0;     /* 允许 flex 子项被压缩 */
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 80px; /* 为固定底栏留空 */
     }
     .config-card-header {
       padding: 14px 20px;
@@ -120,8 +124,17 @@
       background: var(--bg-3);
       font-size: 13px;
       font-weight: 600;
+      flex-shrink: 0;    /* 标题行不被压缩 */
     }
-    .config-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    .config-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;  /* 配置内容区独立滚动 */
+      flex: 1;
+      min-height: 0;
+    }
 
     .config-row { display: flex; flex-direction: column; gap: 7px; }
     .config-label {
