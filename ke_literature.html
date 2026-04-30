@@ -305,10 +305,21 @@
       min-height: 0;
     }
     .preview-empty {
-      padding: 40px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
       text-align: center;
       color: var(--text-3);
       font-size: 12px;
+    }
+    /* 文献预览图片 */
+    .preview-img {
+      width: 100%;
+      display: block;
+      object-fit: contain;
     }
     .preview-title { font-size: 13px; font-weight: 600; color: var(--text-1); line-height: 1.5; margin-bottom: 10px; }
     .preview-meta { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
@@ -564,9 +575,9 @@
         </svg>
       </button>
     </div>
-    <div id="preview-content">
+    <div id="preview-content" style="display:flex;flex-direction:column;flex:1;min-height:0">
       <div class="preview-empty">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="margin:0 auto 8px;display:block;opacity:.3">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="opacity:.3;margin-bottom:8px">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.5"/>
           <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
@@ -759,26 +770,12 @@
     renderTable();
   }
 
-  /* ── 选中文献 → 右侧预览 ── */
+  /* ── 选中文献 → 右侧预览图片 ── */
   function selectLit(id) {
     selectedLitId = id;
     renderTable();
-    const lit = LIT_DATA.find(r => r.id === id);
-    const extra = PREVIEW_DATA[id] || {};
-    document.getElementById('preview-content').innerHTML = `
-      <div class="preview-body">
-        <div class="preview-title">${lit.title}</div>
-        <div class="preview-meta">
-          <div class="preview-meta-row"><span class="preview-meta-key">来源</span><span class="preview-meta-val">${lit.source}</span></div>
-          <div class="preview-meta-row"><span class="preview-meta-key">年份</span><span class="preview-meta-val">${lit.year}</span></div>
-          <div class="preview-meta-row"><span class="preview-meta-key">大小</span><span class="preview-meta-val">${lit.size}</span></div>
-          <div class="preview-meta-row"><span class="preview-meta-key">方式</span><span class="preview-meta-val">${lit.method === 'upload' ? '上传' : '从文献库添加'}</span></div>
-        </div>
-        ${extra.abstract ? `
-          <div class="preview-divider"></div>
-          <div class="preview-abstract-title">摘要</div>
-          <div class="preview-abstract">${extra.abstract}</div>` : ''}
-      </div>`;
+    document.getElementById('preview-content').innerHTML =
+      `<img class="preview-img" src="asset/Literature Preview.jpg" alt="文献预览" draggable="false">`;
   }
 
   /* ── 删除文献 ── */
@@ -787,8 +784,14 @@
     if (idx !== -1) LIT_DATA.splice(idx, 1);
     if (selectedLitId === id) {
       selectedLitId = null;
-      document.getElementById('preview-content').innerHTML =
-        '<div class="preview-empty">点击列表中的文献查看详情</div>';
+      document.getElementById('preview-content').innerHTML = `
+        <div class="preview-empty">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" style="opacity:.3;margin-bottom:8px">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          点击列表中的文献查看详情
+        </div>`;
     }
     const total = Math.ceil(LIT_DATA.length / PAGE_SIZE);
     if (currentPage > total) currentPage = Math.max(1, total);
