@@ -10843,6 +10843,21 @@
       }
     }
 
+    // ── URL 参数路由：支持从外部页面（如 graph.html）跳转到指定子页面 ──
+    // 用法：main.html?page=ke-review
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get('page');
+      if (target) {
+        // 等 DOM 完全就绪后再跳转，确保 goPage 能找到页面元素
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => goPage(target));
+        } else {
+          goPage(target);
+        }
+      }
+    })();
+
   </script>
 
   <!-- ── ke-config 详情抽屉 ── -->

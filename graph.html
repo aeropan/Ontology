@@ -1531,6 +1531,86 @@
     </div>
   </div>
 
+  <!-- ─── 提示词管理面板（全屏覆盖，与文本视图同层） ─── -->
+  <div class="tab-panel" id="panel-prompt">
+    <div class="text-view-layout">
+      <!-- 左侧：代码编辑主区 -->
+      <div class="json-main">
+        <div class="json-toolbar" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:12px">
+            <button class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="closePromptPanel()">← 返回</button>
+            <span class="json-line-count">提示词模板编辑</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" style="font-size:12px;padding:5px 14px" onclick="openSavePromptModal()">保存提示词</button>
+            <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openExtractConfirm('panel-prompt')">用新提示词重新抽取 →</button>
+          </div>
+        </div>
+        <!-- 行号 + textarea 编辑区 -->
+        <div style="flex:1;display:flex;overflow:hidden;background:var(--bg-0)">
+          <div class="json-ln-col scrollbar-code" id="prompt-line-nums"
+               style="width:44px;flex-shrink:0;background:var(--bg-0);border-right:1px solid var(--border-1);
+                      padding:10px 0;text-align:right;overflow:hidden;user-select:none;
+                      font-family:var(--font-mono);font-size:12.5px;line-height:1.65;color:var(--text-3)"></div>
+          <textarea id="prompt-editor" spellcheck="false"
+            oninput="syncPromptLines()" onscroll="syncPromptScroll()"
+            style="flex:1;background:none;border:none;outline:none;resize:none;overflow-y:auto;
+                   padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;
+                   line-height:1.65;color:var(--text-1);tab-size:2;"
+            class="scrollbar-code"
+          >你是一个专业的气候与地理信息领域知识图谱构建专家。
+
+请从以下文本中抽取结构化的本体知识，识别：
+1. 核心概念（Classes）：气候变量、预测算法、评估指标等
+2. 属性（Properties）：概念的关键特征和参数
+3. 关系（Relations）：概念间的层级或语义关联
+
+输入文本：
+{context}
+
+领域范围：{domain}
+
+输出要求：
+- 以 JSON 格式输出，包含 nodes 和 edges 数组
+- 每个节点包含 id、label、type、description 字段
+- 每条边包含 from、to、relation、type 字段
+- type 限定为：class / property / instance / concept
+- relation 使用英文大写下划线格式，如 HAS_SUBCLASS
+
+示例输出：
+{
+  "nodes": [
+    { "id": "WindSpeed", "label": "风速", "type": "class", "description": "近地面风速观测值" }
+  ],
+  "edges": [
+    { "from": "WindSpeed", "to": "InputFeature", "relation": "IS_FEATURE_OF", "type": "semantic" }
+  ]
+}</textarea>
+        </div>
+      </div>
+      <!-- 右侧：信息面板 -->
+      <div class="json-side">
+        <div class="json-side-title">提示词信息</div>
+        <div class="json-info-row"><span class="json-info-key">template_id</span><span class="json-info-val">tpl_wind_extract_v1</span></div>
+        <div class="json-info-row"><span class="json-info-key">version</span><span class="json-info-val" style="color:var(--blue)">v1.2</span></div>
+        <div class="json-info-row"><span class="json-info-key">domain</span><span class="json-info-val">气候 / 地理</span></div>
+        <div class="json-info-row"><span class="json-info-key">last_used</span><span class="json-info-val">2026-04-28</span></div>
+        <div class="json-info-row"><span class="json-info-key">占位符</span><span class="json-info-val">{context}, {domain}</span></div>
+        <div style="margin-top:4px;padding-top:12px;border-top:1px solid var(--border-1)">
+          <div style="font-size:11px;color:var(--text-3);line-height:1.6">
+            支持变量占位符：<br>
+            <code style="color:var(--blue)">{context}</code> — 输入文本<br>
+            <code style="color:var(--blue)">{domain}</code> — 领域范围
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-secondary" style="width:100%;font-size:12px" onclick="openSavePromptModal()">保存提示词</button>
+          <button class="btn btn-primary" style="width:100%;font-size:12px" onclick="openExtractConfirm('panel-prompt')">用新提示词重新抽取 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /main-body -->
 
 
@@ -1830,58 +1910,6 @@
 </div>
 
 <!-- Modal：提示词管理 -->
-<div class="modal-overlay" id="prompt-modal" onclick="handleOverlayClick(event,'prompt-modal')">
-  <div class="modal" style="max-width:600px">
-    <div class="modal-header">
-      <span class="modal-title">提示词管理</span>
-      <button class="btn-close" onclick="closeModal('prompt-modal')"></button>
-    </div>
-    <div class="modal-body" style="gap:12px">
-      <div style="font-size:12px;color:var(--text-3);line-height:1.6">
-        编辑用于知识抽取的提示词模板。支持变量占位符，如 <code style="background:var(--bg-1);padding:1px 5px;border-radius:3px;font-family:var(--font-mono)">{context}</code>、<code style="background:var(--bg-1);padding:1px 5px;border-radius:3px;font-family:var(--font-mono)">{domain}</code>。
-      </div>
-      <div class="code-editor-wrap">
-        <div class="code-line-nums scrollbar-code" id="prompt-line-nums"></div>
-        <textarea class="code-editor-ta scrollbar-code" id="prompt-editor" spellcheck="false"
-          oninput="syncPromptLines()" onscroll="syncPromptScroll()"
-        >你是一个专业的气候与地理信息领域知识图谱构建专家。
-
-请从以下文本中抽取结构化的本体知识，识别：
-1. 核心概念（Classes）：气候变量、预测算法、评估指标等
-2. 属性（Properties）：概念的关键特征和参数
-3. 关系（Relations）：概念间的层级或语义关联
-
-输入文本：
-{context}
-
-领域范围：{domain}
-
-输出要求：
-- 以 JSON 格式输出，包含 nodes 和 edges 数组
-- 每个节点包含 id、label、type、description 字段
-- 每条边包含 from、to、relation、type 字段
-- type 限定为：class / property / instance / concept
-- relation 使用英文大写下划线格式，如 HAS_SUBCLASS
-
-示例输出：
-{
-  "nodes": [
-    { "id": "WindSpeed", "label": "风速", "type": "class", "description": "近地面风速观测值" }
-  ],
-  "edges": [
-    { "from": "WindSpeed", "to": "InputFeature", "relation": "IS_FEATURE_OF", "type": "semantic" }
-  ]
-}</textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('prompt-modal')">取消</button>
-      <button class="btn btn-secondary" onclick="openSavePromptModal()">保存提示词</button>
-      <button class="btn btn-primary" onclick="openExtractConfirm('prompt-modal')">用新提示词重新抽取 →</button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal：二次确认 — 是否抽取 -->
 <div class="modal-overlay" id="extract-confirm-modal" onclick="handleOverlayClick(event,'extract-confirm-modal')">
   <div class="modal confirm-sm-modal">
@@ -2241,39 +2269,57 @@
     renderLitFileList();
   }
 
-  /* ── 提示词管理弹窗 ── */
+  /* ── 提示词管理：全屏面板（与文本视图同层） ── */
+  // 记录打开前激活的 tab-panel，以便返回时恢复
+  let _promptPrevPanel = 'panel-graph';
+
   function openPromptModal() {
-    openModal('prompt-modal');
-    // 初始化行号
+    // 找到当前激活的 tab-panel
+    const active = document.querySelector('.tab-panel.active');
+    if (active) _promptPrevPanel = active.id;
+    // 切换到提示词面板
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-prompt').classList.add('active');
+    // 初始化行号（等面板渲染完再计算）
     setTimeout(syncPromptLines, 50);
+  }
+
+  function closePromptPanel() {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(_promptPrevPanel || 'panel-graph').classList.add('active');
   }
 
   function syncPromptLines() {
     const ta   = document.getElementById('prompt-editor');
     const nums = document.getElementById('prompt-line-nums');
+    if (!ta || !nums) return;
     const lines = ta.value.split('\n').length;
+    // 用与 json-ln 同款的 div 行格式
     nums.innerHTML = Array.from({length: lines}, (_, i) =>
-      `<span>${i + 1}</span>`).join('');
+      `<div style="padding:0 12px 0 0;line-height:1.65">${i + 1}</div>`).join('');
     syncPromptScroll();
   }
 
   function syncPromptScroll() {
     const ta   = document.getElementById('prompt-editor');
     const nums = document.getElementById('prompt-line-nums');
-    nums.scrollTop = ta.scrollTop;
+    if (ta && nums) nums.scrollTop = ta.scrollTop;
   }
 
   /* ── 二次确认：是否抽取 ── */
-  // sourceModal：抽取确认前需要关闭的来源弹窗 id
-  let _extractSourceModal = null;
-  function openExtractConfirm(sourceModalId) {
-    _extractSourceModal = sourceModalId;
+  // source：来源面板/弹窗 id，确认后需关闭或离开
+  let _extractSource = null;
+  function openExtractConfirm(sourceId) {
+    _extractSource = sourceId;
     openModal('extract-confirm-modal');
   }
   function confirmExtract() {
     closeModal('extract-confirm-modal');
-    if (_extractSourceModal) closeModal(_extractSourceModal);
-    window.location.href = 'main.html';
+    // 如果来源是弹窗则关闭，如果是面板则不需要（跳走了）
+    if (_extractSource && _extractSource !== 'panel-prompt') {
+      closeModal(_extractSource);
+    }
+    window.location.href = 'main.html?page=ke-review';
   }
 
   /* ── 保存提示词弹窗 ── */
