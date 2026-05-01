@@ -164,6 +164,12 @@
     .rel-badge-amber  { background: var(--amber-dim);     color: var(--amber); }
     .rel-badge-rose   { background: var(--rose-dim);      color: var(--rose); }
 
+    /* 业务类型徽章（中性色，区别于节点类型） */
+    .badge-ghost {
+      background: var(--bg-4);
+      color: var(--text-2);
+    }
+
     /* 操作链接 */
     .action-link {
       color: var(--blue); font-size: 11px; cursor: pointer;
@@ -249,10 +255,11 @@
           <tr>
             <th style="width:36px"><input type="checkbox" class="row-cb" checked onchange="toggleAllConcepts(this.checked)"></th>
             <th>概念名称</th>
-            <th style="width:100px">类型</th>
+            <th style="width:100px">节点类型</th>
+            <th style="width:90px">业务类型</th>
             <th style="width:130px">置信度</th>
-            <th>定义预览（专业）</th>
-            <th style="width:120px">概念说明（通俗）</th>
+            <th>描述</th>
+            <th>来源文献</th>
             <th style="width:50px">操作</th>
           </tr>
         </thead>
@@ -303,18 +310,18 @@
      概念数据
   ══════════════════════════════════════ */
   const CONCEPTS = [
-    { name: 'WindSpeedForecast', color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   conf: 95, def: '对未来一段时间内风速变化的数字化预报结果，是风电功率预测的核心输入。',    simple: '风速预测',   checked: true  },
-    { name: 'ForecastModel',    color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   conf: 88, def: '基于历史气象和测风数据构建的算法模型，用于实现风速或风功率的未来预测。',  simple: 'AI预测系统', checked: true  },
-    { name: 'hasInputData',     color: 'var(--purple)', type: 'Property', typeBadge: 'badge-purple', conf: 76, def: '模型接收的输入数据属性，描述预测模型与输入特征之间的依赖关系。',              simple: '接收输入',   checked: true  },
-    { name: 'ImagePreprocessing', color: 'var(--rose)', type: 'Class',    typeBadge: 'badge-blue',   conf: 45, def: '图像预处理步骤，包含归一化、降噪、尺寸调整等数据标准化操作。',               simple: '前处理步骤', checked: false },
-    { name: 'MeteoEnv',         color: 'var(--green)',  type: 'Instance', typeBadge: 'badge-green',  conf: 91, def: '影响风力发电的气象要素总称，包括风速、风向、温度、气压、湿度等。',            simple: '输入特征',   checked: true  },
-    { name: 'WindStation',      color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   conf: 91, def: '风电场测风塔或测风站实时采集的实际风速、风向等观测数据。',                    simple: '测风站数据', checked: true  },
-    { name: 'TopoSpace',        color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   conf: 88, def: '描述风电场复杂地形对风流场影响的数字化空间特征，用于精细化风速订正。',        simple: '地形空间',   checked: true  },
-    { name: 'OutputReport',     color: 'var(--green)',  type: 'Instance', typeBadge: 'badge-green',  conf: 89, def: '根据风速预测结果，计算未来风电机组或风电场发电功率的数字化预报。',            simple: '风功率预测', checked: true  },
-    { name: 'ERA5Dataset',      color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   conf: 83, def: 'ECMWF 提供的全球气候再分析数据集，包含历史气象要素的高分辨率格点数据。',      simple: 'ERA5数据',   checked: true  },
-    { name: 'LSTMModel',        color: 'var(--purple)', type: 'Property', typeBadge: 'badge-purple', conf: 79, def: '长短期记忆网络，擅长捕捉时间序列中的长程依赖关系，广泛用于风速预测。',        simple: 'LSTM模型',   checked: true  },
-    { name: 'EnsembleMethod',   color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   conf: 67, def: '通过融合多个单一模型的预测结果降低误差方差，提升整体预测稳定性的方法论。',    simple: '集成方法',   checked: true  },
-    { name: 'ConfidenceScore',  color: 'var(--amber)',  type: 'Class',    typeBadge: 'badge-amber',  conf: 52, def: '衡量模型输出结果可信程度的量化指标，通常以概率或百分比形式呈现。',            simple: '置信评分',   checked: false },
+    { name: 'WindSpeedForecast',  color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   bizType: '数据', conf: 95, def: '对未来一段时间内风速变化的数字化预报结果，是风电功率预测的核心输入。',                      source: 'Wind Power Forecasting Review 2023',                   checked: true  },
+    { name: 'ForecastModel',      color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   bizType: '模型', conf: 88, def: '基于历史气象和测风数据构建的算法模型，用于实现风速或风功率的未来预测。',                    source: 'Deep Learning for Wind Speed Prediction',              checked: true  },
+    { name: 'hasInputData',       color: 'var(--purple)', type: 'Property', typeBadge: 'badge-purple', bizType: '任务', conf: 76, def: '模型接收的输入数据属性，描述预测模型与输入特征之间的依赖关系。',                              source: 'Deep Learning for Wind Speed Prediction',              checked: true  },
+    { name: 'ImagePreprocessing', color: 'var(--rose)',   type: 'Class',    typeBadge: 'badge-blue',   bizType: '算法', conf: 45, def: '图像预处理步骤，包含归一化、降噪、尺寸调整等数据标准化操作。',                               source: 'ICACER 2024',                                          checked: false },
+    { name: 'MeteoEnv',           color: 'var(--green)',  type: 'Instance', typeBadge: 'badge-green',  bizType: '数据', conf: 91, def: '影响风力发电的气象要素总称，包括风速、风向、温度、气压、湿度等。',                            source: 'ERA5 Reanalysis Dataset Documentation',                checked: true  },
+    { name: 'WindStation',        color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   bizType: '数据', conf: 91, def: '风电场测风塔或测风站实时采集的实际风速、风向等观测数据。',                                    source: 'Wind Farm Observation Systems 2022',                   checked: true  },
+    { name: 'TopoSpace',          color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   bizType: '数据', conf: 88, def: '描述风电场复杂地形对风流场影响的数字化空间特征，用于精细化风速订正。',                        source: 'Turkish Journal of Wind Energy 2023',                  checked: true  },
+    { name: 'OutputReport',       color: 'var(--green)',  type: 'Instance', typeBadge: 'badge-green',  bizType: '任务', conf: 89, def: '根据风速预测结果，计算未来风电机组或风电场发电功率的数字化预报。',                            source: 'IEEE Trans. on Sustainable Energy 2022',               checked: true  },
+    { name: 'ERA5Dataset',        color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   bizType: '数据', conf: 83, def: 'ECMWF 提供的全球气候再分析数据集，包含历史气象要素的高分辨率格点数据。',                      source: 'ERA5 Reanalysis Dataset Documentation',                checked: true  },
+    { name: 'LSTMModel',          color: 'var(--purple)', type: 'Property', typeBadge: 'badge-purple', bizType: '模型', conf: 79, def: '长短期记忆网络，擅长捕捉时间序列中的长程依赖关系，广泛用于风速预测。',                        source: 'Wind speed prediction using LSTM and ARIMA',           checked: true  },
+    { name: 'EnsembleMethod',     color: 'var(--blue)',   type: 'Class',    typeBadge: 'badge-blue',   bizType: '算法', conf: 67, def: '通过融合多个单一模型的预测结果降低误差方差，提升整体预测稳定性的方法论。',                    source: 'Probabilistic Wind Power Forecasting 2022',            checked: true  },
+    { name: 'ConfidenceScore',    color: 'var(--amber)',  type: 'Class',    typeBadge: 'badge-amber',  bizType: '算法', conf: 52, def: '衡量模型输出结果可信程度的量化指标，通常以概率或百分比形式呈现。',                            source: 'Short-term Wind Speed Forecasting with Autoencoders',  checked: false },
   ];
 
   /* ══════════════════════════════════════
@@ -351,15 +358,17 @@
           <span class="concept-name" style="color:${c.color}">${c.name}</span>
         </td>
         <td><span class="badge ${c.typeBadge}">${c.type}</span></td>
+        <td><span class="badge badge-ghost">${c.bizType}</span></td>
         <td>
           <div class="conf-cell">
             <div class="conf-track"><div class="conf-fill" style="width:${c.conf}%;background:${cc}"></div></div>
             <span class="conf-label" style="color:${cc}">${c.conf}%</span>
           </div>
         </td>
-        <td style="color:var(--text-2);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+        <td style="color:var(--text-2);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
             title="${c.def}">${c.def}</td>
-        <td style="color:var(--text-2)">${c.simple}</td>
+        <td style="color:var(--text-3);font-size:11px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+            title="${c.source}">${c.source}</td>
         <td><span class="action-link">编辑</span></td>
       </tr>`;
     }).join('');
