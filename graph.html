@@ -90,14 +90,103 @@
       cursor: pointer; transition: all var(--transition);
     }
     .btn-save-version:hover { background: rgba(16,185,129,0.25); border-color: rgba(16,185,129,0.55); }
-    .btn-mount-data {
-      display: flex; align-items: center; gap: 6px;
-      background: var(--blue-dim); border: 1px solid rgba(59,130,246,0.35);
-      border-radius: var(--radius-md); padding: 5px 14px;
-      font-size: 12px; font-family: var(--font-sans); color: var(--blue);
-      cursor: pointer; transition: all var(--transition); margin-right: 6px;
+    /* ── 工具栏更多操作下拉 ── */
+    .toolbar-more-wrap { position: relative; margin-right: 6px; display: flex; align-items: center; }
+    .btn-toolbar-more {
+      display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px;
+      background: var(--bg-3); border: 1px solid var(--border-1);
+      border-radius: var(--radius-md); color: var(--text-2);
+      cursor: pointer; transition: all var(--transition);
     }
-    .btn-mount-data:hover { background: rgba(59,130,246,0.25); border-color: rgba(59,130,246,0.55); }
+    .btn-toolbar-more:hover, .btn-toolbar-more.open {
+      background: var(--bg-4); color: var(--text-1); border-color: var(--border-2);
+    }
+    .toolbar-dropdown {
+      display: none; position: absolute; top: calc(100% + 6px); right: 0;
+      background: var(--bg-4); border: 1px solid var(--border-2);
+      border-radius: var(--radius-md); padding: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+      z-index: 500; min-width: 148px;
+    }
+    .toolbar-dropdown.open { display: block; }
+    .toolbar-dropdown-item {
+      display: flex; align-items: center; gap: 9px;
+      width: 100%; padding: 8px 12px;
+      background: none; border: none; border-radius: var(--radius-sm);
+      font-size: 12px; font-family: var(--font-sans); color: var(--text-2);
+      cursor: pointer; white-space: nowrap;
+      transition: background var(--transition), color var(--transition);
+    }
+    .toolbar-dropdown-item:hover { background: var(--bg-3); color: var(--text-1); }
+
+    /* ── 弹窗内标签页 ── */
+    .modal-tabs {
+      display: flex; border-bottom: 1px solid var(--border-1);
+      margin: 0 0 16px; padding: 0;
+    }
+    .modal-tab-btn {
+      padding: 8px 16px; background: none; border: none;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      font-size: 12px; font-family: var(--font-sans); color: var(--text-3);
+      cursor: pointer; transition: all var(--transition);
+    }
+    .modal-tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .modal-tab-pane { display: none; }
+    .modal-tab-pane.active { display: flex; flex-direction: column; gap: 12px; }
+
+    /* 已上传文献列表 */
+    .lit-file-list { display: flex; flex-direction: column; gap: 6px; }
+    .lit-file-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; background: var(--bg-2);
+      border: 1px solid var(--border-1); border-radius: var(--radius-sm);
+    }
+    .lit-file-icon { color: var(--blue); flex-shrink: 0; }
+    .lit-file-name { flex: 1; font-size: 12px; color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lit-file-size { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+    .lit-file-del { color: var(--text-3); cursor: pointer; padding: 2px 4px; border-radius: 3px; background: none; border: none; transition: color var(--transition); font-size: 12px; }
+    .lit-file-del:hover { color: var(--rose); }
+
+    /* 从文献库选取列表 */
+    .lit-lib-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+    .lit-lib-item {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px;
+      border: 1px solid var(--border-1); border-radius: var(--radius-sm);
+      background: var(--bg-2); cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .lit-lib-item:hover { border-color: var(--border-2); }
+    .lit-lib-item.selected { border-color: rgba(59,130,246,.5); background: var(--blue-dim); }
+    .lit-lib-check { width: 14px; height: 14px; margin-top: 2px; flex-shrink: 0; accent-color: var(--blue); cursor: pointer; }
+    .lit-lib-title { font-size: 12px; color: var(--text-1); margin-bottom: 3px; line-height: 1.4; }
+    .lit-lib-meta { font-size: 10px; color: var(--text-3); }
+
+    /* ── 提示词管理 / 代码编辑器 ── */
+    .code-editor-wrap {
+      display: flex; border: 1px solid var(--border-1); border-radius: var(--radius-sm);
+      background: var(--bg-1); overflow: hidden; height: 300px;
+    }
+    .code-line-nums {
+      width: 38px; flex-shrink: 0;
+      background: var(--bg-1); border-right: 1px solid var(--border-1);
+      padding: 10px 0; text-align: right; overflow: hidden;
+      user-select: none; pointer-events: none;
+      font-family: var(--font-mono); font-size: 12px; line-height: 1.6; color: var(--text-3);
+    }
+    .code-line-nums span { display: block; padding: 0 8px; }
+    .code-editor-ta {
+      flex: 1; background: none; border: none; outline: none;
+      padding: 10px 12px; resize: none; overflow-y: auto;
+      font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
+      color: var(--text-1); tab-size: 2;
+    }
+    .code-editor-ta::selection { background: rgba(59,130,246,0.3); }
+
+    /* ── 二次确认小弹窗 ── */
+    .confirm-sm-modal { max-width: 360px; }
+    .confirm-sm-desc { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
     /* Toast 样式由 styles/shared.css 提供 */
     /* 上传区域 */
     .upload-zone {
@@ -998,13 +1087,39 @@
   <div class="tab-item" onclick="switchTab('text',this)"><span>☰</span> 文本视图</div>
   <div class="tab-item" onclick="switchTab('versions',this)"><span>⊕</span> 版本管理</div>
   <div class="tab-bar-spacer"></div>
-  <button class="btn-mount-data" onclick="openMountModal()">
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-      <path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M3 11v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-    </svg>
-    挂载数据
-  </button>
+  <!-- 工具栏更多操作下拉 -->
+  <div class="toolbar-more-wrap" id="toolbar-more-wrap">
+    <button class="btn-toolbar-more" id="btn-toolbar-more" onclick="toggleToolbarMenu(event)" title="更多操作">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+        <circle cx="4" cy="4" r="1.4"/><circle cx="12" cy="4" r="1.4"/>
+        <circle cx="4" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/>
+      </svg>
+    </button>
+    <div class="toolbar-dropdown" id="toolbar-dropdown">
+      <button class="toolbar-dropdown-item" onclick="openAddLitModal()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <path d="M4 2h6l3 3v9a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+          <path d="M9 2v4h3M6 8h4M6 10.5h2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        添加文献
+      </button>
+      <button class="toolbar-dropdown-item" onclick="openMountModal()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 11v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        挂载数据
+      </button>
+      <button class="toolbar-dropdown-item" onclick="openPromptModal()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <path d="M2 3h12M2 6.5h8M2 10h10M2 13.5h6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <circle cx="13" cy="11.5" r="2.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M15 13.5l1.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        提示词管理
+      </button>
+    </div>
+  </div>
   <button class="btn-save-version" onclick="window.showToast?.('版本已保存')">
     <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
       <path d="M3 3h8l2 2v8a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
@@ -1416,6 +1531,69 @@
     </div>
   </div>
 
+  <!-- ─── 提示词管理面板（全屏覆盖，与文本视图同层） ─── -->
+  <div class="tab-panel" id="panel-prompt">
+    <div class="text-view-layout">
+      <!-- 代码编辑主区（全宽，无右侧面板） -->
+      <div class="json-main">
+        <div class="json-toolbar" style="justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:16px">
+            <button class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="closePromptPanel()">← 返回</button>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <span style="font-size:13px;font-weight:600;color:var(--text-1)">风力发电提示词模板v1.1</span>
+              <span style="font-size:11px;color:var(--text-3)">修改于 2026-04-28 &nbsp;·&nbsp; 图谱工程师</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-secondary" style="font-size:12px;padding:5px 14px" onclick="openSavePromptModal(false)">保存为提示词模板</button>
+            <button class="btn btn-primary" style="font-size:12px;padding:5px 14px" onclick="openSavePromptModal(true)">保存提示词模板并重新抽取</button>
+          </div>
+        </div>
+        <!-- 行号 + textarea 编辑区 -->
+        <div style="flex:1;display:flex;overflow:hidden;background:var(--bg-0)">
+          <div class="json-ln-col scrollbar-code" id="prompt-line-nums"
+               style="width:44px;flex-shrink:0;background:var(--bg-0);border-right:1px solid var(--border-1);
+                      padding:10px 0;text-align:right;overflow:hidden;user-select:none;
+                      font-family:var(--font-mono);font-size:12.5px;line-height:1.65;color:var(--text-3)"></div>
+          <textarea id="prompt-editor" spellcheck="false"
+            oninput="syncPromptLines()" onscroll="syncPromptScroll()"
+            style="flex:1;background:none;border:none;outline:none;resize:none;overflow-y:auto;
+                   padding:10px 16px;font-family:var(--font-mono);font-size:12.5px;
+                   line-height:1.65;color:var(--text-1);tab-size:2;"
+            class="scrollbar-code"
+          >你是一个专业的气候与地理信息领域知识图谱构建专家。
+
+请从以下文本中抽取结构化的本体知识，识别：
+1. 核心概念（Classes）：气候变量、预测算法、评估指标等
+2. 属性（Properties）：概念的关键特征和参数
+3. 关系（Relations）：概念间的层级或语义关联
+
+输入文本：
+{context}
+
+领域范围：{domain}
+
+输出要求：
+- 以 JSON 格式输出，包含 nodes 和 edges 数组
+- 每个节点包含 id、label、type、description 字段
+- 每条边包含 from、to、relation、type 字段
+- type 限定为：class / property / instance / concept
+- relation 使用英文大写下划线格式，如 HAS_SUBCLASS
+
+示例输出：
+{
+  "nodes": [
+    { "id": "WindSpeed", "label": "风速", "type": "class", "description": "近地面风速观测值" }
+  ],
+  "edges": [
+    { "from": "WindSpeed", "to": "InputFeature", "relation": "IS_FEATURE_OF", "type": "semantic" }
+  ]
+}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /main-body -->
 
 
@@ -1591,21 +1769,6 @@
     </div>
     <div class="modal-body" style="gap:14px">
       <div class="form-group">
-        <label class="form-label">目标节点</label>
-        <select class="form-select" id="mount-target-node">
-          <option value="">— 请选择节点 —</option>
-          <option>核心预测算法</option>
-          <option>输入特征数据</option>
-          <option>单机历史风速序列</option>
-          <option>NWP风速数据</option>
-          <option>数据预处理技术</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">数据集名称</label>
-        <input type="text" class="form-input" placeholder="例：ERA5 再分析风速数据 2000-2023"/>
-      </div>
-      <div class="form-group">
         <label class="form-label">上传数据文件</label>
         <div class="upload-zone" id="upload-zone" onclick="triggerFileInput()">
           <div class="upload-zone-icon">
@@ -1629,6 +1792,129 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeMountModal()">取消</button>
       <button class="btn btn-primary" onclick="confirmMount()">确定挂载</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal：添加文献 -->
+<div class="modal-overlay" id="add-lit-modal" onclick="handleOverlayClick(event,'add-lit-modal')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <span class="modal-title">添加文献</span>
+      <button class="btn-close" onclick="closeModal('add-lit-modal')"></button>
+    </div>
+    <div class="modal-body" style="gap:0">
+      <!-- 标签页切换 -->
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" id="lit-tab-upload" onclick="switchLitTab('upload')">上传文献</button>
+        <button class="modal-tab-btn" id="lit-tab-lib" onclick="switchLitTab('lib')">从文献库选取</button>
+      </div>
+      <!-- 上传文献 Tab -->
+      <div class="modal-tab-pane active" id="lit-pane-upload">
+        <div class="upload-zone" id="lit-upload-zone" onclick="document.getElementById('lit-file-input').click()">
+          <div class="upload-zone-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M12 4v12M8 8l4-4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M4 17v1a2 2 0 002 2h12a2 2 0 002-2v-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="upload-zone-text">点击或拖拽上传文献文件</div>
+          <div class="upload-zone-hint">支持 .pdf、.docx、.txt 格式</div>
+        </div>
+        <input type="file" id="lit-file-input" accept=".pdf,.docx,.txt" multiple style="display:none" onchange="handleLitFileSelect(this)"/>
+        <!-- 已上传文献列表 -->
+        <div id="lit-file-list-wrap" style="display:none">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:6px">已添加文献</div>
+          <div class="lit-file-list" id="lit-file-list"></div>
+        </div>
+      </div>
+      <!-- 从文献库选取 Tab -->
+      <div class="modal-tab-pane" id="lit-pane-lib">
+        <input type="text" class="form-input" placeholder="搜索文献…" style="margin-bottom:4px"/>
+        <div class="lit-lib-list" id="lit-lib-list">
+          <label class="lit-lib-item">
+            <input type="checkbox" class="lit-lib-check">
+            <div>
+              <div class="lit-lib-title">A survey on knowledge graph embedding: Approaches, applications and benchmarks</div>
+              <div class="lit-lib-meta">Dai et al. · Electronics 2020 · 已入库</div>
+            </div>
+          </label>
+          <label class="lit-lib-item">
+            <input type="checkbox" class="lit-lib-check">
+            <div>
+              <div class="lit-lib-title">Wind power forecasting methods based on deep learning: A survey</div>
+              <div class="lit-lib-meta">Liu et al. · Energy Reports 2023 · 已入库</div>
+            </div>
+          </label>
+          <label class="lit-lib-item">
+            <input type="checkbox" class="lit-lib-check">
+            <div>
+              <div class="lit-lib-title">Short-term wind speed forecasting using LSTM recurrent neural networks</div>
+              <div class="lit-lib-meta">Jiang et al. · Applied Energy 2021 · 已入库</div>
+            </div>
+          </label>
+          <label class="lit-lib-item">
+            <input type="checkbox" class="lit-lib-check">
+            <div>
+              <div class="lit-lib-title">ERA5: A new global climate reanalysis product from ECMWF</div>
+              <div class="lit-lib-meta">Hersbach et al. · QJRMS 2020 · 已入库</div>
+            </div>
+          </label>
+          <label class="lit-lib-item">
+            <input type="checkbox" class="lit-lib-check">
+            <div>
+              <div class="lit-lib-title">Probabilistic wind power forecasting using Gaussian process regression</div>
+              <div class="lit-lib-meta">Zhang et al. · IEEE Trans. 2022 · 已入库</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-lit-modal')">取消</button>
+      <button class="btn btn-primary" onclick="openExtractConfirm('add-lit-modal')">用添加的文献增量抽取 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal：提示词管理 -->
+<!-- Modal：二次确认 — 是否抽取 -->
+<div class="modal-overlay" id="extract-confirm-modal" onclick="handleOverlayClick(event,'extract-confirm-modal')">
+  <div class="modal confirm-sm-modal">
+    <div class="modal-header">
+      <span class="modal-title">确认抽取</span>
+      <button class="btn-close" onclick="closeModal('extract-confirm-modal')"></button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-sm-desc">是否要进行抽取？抽取完成后将跳转至结果审核页面，当前图谱内容不会被自动覆盖。</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('extract-confirm-modal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmExtract()">确认抽取</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal：保存提示词 -->
+<div class="modal-overlay" id="save-prompt-modal" onclick="handleOverlayClick(event,'save-prompt-modal')">
+  <div class="modal confirm-sm-modal">
+    <div class="modal-header">
+      <span class="modal-title">保存提示词</span>
+      <button class="btn-close" onclick="closeModal('save-prompt-modal')"></button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">提示词名称 <span style="color:var(--rose)">*</span></label>
+        <input type="text" class="form-input" id="save-prompt-name" placeholder="例：风电预测标准抽取模板 v1"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">描述</label>
+        <textarea class="form-textarea" id="save-prompt-desc" rows="2" placeholder="可选：说明该提示词的适用场景或改动要点"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('save-prompt-modal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmSavePrompt()">保存</button>
     </div>
   </div>
 </div>
@@ -1880,6 +2166,152 @@
     closeMountModal();
     window.__showToast('数据挂载中…', 2200);
     setTimeout(() => window.__showToast('挂载完成，为 1 个节点挂载数据'), 2000);
+  }
+
+  /* ── 工具栏更多操作下拉 ── */
+  function toggleToolbarMenu(e) {
+    e.stopPropagation();
+    const btn = document.getElementById('btn-toolbar-more');
+    const dd  = document.getElementById('toolbar-dropdown');
+    const open = dd.classList.toggle('open');
+    btn.classList.toggle('open', open);
+  }
+  function closeToolbarMenu() {
+    document.getElementById('toolbar-dropdown')?.classList.remove('open');
+    document.getElementById('btn-toolbar-more')?.classList.remove('open');
+  }
+  // 点击下拉菜单外部时关闭
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('toolbar-more-wrap')?.contains(e.target)) {
+      closeToolbarMenu();
+    }
+  });
+  // 点击菜单项后自动关闭下拉
+  document.getElementById('toolbar-dropdown')?.addEventListener('click', closeToolbarMenu);
+
+  /* ── 添加文献弹窗 ── */
+  // 已添加文献列表（演示数据）
+  let litFiles = [];
+
+  function openAddLitModal() {
+    renderLitFileList();
+    openModal('add-lit-modal');
+  }
+
+  function switchLitTab(tab) {
+    ['upload','lib'].forEach(t => {
+      document.getElementById('lit-tab-' + t).classList.toggle('active', t === tab);
+      document.getElementById('lit-pane-' + t).classList.toggle('active', t === tab);
+    });
+  }
+
+  function handleLitFileSelect(input) {
+    Array.from(input.files).forEach(f => {
+      if (!litFiles.find(x => x.name === f.name)) litFiles.push(f);
+    });
+    input.value = '';
+    renderLitFileList();
+  }
+
+  function renderLitFileList() {
+    const wrap = document.getElementById('lit-file-list-wrap');
+    const list = document.getElementById('lit-file-list');
+    if (!litFiles.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    list.innerHTML = litFiles.map((f, i) => `
+      <div class="lit-file-item">
+        <span class="lit-file-icon">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M4 2h6l3 3v9a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            <path d="M9 2v4h3" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </span>
+        <span class="lit-file-name">${f.name}</span>
+        <span class="lit-file-size">${(f.size/1024/1024).toFixed(2)} MB</span>
+        <button class="lit-file-del" onclick="removeLitFile(${i})" title="移除">✕</button>
+      </div>`).join('');
+  }
+
+  function removeLitFile(idx) {
+    litFiles.splice(idx, 1);
+    renderLitFileList();
+  }
+
+  /* ── 提示词管理：全屏面板（与文本视图同层） ── */
+  // 记录打开前激活的 tab-panel，以便返回时恢复
+  let _promptPrevPanel = 'panel-graph';
+
+  function openPromptModal() {
+    // 找到当前激活的 tab-panel
+    const active = document.querySelector('.tab-panel.active');
+    if (active) _promptPrevPanel = active.id;
+    // 切换到提示词面板
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-prompt').classList.add('active');
+    // 初始化行号（等面板渲染完再计算）
+    setTimeout(syncPromptLines, 50);
+  }
+
+  function closePromptPanel() {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(_promptPrevPanel || 'panel-graph').classList.add('active');
+  }
+
+  function syncPromptLines() {
+    const ta   = document.getElementById('prompt-editor');
+    const nums = document.getElementById('prompt-line-nums');
+    if (!ta || !nums) return;
+    const lines = ta.value.split('\n').length;
+    // 用与 json-ln 同款的 div 行格式
+    nums.innerHTML = Array.from({length: lines}, (_, i) =>
+      `<div style="padding:0 12px 0 0;line-height:1.65">${i + 1}</div>`).join('');
+    syncPromptScroll();
+  }
+
+  function syncPromptScroll() {
+    const ta   = document.getElementById('prompt-editor');
+    const nums = document.getElementById('prompt-line-nums');
+    if (ta && nums) nums.scrollTop = ta.scrollTop;
+  }
+
+  /* ── 二次确认：是否抽取 ── */
+  // source：来源面板/弹窗 id，确认后需关闭或离开
+  let _extractSource = null;
+  function openExtractConfirm(sourceId) {
+    _extractSource = sourceId;
+    openModal('extract-confirm-modal');
+  }
+  function confirmExtract() {
+    closeModal('extract-confirm-modal');
+    // 如果来源是弹窗则关闭，如果是面板则不需要（跳走了）
+    if (_extractSource && _extractSource !== 'panel-prompt') {
+      closeModal(_extractSource);
+    }
+    window.location.href = 'main.html?page=ke-review';
+  }
+
+  /* ── 保存提示词弹窗 ── */
+  // thenExtract: true = 保存后继续执行跳转抽取逻辑
+  let _savePromptThenExtract = false;
+  function openSavePromptModal(thenExtract = false) {
+    _savePromptThenExtract = !!thenExtract;
+    document.getElementById('save-prompt-name').value = '';
+    document.getElementById('save-prompt-desc').value = '';
+    openModal('save-prompt-modal');
+  }
+  function confirmSavePrompt() {
+    const name = document.getElementById('save-prompt-name').value.trim();
+    if (!name) {
+      window.showToast?.('请填写提示词名称');
+      return;
+    }
+    closeModal('save-prompt-modal');
+    window.showToast?.('保存成功');
+    // 如果是"保存并重新抽取"流程，保存完成后直接跳转
+    if (_savePromptThenExtract) {
+      _savePromptThenExtract = false;
+      window.location.href = 'main.html?page=ke-review';
+    }
   }
 
   /* ── 过滤功能 ── */

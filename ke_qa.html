@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文献质检 · 本体智见平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
+  <script src="scripts/components.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-0);
+      font-family: var(--font-sans);
+      color: var(--text-1);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── 步骤条 ── */
+    .step-bar {
+      background: var(--bg-1);
+      border-bottom: 1px solid var(--border-1);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      height: 48px;
+      flex-shrink: 0;
+    }
+    .step-bar-inner {
+      display: flex; align-items: center;
+      width: 100%; max-width: 860px; margin: 0 auto;
+    }
+    .step { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); flex-shrink: 0; }
+    .step.done  { color: var(--green); }
+    .step.active{ color: var(--blue); font-weight: 600; }
+    .step-dot {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 1.5px solid currentColor;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; flex-shrink: 0;
+    }
+    .step.done  .step-dot { background: rgba(16,185,129,.12); }
+    .step.active .step-dot { background: rgba(59,130,246,.12); }
+    .step-conn { flex: 1; height: 1px; background: var(--border-1); margin: 0 10px; }
+    .step-conn.done { background: var(--green); opacity: .4; }
+
+    /* ── 主内容 ── */
+    .page-wrap {
+      flex: 1;
+      padding: 28px 40px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .page-header { display: flex; flex-direction: column; gap: 4px; }
+    .page-title { font-size: 20px; font-weight: 700; }
+    .page-title span { color: var(--blue); }
+    .page-sub { font-size: 12px; color: var(--text-3); }
+
+    /* ── 模式选择卡片（紧凑水平条） ── */
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .mode-card {
+      background: var(--bg-2);
+      border: 1.5px solid var(--border-1);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      cursor: pointer;
+      position: relative;
+      transition: border-color .2s, background .2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mode-card:hover { border-color: var(--border-2); background: var(--bg-3); }
+    .mode-card.selected {
+      border-color: var(--blue);
+      background: var(--blue-dim);
+    }
+    .mode-check {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-size: 9px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-left: 4px;
+    }
+    .mode-card.selected .mode-check { display: flex; }
+    .mode-icon { font-size: 18px; flex-shrink: 0; line-height: 1; }
+    .mode-title { font-size: 13px; font-weight: 600; color: var(--text-1); flex-shrink: 0; white-space: nowrap; }
+    .mode-desc { font-size: 11px; color: var(--text-2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mode-time { font-size: 11px; color: var(--text-3); font-family: var(--font-mono); flex-shrink: 0; white-space: nowrap; }
+
+    /* ── 配置区 ── */
+    .config-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      flex: 1;           /* 撑满 page-wrap 剩余高度 */
+      min-height: 0;     /* 允许 flex 子项被压缩 */
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 80px; /* 为固定底栏留空 */
+    }
+    .config-card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-3);
+      font-size: 13px;
+      font-weight: 600;
+      flex-shrink: 0;    /* 标题行不被压缩 */
+    }
+    .config-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;  /* 配置内容区独立滚动 */
+      flex: 1;
+      min-height: 0;
+    }
+
+    .config-row { display: flex; flex-direction: column; gap: 7px; }
+    .config-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .config-disabled-hint {
+      display: none;
+      font-size: 10px;
+      color: var(--text-3);
+      background: var(--bg-1);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    /* 禁用态 */
+    .config-row.disabled .config-label { opacity: .4; }
+    .config-row.disabled .config-disabled-hint { display: inline; }
+    .config-row.disabled select,
+    .config-row.disabled input,
+    .config-row.disabled textarea,
+    .config-row.disabled .slider-wrap,
+    .config-row.disabled .prompt-wrap { opacity: .35; pointer-events: none; }
+    .config-row { transition: opacity .2s; }
+
+    /* 下拉 */
+    .cfg-select {
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--text-1);
+      font-family: var(--font-sans);
+      outline: none;
+      cursor: pointer;
+      width: 100%;
+      max-width: 360px;
+      transition: border-color .15s;
+    }
+    .cfg-select:focus { border-color: var(--blue); }
+
+    /* ── 双滑块阈值 ── */
+    .slider-wrap {
+      position: relative;
+      padding: 28px 0 20px;
+      user-select: none;
+    }
+    .slider-track {
+      position: relative;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--bg-1);
+      margin: 0 4px;
+    }
+    /* 三段染色 */
+    .slider-seg-reject  { position: absolute; top:0; height:100%; background: rgba(239,68,68,.22); border-radius: 4px 0 0 4px; }
+    .slider-seg-review  { position: absolute; top:0; height:100%; background: rgba(234,179,8,.22); }
+    .slider-seg-accept  { position: absolute; top:0; height:100%; background: rgba(34,197,94,.22); border-radius: 0 4px 4px 0; }
+    /* 端点标注 */
+    .slider-end-label {
+      position: absolute;
+      bottom: -18px;
+      font-size: 10px;
+      color: var(--text-3);
+    }
+    .slider-end-label.left  { left: 0; }
+    .slider-end-label.right { right: 0; }
+    /* 把手 */
+    .slider-thumb {
+      position: absolute;
+      top: 50%;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--bg-4);
+      border: 2px solid var(--blue);
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      z-index: 2;
+    }
+    .slider-thumb:active { cursor: grabbing; }
+    /* 把手上方气泡 */
+    .slider-thumb::before {
+      content: attr(data-val);
+      position: absolute;
+      bottom: calc(100% + 5px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-4);
+      border: 1px solid var(--border-2);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 10px;
+      color: var(--text-1);
+      white-space: nowrap;
+      font-family: var(--font-mono);
+    }
+    /* 区间标注 */
+    .slider-zone-label {
+      position: absolute;
+      top: calc(100% + 6px);
+      font-size: 10px;
+      transform: translateX(-50%);
+      color: var(--text-3);
+    }
+    /* native range（隐藏用于无障碍） */
+    .slider-input {
+      position: absolute;
+      width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      top: 0; left: 0;
+      z-index: 3;
+    }
+
+    /* ── Prompt 预览/编辑 ── */
+    .prompt-wrap { display: flex; flex-direction: column; gap: 0; }
+    .prompt-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+      border-bottom: none;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .prompt-toolbar-sep { color: var(--border-2); }
+    .prompt-reset {
+      margin-left: auto;
+      background: none; border: none;
+      font-size: 11px; color: var(--blue);
+      cursor: pointer; font-family: var(--font-sans);
+      padding: 0;
+      transition: opacity .15s;
+    }
+    .prompt-reset:hover { opacity: .7; }
+    .prompt-ta {
+      background: var(--bg-1);
+      border: 1px solid var(--border-1);
+      border-top: none;
+      border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.65;
+      color: var(--text-1);
+      resize: vertical;
+      min-height: 220px;
+      max-height: 320px;
+      outline: none;
+      width: 100%;
+    }
+    .prompt-ta:focus { border-color: var(--blue); }
+
+    /* ── 固定底栏 ── */
+    .fixed-footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg-1);
+      border-top: 1px solid var(--border-1);
+      padding: 12px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+    }
+    .footer-est { font-size: 12px; color: var(--text-3); }
+    .footer-est strong { color: var(--text-1); }
+    .footer-actions { display: flex; gap: 10px; }
+
+    /* ── 进度条蒙层 ── */
+    .progress-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(8,12,24,.75);
+      z-index: 200;
+      backdrop-filter: blur(3px);
+      align-items: center;
+      justify-content: center;
+    }
+    .progress-overlay.active { display: flex; }
+
+    /* 进度卡片 */
+    .progress-modal {
+      background: var(--bg-3);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      padding: 32px 40px 28px;
+      width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      text-align: center;
+    }
+    .progress-modal-title { font-size: 15px; font-weight: 600; color: var(--text-1); }
+    .progress-modal-sub { font-size: 12px; color: var(--text-3); margin-top: -10px; }
+    .progress-bar-wrap { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+    .progress-bar-track {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--blue), #60a5fa);
+      border-radius: 4px;
+      transition: width .1s linear;
+    }
+    .progress-bar-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-3);
+      font-family: var(--font-mono);
+    }
+    .progress-actions { display: flex; gap: 10px; margin-top: 4px; }
+
+    /* 暂停确认弹窗（叠在进度蒙层上方） */
+    .qa-confirm-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    .qa-confirm-overlay.active { display: flex; }
+    .qa-confirm-box {
+      background: var(--bg-4);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px 24px;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .qa-confirm-title { font-size: 14px; font-weight: 600; }
+    .qa-confirm-sub { font-size: 12px; color: var(--text-3); line-height: 1.6; }
+    .qa-confirm-actions { display: flex; gap: 8px; }
+
+    /* 页面内容整体禁用 */
+    body.processing .page-wrap,
+    body.processing .fixed-footer { pointer-events: none; opacity: .55; transition: opacity .3s; }
+  </style>
+</head>
+<body>
+
+<!-- 步骤条 -->
+<div class="step-bar">
+  <div class="step-bar-inner">
+    <div class="step done"><div class="step-dot">✓</div><span>新建任务</span></div>
+    <div class="step-conn done"></div>
+    <div class="step done"><div class="step-dot">✓</div><span>文献上传</span></div>
+    <div class="step-conn done"></div>
+    <div class="step active"><div class="step-dot">3</div><span>文献质检</span></div>
+    <div class="step-conn"></div>
+    <div class="step"><div class="step-dot">4</div><span>抽取配置</span></div>
+    <div class="step-conn"></div>
+    <div class="step"><div class="step-dot">5</div><span>确认结果</span></div>
+  </div>
+</div>
+
+<!-- 主内容 -->
+<div class="page-wrap">
+
+  <div class="page-header">
+    <div class="page-title">文献<span>质检</span></div>
+    <div class="page-sub">选择质检模式并配置参数 · 风力发电预测本体 v2 · 共 24 篇文献</div>
+  </div>
+
+  <!-- 模式选择 -->
+  <div class="mode-grid">
+    <div class="mode-card" id="mode-skip" onclick="selectMode('skip')">
+      <div class="mode-check">✓</div>
+      <div class="mode-icon">⊘</div>
+      <div class="mode-title">跳过质检</div>
+      <div class="mode-desc">不进行任何检测，所有文献直接进入下一步</div>
+      <div class="mode-time">0s / 篇</div>
+    </div>
+    <div class="mode-card" id="mode-quick" onclick="selectMode('quick')">
+      <div class="mode-check">✓</div>
+      <div class="mode-icon">⚡</div>
+      <div class="mode-title">快速质检</div>
+      <div class="mode-desc">仅使用模型 + 阈值，跳过提示词环节</div>
+      <div class="mode-time">~5s / 篇</div>
+    </div>
+    <div class="mode-card selected" id="mode-advanced" onclick="selectMode('advanced')">
+      <div class="mode-check">✓</div>
+      <div class="mode-icon">⚙</div>
+      <div class="mode-title">高级质检</div>
+      <div class="mode-desc">完整 prompt 工程化质检流程</div>
+      <div class="mode-time">~20s / 篇</div>
+    </div>
+  </div>
+
+  <!-- 配置区 -->
+  <div class="config-card">
+    <div class="config-card-header">质检参数配置</div>
+    <div class="config-body">
+
+      <!-- 质检模型 -->
+      <div class="config-row" id="row-model">
+        <div class="config-label">
+          质检模型
+          <span class="config-disabled-hint">当前模式不需要此项</span>
+        </div>
+        <select class="cfg-select" id="cfg-model">
+          <option value="gpt4o">GPT-4o（推荐）</option>
+          <option value="gpt4t">GPT-4 Turbo</option>
+          <option value="claude">Claude 3.5 Sonnet</option>
+          <option value="local">本地模型</option>
+        </select>
+      </div>
+
+      <!-- 双滑块阈值 -->
+      <div class="config-row" id="row-threshold">
+        <div class="config-label">
+          阈值设置
+          <span class="config-disabled-hint">当前模式不需要此项</span>
+        </div>
+        <div class="slider-wrap" id="slider-wrap">
+          <div class="slider-track" id="slider-track">
+            <!-- 三段填充 -->
+            <div class="slider-seg-reject"  id="seg-reject"></div>
+            <div class="slider-seg-review"  id="seg-review"></div>
+            <div class="slider-seg-accept"  id="seg-accept"></div>
+            <!-- 把手 -->
+            <div class="slider-thumb" id="thumb-warn"   data-val="26%"></div>
+            <div class="slider-thumb" id="thumb-accept" data-val="58%"></div>
+            <!-- 端点标注 -->
+            <span class="slider-end-label left">严格</span>
+            <span class="slider-end-label right">宽松</span>
+            <!-- 区间中央标注 -->
+            <span class="slider-zone-label" id="lbl-reject" style="color:rgba(239,68,68,.7)">拒绝</span>
+            <span class="slider-zone-label" id="lbl-review" style="color:rgba(234,179,8,.7)">人工审核</span>
+            <span class="slider-zone-label" id="lbl-accept" style="color:rgba(34,197,94,.7)">采纳</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 提示词模板 -->
+      <div class="config-row" id="row-template">
+        <div class="config-label">
+          提示词模板
+          <span class="config-disabled-hint">当前模式不需要此项</span>
+        </div>
+        <select class="cfg-select" id="cfg-template" onchange="onTemplateChange(this.value)">
+          <option value="general">通用语义提示词 v1.5</option>
+          <option value="academic">学术摘要型 v2.0</option>
+          <option value="custom">自定义</option>
+        </select>
+      </div>
+
+      <!-- Prompt 预览/编辑 -->
+      <div class="config-row" id="row-prompt">
+        <div class="config-label">
+          Prompt 预览 / 编辑
+          <span class="config-disabled-hint">当前模式不需要此项</span>
+        </div>
+        <div class="prompt-wrap">
+          <div class="prompt-toolbar">
+            <span id="prompt-tpl-name">通用语义提示词 v1.5</span>
+            <span class="prompt-toolbar-sep">·</span>
+            <span id="prompt-char-count">0 字符</span>
+            <button class="prompt-reset" onclick="resetPrompt()">恢复模板默认</button>
+          </div>
+          <textarea class="prompt-ta" id="prompt-ta" oninput="onPromptInput()"
+            spellcheck="false"
+          ></textarea>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<!-- 固定底栏 -->
+<div class="fixed-footer" id="fixed-footer">
+  <div class="footer-est">
+    预估耗时 · <strong id="est-time">8–12 分钟</strong> &nbsp;·&nbsp; 共 <strong>24</strong> 篇
+  </div>
+  <div class="footer-actions">
+    <button class="btn btn-ghost" onclick="window.location.href='ke_literature.html'">← 上一步</button>
+    <button class="btn btn-primary" id="btn-next" onclick="startQA()">下一步 →</button>
+  </div>
+</div>
+
+<!-- 进度条弹窗 -->
+<div class="progress-overlay" id="progress-overlay">
+  <div class="progress-modal">
+    <div class="progress-modal-title">质检进行中…</div>
+    <div class="progress-modal-sub" id="progress-sub">正在分析文献，请稍候</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar-fill"></div>
+      </div>
+      <div class="progress-bar-meta">
+        <span id="progress-pct">0%</span>
+        <span id="progress-remain">预计剩余 3 秒…</span>
+      </div>
+    </div>
+    <div class="progress-actions">
+      <button class="btn btn-ghost" onclick="pauseOrCancelQA()">暂停</button>
+      <button class="btn btn-secondary" onclick="pauseOrCancelQA()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 暂停确认弹窗 -->
+<div class="qa-confirm-overlay" id="qa-confirm-overlay">
+  <div class="qa-confirm-box">
+    <div class="qa-confirm-title">质检已暂停</div>
+    <div class="qa-confirm-sub">当前进度已保留。<br>选择继续以恢复质检，或取消并返回配置页。</div>
+    <div class="qa-confirm-actions">
+      <button class="btn btn-ghost" onclick="cancelQA()">取消质检</button>
+      <button class="btn btn-primary" onclick="resumeQA()">继续质检</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+  /* ══════════════════════════════════════
+     模式数据
+  ══════════════════════════════════════ */
+  const MODES = {
+    skip:     { model: false, threshold: false, template: false, prompt: false, timePerDoc: 0,  label: '0s / 篇' },
+    quick:    { model: true,  threshold: true,  template: false, prompt: false, timePerDoc: 5,  label: '~5s / 篇' },
+    advanced: { model: true,  threshold: true,  template: true,  prompt: true,  timePerDoc: 20, label: '~20s / 篇' },
+  };
+
+  const TEMPLATES = {
+    general:  { name: '通用语义提示词 v1.5',  text: `你是一位文献质量评估专家。请根据以下标准对文献进行质检评分（0-100）：\n\n1. 学术严谨性（30分）：方法论是否完整、数据来源是否可靠\n2. 领域相关性（30分）：是否与风力发电预测核心主题相关\n3. 信息密度（20分）：单位篇幅内知识密度是否足够\n4. 可抽取性（20分）：概念、实体、关系是否清晰可识别\n\n输入文献摘要：\n{abstract}\n\n请输出 JSON 格式评分结果：\n{\n  "score": <0-100>,\n  "reason": "<简短说明>",\n  "pass": <true|false>\n}` },
+    academic: { name: '学术摘要型 v2.0',       text: `作为学术文献分析系统，请评估以下摘要的质量与适用性。\n\n评估维度：\n- 研究问题清晰度\n- 方法描述完整性\n- 结论可信度\n- 与风电领域的关联程度\n\n文献摘要：\n{abstract}\n\n输出标准化 JSON：\n{\n  "score": <integer 0-100>,\n  "dimensions": { "clarity": 0-25, "method": 0-25, "conclusion": 0-25, "relevance": 0-25 },\n  "recommendation": "accept|review|reject"\n}` },
+    custom:   { name: '自定义提示词',          text: '' },
+  };
+
+  let currentMode = 'advanced';
+  let promptDraft = {};   // 各模板草稿缓存
+  let currentTemplate = 'general';
+  let promptEdited = false;
+
+  const DOC_COUNT = 24;
+
+  /* ══════════════════════════════════════
+     模式切换
+  ══════════════════════════════════════ */
+  function selectMode(mode) {
+    currentMode = mode;
+    ['skip','quick','advanced'].forEach(m =>
+      document.getElementById('mode-'+m).classList.toggle('selected', m === mode)
+    );
+    applyModeToConfig();
+    updateEstTime();
+  }
+
+  function applyModeToConfig() {
+    const cfg = MODES[currentMode];
+    ['model','threshold','template','prompt'].forEach(k => {
+      const row = document.getElementById('row-'+k);
+      if (row) row.classList.toggle('disabled', !cfg[k]);
+    });
+  }
+
+  /* ══════════════════════════════════════
+     预估耗时
+  ══════════════════════════════════════ */
+  function updateEstTime() {
+    const s = MODES[currentMode].timePerDoc * DOC_COUNT;
+    let label;
+    if (s === 0) { label = '0 分钟'; }
+    else {
+      const minMin = Math.floor(s * 0.8 / 60) || 1;
+      const maxMin = Math.ceil(s * 1.2 / 60) || 1;
+      label = `${minMin}–${maxMin} 分钟`;
+    }
+    document.getElementById('est-time').textContent = label;
+  }
+
+  /* ══════════════════════════════════════
+     双滑块
+  ══════════════════════════════════════ */
+  let warnVal = 26, acceptVal = 58;
+  let dragging = null;
+
+  function updateSlider() {
+    const track = document.getElementById('slider-track');
+    const W = track.offsetWidth;
+    const wPct = warnVal / 100, aPct = acceptVal / 100;
+
+    document.getElementById('seg-reject').style.cssText = `left:0;width:${warnVal}%`;
+    document.getElementById('seg-review').style.cssText = `left:${warnVal}%;width:${acceptVal-warnVal}%`;
+    document.getElementById('seg-accept').style.cssText = `left:${acceptVal}%;right:0;width:${100-acceptVal}%`;
+
+    const tw = document.getElementById('thumb-warn');
+    const ta = document.getElementById('thumb-accept');
+    tw.style.left = warnVal + '%';
+    ta.style.left = acceptVal + '%';
+    tw.dataset.val = warnVal + '%';
+    ta.dataset.val = acceptVal + '%';
+
+    // 区间标注中点
+    const lR = document.getElementById('lbl-reject');
+    const lRv = document.getElementById('lbl-review');
+    const lA = document.getElementById('lbl-accept');
+    lR.style.left  = (warnVal / 2) + '%';
+    lRv.style.left = (warnVal + (acceptVal - warnVal) / 2) + '%';
+    lA.style.left  = (acceptVal + (100 - acceptVal) / 2) + '%';
+  }
+
+  function setupSlider() {
+    const track = document.getElementById('slider-track');
+    const thumbs = { warn: document.getElementById('thumb-warn'), accept: document.getElementById('thumb-accept') };
+
+    function startDrag(e, which) {
+      e.preventDefault();
+      dragging = which;
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', stopDrag);
+      document.addEventListener('touchmove', onDrag, { passive: false });
+      document.addEventListener('touchend', stopDrag);
+    }
+
+    function onDrag(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      const rect = track.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      let pct = Math.round(Math.max(0, Math.min(100, (clientX - rect.left) / rect.width * 100)));
+      if (dragging === 'warn') {
+        warnVal = Math.min(pct, acceptVal - 1);
+      } else {
+        acceptVal = Math.max(pct, warnVal + 1);
+      }
+      updateSlider();
+    }
+    function stopDrag() {
+      dragging = null;
+      document.removeEventListener('mousemove', onDrag);
+      document.removeEventListener('mouseup', stopDrag);
+      document.removeEventListener('touchmove', onDrag);
+      document.removeEventListener('touchend', stopDrag);
+    }
+
+    thumbs.warn.addEventListener('mousedown',  e => startDrag(e, 'warn'));
+    thumbs.warn.addEventListener('touchstart', e => startDrag(e, 'warn'), { passive: false });
+    thumbs.accept.addEventListener('mousedown',  e => startDrag(e, 'accept'));
+    thumbs.accept.addEventListener('touchstart', e => startDrag(e, 'accept'), { passive: false });
+
+    updateSlider();
+    window.addEventListener('resize', updateSlider);
+  }
+
+  /* ══════════════════════════════════════
+     提示词模板
+  ══════════════════════════════════════ */
+  function loadTemplate(tplKey, force = false) {
+    const tpl = TEMPLATES[tplKey];
+    const ta = document.getElementById('prompt-ta');
+    // 如果有草稿且不强制刷新，用草稿
+    if (!force && promptDraft[tplKey] !== undefined) {
+      ta.value = promptDraft[tplKey];
+    } else {
+      ta.value = tpl.text;
+      promptDraft[tplKey] = tpl.text;
+    }
+    document.getElementById('prompt-tpl-name').textContent = tpl.name;
+    updateCharCount();
+    promptEdited = false;
+  }
+
+  function onTemplateChange(val) {
+    if (promptEdited) {
+      if (!confirm('确定覆盖当前编辑内容？')) {
+        document.getElementById('cfg-template').value = currentTemplate;
+        return;
+      }
+    }
+    // 保存旧草稿
+    promptDraft[currentTemplate] = document.getElementById('prompt-ta').value;
+    currentTemplate = val;
+    loadTemplate(val);
+  }
+
+  function resetPrompt() {
+    if (!confirm('确定恢复模板默认内容？当前编辑将丢失。')) return;
+    loadTemplate(currentTemplate, true);
+  }
+
+  function onPromptInput() {
+    promptEdited = true;
+    promptDraft[currentTemplate] = document.getElementById('prompt-ta').value;
+    updateCharCount();
+    // 失焦时自动保存（已在 oninput 实时保存草稿）
+  }
+
+  function updateCharCount() {
+    const len = document.getElementById('prompt-ta').value.length;
+    document.getElementById('prompt-char-count').textContent = len + ' 字符';
+  }
+
+  /* ══════════════════════════════════════
+     执行质检（进度条）
+  ══════════════════════════════════════ */
+  const QA_TOTAL_MS    = 3000;  // 模拟总时长 3 秒
+  const QA_INTERVAL_MS = 50;    // 每 50ms 更新一次进度
+  let qaTimer    = null;
+  let qaProgress = 0;
+  let qaPaused   = false;
+
+  function startQA() {
+    // 校验：快速/高级模式下警告线 ≤ 采纳线
+    if (currentMode !== 'skip' && warnVal > acceptVal) {
+      window.showToast?.('配置错误：警告线不得大于采纳线');
+      return;
+    }
+
+    // 页面内容置灰 + 显示进度弹窗
+    document.body.classList.add('processing');
+    document.getElementById('progress-overlay').classList.add('active');
+    window.showToast?.('质检中，预计3~5分钟', 3500);
+
+    qaProgress = 0;
+    qaPaused   = false;
+    updateProgressUI(0);
+
+    qaTimer = setInterval(() => {
+      if (qaPaused) return;
+      qaProgress = Math.min(100, qaProgress + (QA_INTERVAL_MS / QA_TOTAL_MS) * 100);
+      updateProgressUI(qaProgress);
+      if (qaProgress >= 100) {
+        clearInterval(qaTimer);
+        setTimeout(() => { window.location.href = 'ke_extract_config.html'; }, 400);
+      }
+    }, QA_INTERVAL_MS);
+  }
+
+  function updateProgressUI(pct) {
+    const rounded  = Math.round(pct);
+    const remSec   = Math.max(0, Math.ceil((1 - pct / 100) * QA_TOTAL_MS / 1000));
+    document.getElementById('progress-bar-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent      = rounded + '%';
+    document.getElementById('progress-remain').textContent   =
+      pct < 100 ? `预计剩余 ${remSec} 秒…` : '质检完成，正在跳转…';
+    document.getElementById('progress-sub').textContent =
+      pct < 30  ? '正在分析文献，请稍候' :
+      pct < 70  ? '质量评分计算中…' :
+      pct < 100 ? '汇总质检报告…' : '完成';
+  }
+
+  /* 暂停 / 取消按钮 → 弹出确认框并暂停计时 */
+  function pauseOrCancelQA() {
+    qaPaused = true;
+    document.getElementById('qa-confirm-overlay').classList.add('active');
+  }
+
+  /* 继续质检 */
+  function resumeQA() {
+    qaPaused = false;
+    document.getElementById('qa-confirm-overlay').classList.remove('active');
+  }
+
+  /* 取消并返回上一步 */
+  function cancelQA() {
+    clearInterval(qaTimer);
+    document.getElementById('qa-confirm-overlay').classList.remove('active');
+    document.getElementById('progress-overlay').classList.remove('active');
+    document.body.classList.remove('processing');
+    window.location.href = 'ke_literature.html';
+  }
+
+  /* ══════════════════════════════════════
+     初始化
+  ══════════════════════════════════════ */
+  applyModeToConfig();
+  updateEstTime();
+  setupSlider();
+  loadTemplate('general');
+</script>
+</body>
+</html>
