@@ -1886,7 +1886,7 @@
       <button class="btn-close" onclick="closeModal('extract-confirm-modal')"></button>
     </div>
     <div class="modal-body">
-      <p class="confirm-sm-desc">是否要进行抽取？抽取完成后将跳转至结果审核页面，当前图谱内容不会被自动覆盖。</p>
+      <p class="confirm-sm-desc">是否新建抽取任务进行增量抽取？</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('extract-confirm-modal')">取消</button>
@@ -2287,7 +2287,12 @@
     if (_extractSource && _extractSource !== 'panel-prompt') {
       closeModal(_extractSource);
     }
-    window.location.href = 'ke_review.html';
+    // 添加文献增量抽取 → 进入文献质检流程；提示词重新抽取 → 直接到结果审核
+    if (_extractSource === 'add-lit-modal') {
+      window.location.href = 'ke_qa.html';
+    } else {
+      window.location.href = 'ke_review.html';
+    }
   }
 
   /* ── 保存提示词弹窗 ── */
