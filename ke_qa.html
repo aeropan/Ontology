@@ -446,24 +446,13 @@
 
   <!-- 配置区 -->
   <div class="config-card">
-    <div class="config-card-header">质检参数配置</div>
+    <div class="config-card-header">
+      质检参数配置
+      <span class="badge badge-blue" style="margin-left:10px;font-size:11px;font-weight:500">风力发电</span>
+    </div>
     <div class="config-body">
 
-      <!-- 质检模型 -->
-      <div class="config-row" id="row-model">
-        <div class="config-label">
-          质检模型
-          <span class="config-disabled-hint">当前模式不需要此项</span>
-        </div>
-        <select class="cfg-select" id="cfg-model">
-          <option value="gpt4o">GPT-4o（推荐）</option>
-          <option value="gpt4t">GPT-4 Turbo</option>
-          <option value="claude">Claude 3.5 Sonnet</option>
-          <option value="local">本地模型</option>
-        </select>
-      </div>
-
-      <!-- 双滑块阈值 -->
+      <!-- 双滑块阈值（顺序调整：置于模型选择上方） -->
       <div class="config-row" id="row-threshold">
         <div class="config-label">
           阈值设置
@@ -481,12 +470,26 @@
             <!-- 端点标注 -->
             <span class="slider-end-label left">严格</span>
             <span class="slider-end-label right">宽松</span>
-            <!-- 区间中央标注 -->
-            <span class="slider-zone-label" id="lbl-reject" style="color:rgba(239,68,68,.7)">拒绝</span>
-            <span class="slider-zone-label" id="lbl-review" style="color:rgba(234,179,8,.7)">人工审核</span>
+            <!-- 区间中央标注（文字已按需求调整） -->
+            <span class="slider-zone-label" id="lbl-reject" style="color:rgba(239,68,68,.7)">不建议使用</span>
+            <span class="slider-zone-label" id="lbl-review" style="color:rgba(234,179,8,.7)">建议确认</span>
             <span class="slider-zone-label" id="lbl-accept" style="color:rgba(34,197,94,.7)">采纳</span>
           </div>
         </div>
+      </div>
+
+      <!-- 质检模型 -->
+      <div class="config-row" id="row-model">
+        <div class="config-label">
+          质检模型
+          <span class="config-disabled-hint">当前模式不需要此项</span>
+        </div>
+        <select class="cfg-select" id="cfg-model">
+          <option value="gpt4o">GPT-4o（推荐）</option>
+          <option value="gpt4t">GPT-4 Turbo</option>
+          <option value="claude">Claude 3.5 Sonnet</option>
+          <option value="local">本地模型</option>
+        </select>
       </div>
 
       <!-- 提示词模板 -->
@@ -578,7 +581,7 @@
   ══════════════════════════════════════ */
   const MODES = {
     skip:     { model: false, threshold: false, template: false, prompt: false, timePerDoc: 0,  label: '0s / 篇' },
-    quick:    { model: true,  threshold: true,  template: false, prompt: false, timePerDoc: 5,  label: '~5s / 篇' },
+    quick:    { model: false, threshold: true,  template: false, prompt: false, timePerDoc: 5,  label: '~5s / 篇' },
     advanced: { model: true,  threshold: true,  template: true,  prompt: true,  timePerDoc: 20, label: '~20s / 篇' },
   };
 
