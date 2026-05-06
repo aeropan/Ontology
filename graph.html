@@ -3100,7 +3100,13 @@
           <button className={`gc-layout-tab${layout==='force'?' active':''}`}
                   onClick={()=>setLayout('force')}>力导</button>
           <button className={`gc-layout-tab${layout==='3d'?' active':''}`}
-                  onClick={()=>setLayout('3d')}>3D</button>
+                  onClick={()=>{
+                    // 在用户手势窗口内同步请求全屏，避免 useEffect 异步导致被浏览器拒绝
+                    if (!document.fullscreenElement) {
+                      document.documentElement.requestFullscreen().catch(()=>{});
+                    }
+                    setLayout('3d');
+                  }}>3D</button>
         </div>
 
         {/* 悬停 tooltip */}
@@ -3793,19 +3799,12 @@
     const container = document.getElementById('graph-3d-container');
     if (!overlay || !container) return;
 
-    /* 先显示 overlay，再请求真全屏 */
+    /* 显示 overlay（全屏请求已在 onClick 的用户手势上下文中同步发起） */
     overlay.style.display = 'flex';
-
-    const doFullscreen = () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-    };
 
     /* 动态加载库 */
     if (typeof ForceGraph3D !== 'undefined') {
       initForceGraph3D();
-      doFullscreen();
       return;
     }
 
@@ -3815,7 +3814,7 @@
 
     const s = document.createElement('script');
     s.src   = 'https://cdn.jsdelivr.net/npm/3d-force-graph@1';
-    s.onload  = () => { container.innerHTML = ''; initForceGraph3D(); doFullscreen(); };
+    s.onload  = () => { container.innerHTML = ''; initForceGraph3D(); };
     s.onerror = () => {
       container.innerHTML =
         '<div style="color:#f97316;margin:auto;font-size:13px;padding:40px">3D 库加载失败，请检查网络连接后重试</div>';
