@@ -143,6 +143,7 @@ body {
   border: none;
   width: 100%;
   background: var(--bg);
+  /* transition 已去除：本地文件加载极快，opacity 过渡反而产生 race condition */
 }
 
 /* ── Toast 提示 ── */
@@ -283,12 +284,15 @@ function navigate(file, page, crumbs) {
   const frame = document.getElementById('content-frame');
 
   if (file !== currentFile) {
-    // 切换到不同的文件
-    frame.src = file;
+    // 切换文件时先将 iframe 隐藏，避免看到旧页面或 main.html 默认首页的闪烁
+    frame.style.opacity = '0';
+    // main.html 支持 ?page= 参数在 DOMContentLoaded 时直接定位目标子页面
+    frame.src = (file === 'main.html' && page) ? `${file}?page=${page}` : file;
     currentFile = file;
-    // 等 iframe 加载完成后再传 page 指令
     frame.onload = function() {
-      if (page) sendPageCmd(page);
+      // URL 参数路由已在 DOMContentLoaded 中处理，无需再发 sendPageCmd
+      // （发了反而会触发 goPage 二次调用，产生闪烁）
+      frame.style.opacity = '1';
       frame.onload = null;
     };
   } else {
@@ -315,7 +319,22 @@ function sendPageCmd(page) {
 
 // ── 监听 iframe 内部的页面切换消息 ───────────
 window.addEventListener('message', function(e) {
-  if (!e.data || e.data.type !== 'NAV') return;
+  if (!e.data) return;
+
+  // 子页面通过 components.js 自动上报文件名，同步 currentFile
+  // 解决 location.href 内部跳转后侧边栏无响应的问题
+  if (e.data.type === 'IFRAME_NAVIGATED') {
+    currentFile = e.data.file;
+    return;
+  }
+
+  // 子页面请求 Shell 代为导航（避免 iframe 内部 location.href 绕过 opacity 遮罩）
+  if (e.data.type === 'NAVIGATE_TO') {
+    navigate(e.data.file, e.data.page || null, e.data.crumbs || []);
+    return;
+  }
+
+  if (e.data.type !== 'NAV') return;
   // 同步侧边栏高亮
   if (e.data.navId) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -333,9 +352,9 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── 初始化：加载完成后跳转首页 ───────────────
+// ── 初始化：首次加载 main.html，page-home 默认已有 active 类，无需 sendPageCmd
+// （调用 sendPageCmd 反而会触发 goPage 二次执行，造成闪烁）
 document.getElementById('content-frame').onload = function() {
-  sendPageCmd('home');
   this.onload = null;
 };
 </script>

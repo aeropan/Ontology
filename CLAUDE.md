@@ -37,6 +37,29 @@
   <script src="scripts/components.js"></script>
   ```
 
+### Shell 导航同步（自动机制，无需手动处理）
+- `components.js` 在加载时会自动检测当前页面是否运行在 `index.html` 的 iframe 内
+- 若是，则自动向父窗口发送 `{ type: 'IFRAME_NAVIGATED', file: '当前文件名' }` 消息
+- `index.html` 收到后更新内部的 `currentFile` 状态，确保侧边栏点击始终能正确跳转
+- **新建页面只需引入 `components.js`，导航同步自动生效，无需添加任何额外代码**
+- 禁止在页面内手动重复发送 `IFRAME_NAVIGATED` 消息（components.js 已统一处理）
+
+### 跨页面跳转（gotoExternal）— 禁止使用 location.href
+- 页面内如需跳转到**另一个 HTML 文件**，必须使用 `gotoExternal('目标.html')`，**禁止**直接用 `location.href`
+- 原因：`location.href` 在 iframe 内部跳转会绕过 Shell 的 `opacity` 遮罩，导致旧页面短暂闪现
+- `gotoExternal` 会通过 `postMessage` 通知 Shell 先设 `opacity=0` 再切换，彻底消除闪烁
+- **iframe 内关闭模态框后跳转时，不需要也不应该在关闭模态框后再调用 `gotoExternal`**：直接调用 `gotoExternal`，模态框会随 iframe 内容切换自动消失，无需手动 `closeModal`
+- `gotoExternal` 已在 `main.html` 中定义；**新建的独立子页面**若需要跨页面跳转，可在页面 `<script>` 中复制以下函数：
+  ```js
+  function gotoExternal(file) {
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'NAVIGATE_TO', file: file }, '*');
+    } else {
+      location.href = file;
+    }
+  }
+  ```
+
 ### Toast 提示（showToast）
 - 样式已定义在 `styles/shared.css`，函数已定义在 `scripts/components.js`
 - 页面引入 `components.js` 后直接调用 `window.showToast(msg, duration?)`，**禁止**在页面内自行实现

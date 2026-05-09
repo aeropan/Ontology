@@ -205,3 +205,23 @@ window.showToast = showToast;
 //    *   onCancel     {Function}  取消回调
 //    */
 // }
+
+
+/* ============================================================
+   Shell 导航同步（IFRAME_NAVIGATED）
+   ============================================================
+   当本页面运行在 index.html 的 iframe 内时，自动通知 Shell
+   更新 currentFile，保证侧边栏导航始终可用。
+
+   机制：页面脚本执行时（同步），读取自身 window.location.pathname
+   提取文件名，通过 postMessage 发给父窗口（index.html）。
+
+   新建页面只需引入 components.js，无需任何额外代码。
+   ============================================================ */
+(function notifyShellNavigation() {
+  if (window.parent === window) return; // 非 iframe 环境，跳过
+  const file = window.location.pathname.split('/').pop().split('?')[0];
+  if (file) {
+    window.parent.postMessage({ type: 'IFRAME_NAVIGATED', file }, '*');
+  }
+})();

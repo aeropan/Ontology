@@ -29,10 +29,26 @@ index.html（Shell 外壳）
 
 ### 路由机制
 
-- **跨文件切换**：Shell 通过 `iframe.src` 加载不同 HTML 文件
+- **跨文件切换**：Shell 通过 `iframe.src` 加载不同 HTML 文件；对 `main.html` 使用 `?page=xxx` URL 参数直接定位子页面，避免加载时闪现首页
 - **同文件内切换**：通过 `postMessage` 发送 `{ type: 'GOTO', page: 'xxx' }` 指令
 - **面包屑同步**：子页面通过 `postMessage` 发送 `{ type: 'NAV', crumbs: [...], navId: '...' }` 更新 Shell 面包屑
 - **路由配置**：Shell 中的 `NAV_MAP` 对象统一管理所有导航项
+
+### Shell 导航同步机制（IFRAME_NAVIGATED）
+
+部分页面通过 `location.href` 在 iframe 内部跳转（如 ke 流程各步骤、行业洞察子页面），Shell 无法感知，导致 `currentFile` 状态过时、侧边栏点击失效。
+
+**解决方案**：`components.js` 在加载时自动执行，读取自身 `window.location.pathname`，向父窗口发送 `{ type: 'IFRAME_NAVIGATED', file: '文件名' }`，Shell 收到后更新 `currentFile`。
+
+```
+任意子页面加载
+  → components.js 自动执行
+  → postMessage({ type: 'IFRAME_NAVIGATED', file: 'xxx.html' })
+  → index.html 更新 currentFile
+  → 侧边栏导航恢复正常
+```
+
+**约定**：新建任何在 iframe 内运行的页面，引入 `components.js` 即可，无需手动添加任何通知代码。
 
 ### main.html 内部页面
 
@@ -59,31 +75,61 @@ index.html（Shell 外壳）
 | `main.html` | ~10870 | 核心多功能页：主页、任务中心、知识抽取、本体中心、业务本体 |
 | `data_explorer.html` | ~5195 | 行业洞察旧版备份：ERA5 数据源交互式浏览器 |
 
-### 行业洞察模块（6个文件）
+### 知识抽取与融合模块（4个独立文件）
+
+从 `main.html` 的任务列表进入后，各步骤为独立 HTML 页面，形成串行流水线：
+
+```
+main.html(ke-tasks) → ke_literature → ke_qa → ke_extract_config → ke_review → graph.html
+```
 
 | 文件 | 功能 |
 |------|------|
-| `IndustryInsights_list.html` | 洞察任务列表（卡片式，支持筛选/搜索/新建弹窗） |
-| `IndustryInsights_setting.html` | 新建洞察配置页 |
-| `IndustryInsights_config.html` | 洞察参数配置 |
+| `ke_literature.html` | 上传文献（步骤1） |
+| `ke_qa.html` | 文献质检（步骤2） |
+| `ke_extract_config.html` | 抽取配置与结果（步骤3） |
+| `ke_review.html` | 结果确认与审核（步骤4） |
+
+### 本体图谱编辑器（1个文件）
+
+| 文件 | 功能 |
+|------|------|
+| `graph.html` | 本体图谱编辑器（2D/3D 可视化、节点关系编辑、数据挂载） |
+
+### 行业洞察模块（7个文件）
+
+入口由侧边栏直接加载，内部各步骤通过 `location.href` 串联：
+
+| 文件 | 功能 |
+|------|------|
+| `IndustryInsights_list.html` | 洞察任务列表（卡片式，支持筛选/搜索/新建弹窗）← 侧边栏入口 |
+| `IndustryInsights_setting.html` | 新建洞察：配置数据源与参数 |
+| `IndustryInsights_config.html` | 洞察参数详细配置 |
 | `IndustryInsights_progress.html` | 执行进度（步骤条+日志） |
 | `IndustryInsights_detail.html` | 洞察结果详情（结论面板+图表+方法统计） |
 | `IndustryInsights_templatelist.html` | 洞察模板列表 |
-| `IndustryInsights_templatedetail.html` | 洞察模板详情 |
+| `IndustryInsights_templatedetail.html` | 洞察模板详情与编辑 |
 
 ### RAG增强管理模块（2个文件）
 
 | 文件 | 功能 |
 |------|------|
-| `RAGrule_list.html` | 规则集列表（卡片+下拉菜单：修改/复制/删除） |
+| `RAGrule_list.html` | 规则集列表（卡片+下拉菜单：修改/复制/删除）← 侧边栏入口 |
 | `RAGrule_detail.html` | 规则集详情与编辑 |
+
+### 业务本体生成模块（4个文件）
+
+| 文件 | 功能 |
+|------|------|
+| `arrange_list.html` | 业务本体列表 ← 侧边栏入口 |
+| `arrange_template.html` | 从模板新建业务本体 |
+| `Arrange.html` | 业务本体排版编辑器 |
+| `arrange_compare.html` | 业务本体对比视图 |
 
 ### 其他页面
 
 | 文件 | 功能 |
 |------|------|
-| `Arrange.html` | 排版页面 |
-| `arrange_template.html` | 排版模板 |
 | `setting_backup.html` | 数据分析设置（备份） |
 
 ### 样式与脚本
@@ -91,7 +137,7 @@ index.html（Shell 外壳）
 | 文件 | 功能 |
 |------|------|
 | `styles/shared.css` | 全局设计规范：CSS 变量、重置样式、通用组件样式 |
-| `scripts/components.js` | 通用交互组件库（工厂函数模式，当前含 Modal 骨架） |
+| `scripts/components.js` | 通用交互组件库；含 Shell 导航同步自动机制（见下文） |
 
 ### 数据与脚本
 
