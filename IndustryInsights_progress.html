@@ -403,12 +403,20 @@ body {
 <!-- 操作栏 -->
 <div class="action-bar">
   <button class="btn-back" onclick="window.location.href='IndustryInsights_config.html'">← 返回配置</button>
-  <button class="btn-primary" id="btn-view" onclick="window.location.href='IndustryInsights_detail.html'">
+  <button class="btn-primary" id="btn-view" onclick="gotoExternal('IndustryInsights_detail_version_2.html')">
     查看结果 →
   </button>
 </div>
 
 <script>
+function gotoExternal(file) {
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'NAVIGATE_TO', file: file }, '*');
+  } else {
+    location.href = file;
+  }
+}
+
 // 演示：模拟进度推进
 let pct = 62;
 const bar = document.getElementById('prog-bar');
