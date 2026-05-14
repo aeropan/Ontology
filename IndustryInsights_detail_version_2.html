@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业洞察 · 调研数据</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
+<script src="scripts/components.js"></script>
+<!-- ag-grid Community v31（CSS 变量主题方案，锁定版本避免 v32 破坏性变更） -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.4/styles/ag-grid.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.4/styles/ag-theme-quartz.min.css">
+<script src="https://cdn.jsdelivr.net/npm/ag-grid-community@31.3.4/dist/ag-grid-community.min.js"></script>
+<!-- 预生成的调研数据（由 xlsx 转换） -->
+<script src="data/IndustryInsights_data.js"></script>
+
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-0);
+}
+
+/* ── 页头 ── */
+.page-header {
+  padding: 16px 24px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.header-left { display: flex; align-items: center; gap: 14px; }
+.header-title { font-size: 17px; font-weight: 700; color: var(--text-1); }
+.header-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-3);
+}
+.meta-sep { color: var(--border-2); }
+.badge-done {
+  padding: 3px 10px; border-radius: 5px;
+  font-size: 11px; font-weight: 500;
+  background: var(--green-dim); color: var(--green);
+}
+.header-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ── Sheet 标签栏 ── */
+.sheet-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border-1);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.sheet-tabs::-webkit-scrollbar { height: 0; }
+.tab-btn {
+  padding: 9px 16px;
+  background: transparent;
+  border: none; border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-size: 12px; font-family: inherit;
+  color: var(--text-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover { color: var(--text-1); }
+.tab-btn.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+  font-weight: 500;
+}
+.tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 16px; padding: 0 5px;
+  background: var(--bg-4); border-radius: 8px;
+  font-size: 10px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text-3); margin-left: 5px;
+}
+.tab-btn.active .tab-count { background: var(--blue-dim); color: var(--blue); }
+
+/* ── 工具栏 ── */
+.grid-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 24px;
+  flex-shrink: 0;
+}
+.toolbar-left { display: flex; align-items: center; gap: 8px; }
+.toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+.search-wrap {
+  position: relative;
+  display: flex; align-items: center;
+}
+.search-icon {
+  position: absolute; left: 9px;
+  color: var(--text-3); pointer-events: none;
+  width: 14px; height: 14px;
+}
+.search-input {
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
+  border-radius: 7px;
+  padding: 6px 10px 6px 30px;
+  font-size: 12px; font-family: inherit;
+  color: var(--text-1);
+  width: 220px;
+  transition: border-color 0.15s;
+}
+.search-input::placeholder { color: var(--text-3); }
+.search-input:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-dim);
+}
+
+.row-count-tag {
+  font-size: 11px; color: var(--text-3);
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: 5px; padding: 4px 9px;
+}
+.row-count-tag span { color: var(--text-1); font-weight: 600; }
+
+/* ── Grid 容器 ── */
+.grid-wrap {
+  flex: 1;
+  min-height: 0;
+  padding: 0 24px 20px;
+}
+#myGrid {
+  height: 100%;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-1);
+}
+
+/* ── 加载态 ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: var(--bg-0);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; z-index: 999;
+}
+.loading-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border-2);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.loading-text { font-size: 13px; color: var(--text-3); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── ag-grid 深色主题（v31 CSS 变量方案） ── */
+.ag-theme-quartz-dark {
+  --ag-background-color: #0f1729;
+  --ag-header-background-color: #1a2540;
+  --ag-odd-row-background-color: #0f1729;
+  --ag-even-row-background-color: #0d1220;
+  --ag-row-hover-color: rgba(59, 130, 246, 0.08);
+  --ag-selected-row-background-color: rgba(59, 130, 246, 0.15);
+  --ag-border-color: #1e2d4a;
+  --ag-header-column-separator-color: #253550;
+  --ag-foreground-color: #e2e8f0;
+  --ag-header-foreground-color: #94a3b8;
+  --ag-secondary-foreground-color: #475569;
+  --ag-disabled-foreground-color: #475569;
+  --ag-font-family: 'Noto Sans SC', sans-serif;
+  --ag-font-size: 12px;
+  --ag-row-height: 38px;
+  --ag-header-height: 40px;
+  --ag-cell-horizontal-padding: 12px;
+  --ag-input-focus-border-color: #3b82f6;
+  --ag-range-selection-border-color: #3b82f6;
+  --ag-checkbox-checked-color: #3b82f6;
+  --ag-checkbox-background-color: #0f1729;
+  --ag-input-border-color: #253550;
+  --ag-input-background-color: #131d30;
+  --ag-control-panel-background-color: #0d1220;
+  --ag-subheader-background-color: #131d30;
+  --ag-menu-background-color: #131d30;
+  --ag-menu-border-color: #253550;
+  --ag-tooltip-background-color: #131d30;
+  --ag-tooltip-foreground-color: #e2e8f0;
+  --ag-tooltip-border-color: #253550;
+  --ag-modal-overlay-background-color: rgba(8, 12, 24, 0.7);
+  --ag-side-bar-panel-width: 220px;
+}
+.ag-theme-quartz-dark .ag-header-cell { font-weight: 600; letter-spacing: 0.2px; }
+.ag-theme-quartz-dark .ag-row { border-bottom-color: #1e2d4a; }
+.ag-theme-quartz-dark .ag-header { border-bottom: 2px solid #253550; }
+.ag-theme-quartz-dark .ag-paging-panel { border-top: 1px solid #1e2d4a; }
+
+/* 导出按钮（蓝色描边） */
+.btn-export-outline {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid var(--blue);
+  border-radius: 8px;
+  font-size: 12px; font-family: inherit;
+  color: var(--blue);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-export-outline:hover { background: var(--blue-dim); }
+
+/* 生成本体弹窗 */
+.ontology-modal .form-group { margin-bottom: 18px; }
+.ontology-modal .form-label {
+  display: block;
+  font-size: 12px; font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 7px;
+}
+.ontology-modal .form-input,
+.ontology-modal .form-select,
+.ontology-modal .form-textarea {
+  width: 100%; box-sizing: border-box;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px; font-family: inherit;
+  color: var(--text-1);
+  transition: border-color 0.15s;
+}
+.ontology-modal .form-input:focus,
+.ontology-modal .form-select:focus,
+.ontology-modal .form-textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px var(--blue-dim);
+}
+.ontology-modal .form-input::placeholder,
+.ontology-modal .form-textarea::placeholder { color: var(--text-3); }
+.ontology-modal .form-select { appearance: none; cursor: pointer; }
+.ontology-modal .form-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.ontology-modal .field-disabled {
+  background: var(--bg-3) !important;
+  color: var(--text-3) !important;
+  cursor: not-allowed;
+  border-color: var(--border-1) !important;
+}
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: '';
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-3);
+  pointer-events: none;
+}
+
+/* 链接单元格 */
+.cell-link {
+  color: var(--blue);
+  text-decoration: none;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+.cell-link:hover { text-decoration: underline; }
+
+/* 优先级徽章 */
+.priority-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 500;
+  white-space: nowrap;
+}
+.priority-high  { background: rgba(16,185,129,0.12); color: #10b981; }
+.priority-mid   { background: rgba(234,179,8,0.12);  color: #eab308; }
+.priority-low   { background: rgba(100,116,139,0.15); color: #94a3b8; }
+.priority-skip  { background: rgba(239,68,68,0.12);  color: #ef4444; }
+
+/* 开源状态 */
+.open-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 7px; border-radius: 4px;
+  font-size: 11px; white-space: nowrap;
+}
+.open-yes { background: rgba(16,185,129,0.12); color: #10b981; }
+.open-no  { background: rgba(100,116,139,0.12); color: #64748b; }
+</style>
+</head>
+<body>
+
+<!-- 加载遮罩 -->
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">正在加载数据…</div>
+</div>
+
+<!-- 顶部导航栏 -->
+<div class="page-topbar">
+  <nav class="topbar-breadcrumb">
+    <a href="IndustryInsights_list.html" class="topbar-module">行业洞察</a>
+    <span class="topbar-sep">›</span>
+    <span class="topbar-current">调研数据</span>
+  </nav>
+  <div class="topbar-actions">
+    <button class="topbar-back" onclick="gotoExternal('IndustryInsights_list.html')">← 返回</button>
+  </div>
+</div>
+
+<!-- 页头 -->
+<div class="page-header">
+  <div class="header-left">
+    <div class="header-title">风力发电调研数据</div>
+    <span class="badge-done">已完成</span>
+    <div class="header-meta">
+      <span id="meta-sheets">6 个数据表</span>
+      <span class="meta-sep">·</span>
+      <span id="meta-task">图谱组调研汇总</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-export-outline" onclick="exportCSV()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      导出
+    </button>
+    <button class="btn btn-primary" onclick="openOntologyModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+      生成本体
+    </button>
+  </div>
+</div>
+
+<!-- 生成本体弹窗 -->
+<div class="modal-overlay" id="ontology-modal-overlay">
+  <div class="modal ontology-modal" style="width:480px">
+    <div class="modal-header">
+      <span>生成本体</span>
+      <button class="btn-close" onclick="closeOntologyModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">本体名称 <span style="color:var(--blue)">*</span></label>
+        <input class="form-input" id="onto-name" placeholder="如：风力发电预测本体 v3">
+      </div>
+      <div class="form-group">
+        <label class="form-label">本体领域</label>
+        <div class="select-wrap">
+          <select class="form-select" id="onto-domain">
+            <option value="新能源">新能源</option>
+            <option value="金融">金融</option>
+            <option value="工业">工业</option>
+            <option value="气象">气象</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">创建方式</label>
+        <input class="form-input field-disabled" value="行业洞察抽取" disabled>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">本体描述</label>
+        <textarea class="form-textarea" id="onto-desc" placeholder="描述本体的用途和范围…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeOntologyModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmOntology()">创建并编辑</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sheet 标签 -->
+<div class="sheet-tabs" id="sheet-tabs"></div>
+
+<!-- 工具栏 -->
+<div class="grid-toolbar">
+  <div class="toolbar-left">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" id="search-input" placeholder="搜索当前表数据…" oninput="onSearch(this.value)">
+    </div>
+  </div>
+  <div class="toolbar-right">
+    <div class="row-count-tag">共 <span id="row-count">0</span> 行</div>
+  </div>
+</div>
+
+<!-- ag-grid -->
+<div class="grid-wrap">
+  <div id="myGrid" class="ag-theme-quartz-dark"></div>
+</div>
+
+<script>
+function gotoExternal(file) {
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'NAVIGATE_TO', file }, '*');
+  } else {
+    location.href = file;
+  }
+}
+
+// ── 全局状态 ──
+let gridApi = null;
+let currentSheet = 0;
+const SHEET_NAMES = Object.keys(INDUSTRY_INSIGHTS_DATA);
+
+// ── Sheet 名称与简称映射 ──
+const SHEET_LABELS = {
+  'ERA5和其他数据源组合调研':       'ERA5数据调研',
+  '使用ERA5数据源对应文献及条目':   '使用ERA5文献',
+  '未使用ERA5数据源对应文献及条目': '未使用ERA5文献',
+  '文献列表':                        '文献列表',
+  '截至目前有开源代码的文献':        '开源代码文献',
+  '使用物理模型的文献':              '物理模型文献',
+};
+
+// ── 需要链接渲染的列名关键词 ──
+const LINK_COL_KEYWORDS = ['链接', 'url', 'link', 'doi', 'DOI', '代码'];
+
+// ── 优先级渲染 ──
+function priorityCellRenderer(params) {
+  const v = params.value;
+  if (!v) return '';
+  const s = String(v);
+  let cls = 'priority-mid';
+  if (s.includes('必选') || s.includes('核心') || s.includes('高'))   cls = 'priority-high';
+  else if (s.includes('推荐') || s.includes('中'))                    cls = 'priority-mid';
+  else if (s.includes('可选') || s.includes('低'))                    cls = 'priority-low';
+  else if (s.includes('不推荐') || s.includes('跳过'))                cls = 'priority-skip';
+  return `<span class="priority-badge ${cls}">${s}</span>`;
+}
+
+// ── 链接渲染 ──
+function linkCellRenderer(params) {
+  const v = params.value;
+  if (!v) return '';
+  const s = String(v).trim();
+  if (s.startsWith('http') || s.startsWith('https')) {
+    const short = s.length > 40 ? s.slice(0, 40) + '…' : s;
+    return `<a class="cell-link" href="${s}" target="_blank" title="${s}">${short}</a>`;
+  }
+  return `<span title="${s}">${s}</span>`;
+}
+
+// ── 开源状态渲染 ──
+function openStatusRenderer(params) {
+  const v = params.value;
+  if (!v) return '';
+  const s = String(v);
+  const isOpen = s.includes('✅') || s.includes('开源') || s.includes('是');
+  return `<span class="open-badge ${isOpen ? 'open-yes' : 'open-no'}">${s}</span>`;
+}
+
+// ── 判断列是否为链接列 ──
+function isLinkCol(colName) {
+  const name = String(colName).toLowerCase();
+  return LINK_COL_KEYWORDS.some(k => name.includes(k.toLowerCase()));
+}
+
+// ── 生成列定义 ──
+function buildColDefs(sheetName, headers) {
+  return headers
+    .filter(h => h != null && h !== '')
+    .map((h, idx) => {
+      const name = String(h);
+      const base = {
+        field: name,
+        headerName: name,
+        sortable: true,
+        resizable: true,
+        filter: true,
+        tooltipValueGetter: p => (p.value != null ? String(p.value) : ''),
+        minWidth: 80,
+      };
+
+      // Sheet1 前三列固定
+      if (sheetName === 'ERA5和其他数据源组合调研' && idx < 3) {
+        base.pinned = 'left';
+        base.lockPinned = true;
+      }
+
+      // 文献列表前两列固定
+      if (sheetName === '文献列表' && idx < 2) {
+        base.pinned = 'left';
+        base.lockPinned = true;
+      }
+
+      // 宽度策略
+      if (name === 'ID' || name === '论文ID' || name === '序号' || name === '编号') {
+        base.width = 80; base.flex = 0;
+      } else if (name === '数据类型分类' || name === '算法分类') {
+        base.width = 120; base.flex = 0;
+      } else if (name === '数据名称' || name === '论文题目' || name === 'title' || name === 'tittle') {
+        base.minWidth = 220; base.flex = 2;
+        base.wrapText = true; base.autoHeight = true;
+        base.cellStyle = { 'line-height': '1.6', 'padding-top': '8px', 'padding-bottom': '8px' };
+      } else if (['优先级'].includes(name)) {
+        base.width = 100; base.flex = 0;
+        base.cellRenderer = priorityCellRenderer;
+      } else if (name === '是否(开源/下载/有无数据)' || name === '代码是否开源' || name === '是否使用era5数据作为数据源之一') {
+        base.width = 130; base.flex = 0;
+        base.cellRenderer = openStatusRenderer;
+      } else if (isLinkCol(name)) {
+        base.minWidth = 140; base.flex = 1;
+        base.cellRenderer = linkCellRenderer;
+      } else if (['数据摘要', '判定依据', '核心字段', '特征维度', '数据集规模', '缺失值规则',
+                  '元数据表征', '用途', '对应论文与数据量需求', '数据使用', '原文证据',
+                  '气象与环境输入', '数据集与特征工程处理方法', '核心算法基线', '物理机制融合点',
+                  '性能提升幅度', '业务映射'].includes(name)) {
+        // 长文本列：截断 + tooltip
+        base.minWidth = 200; base.flex = 2;
+        base.maxWidth = 360;
+        base.cellStyle = {
+          'white-space': 'nowrap',
+          'overflow': 'hidden',
+          'text-overflow': 'ellipsis',
+        };
+      } else {
+        base.minWidth = 100; base.flex = 1;
+      }
+
+      return base;
+    });
+}
+
+// ── 生成本体弹窗 ──
+function openOntologyModal() {
+  document.getElementById('ontology-modal-overlay').classList.add('active');
+}
+function closeOntologyModal() {
+  document.getElementById('ontology-modal-overlay').classList.remove('active');
+}
+function confirmOntology() {
+  const name = document.getElementById('onto-name').value.trim();
+  if (!name) {
+    document.getElementById('onto-name').focus();
+    document.getElementById('onto-name').style.borderColor = '#ef4444';
+    return;
+  }
+  gotoExternal('graph.html');
+}
+// 点击遮罩关闭
+document.getElementById('ontology-modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeOntologyModal();
+});
+
+// ── 渲染 Grid ──
+function renderGrid(sheetIndex) {
+  const sheetName = SHEET_NAMES[sheetIndex];
+  const { headers, rows } = INDUSTRY_INSIGHTS_DATA[sheetName];
+  const colDefs = buildColDefs(sheetName, headers);
+
+  document.getElementById('row-count').textContent = rows.length;
+  document.getElementById('search-input').value = '';
+
+  if (gridApi) {
+    gridApi.destroy();
+    gridApi = null;
+  }
+
+  const el = document.getElementById('myGrid');
+  gridApi = agGrid.createGrid(el, {
+    columnDefs: colDefs,
+    rowData: rows,
+    defaultColDef: {
+      resizable: true,
+      sortable: true,
+      filter: true,
+      tooltipShowDelay: 300,
+      tooltipHideDelay: 5000,
+    },
+    tooltipShowDelay: 300,
+    tooltipInteraction: true,
+    animateRows: false,
+    pagination: rows.length > 200,
+    paginationPageSize: 100,
+    paginationPageSizeSelector: [50, 100, 200],
+    rowBuffer: 20,
+    getRowId: params => String(params.data['ID'] || params.data['论文ID'] || params.data['序号'] || Math.random()),
+    onFilterChanged: () => {
+      document.getElementById('row-count').textContent = gridApi.getDisplayedRowCount();
+    },
+  });
+}
+
+// ── 渲染 Tab 栏 ──
+function renderTabs() {
+  const container = document.getElementById('sheet-tabs');
+  container.innerHTML = '';
+  SHEET_NAMES.forEach((name, idx) => {
+    const { rows } = INDUSTRY_INSIGHTS_DATA[name];
+    const label = SHEET_LABELS[name] || name;
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (idx === 0 ? ' active' : '');
+    btn.innerHTML = `${label}<span class="tab-count">${rows.length}</span>`;
+    btn.onclick = () => switchTab(idx);
+    container.appendChild(btn);
+  });
+}
+
+// ── 切换 Tab ──
+function switchTab(idx) {
+  if (idx === currentSheet) return;
+  currentSheet = idx;
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+  renderGrid(idx);
+}
+
+// ── 搜索 ──
+function onSearch(val) {
+  if (!gridApi) return;
+  gridApi.setGridOption('quickFilterText', val);
+  setTimeout(() => {
+    document.getElementById('row-count').textContent = gridApi.getDisplayedRowCount();
+  }, 50);
+}
+
+// ── 导出 CSV ──
+function exportCSV() {
+  if (!gridApi) return;
+  gridApi.exportDataAsCsv({ fileName: `${SHEET_NAMES[currentSheet]}.csv` });
+}
+
+// ── 初始化 ──
+renderTabs();
+renderGrid(0);
+document.getElementById('loading').style.display = 'none';
+</script>
+</body>
+</html>

@@ -364,9 +364,16 @@ function filterCards(keyword) {
 /* ════════════════════════════
    页面跳转
 ════════════════════════════ */
+function gotoExternal(file) {
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'NAVIGATE_TO', file: file }, '*');
+  } else {
+    location.href = file;
+  }
+}
 function goSetting()      { window.location.href = 'IndustryInsights_setting.html'; }
 function goProgress()     { window.location.href = 'IndustryInsights_progress.html'; }
-function goDetail()       { window.location.href = 'IndustryInsights_detail.html'; }
+function goDetail()       { gotoExternal('IndustryInsights_detail_version_2.html'); }
 function goTemplateList() { window.location.href = 'IndustryInsights_templatelist.html'; }
 </script>
 </body>
