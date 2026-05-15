@@ -748,22 +748,28 @@ function confirmOntology() {
     return;
   }
 
-  // 按钮进入载入中状态
-  const confirmBtn = document.getElementById('onto-confirm-btn');
-  const cancelBtn  = document.getElementById('onto-cancel-btn');
-  confirmBtn.disabled = true;
-  cancelBtn.disabled  = true;
-  confirmBtn.style.opacity = '0.6';
-  confirmBtn.style.cursor  = 'not-allowed';
-  confirmBtn.innerHTML = `
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-      style="animation:spin 0.8s linear infinite;flex-shrink:0">
-      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>
-    </svg>
-    本体生成中`;
+  // 1. 关闭弹窗回到页面
+  closeOntologyModal();
 
-  // 2 秒后跳转
-  setTimeout(() => gotoExternal('graph.html'), 2000);
+  // 2. 右上角"生成本体"按钮进入载入中状态
+  const pageBtn = document.querySelector('.header-actions .btn.btn-primary');
+  if (pageBtn) {
+    pageBtn.disabled = true;
+    pageBtn.style.opacity = '0.55';
+    pageBtn.style.cursor = 'not-allowed';
+    pageBtn.innerHTML = `
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        style="animation:spin 0.8s linear infinite;flex-shrink:0">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>
+      </svg>
+      本体生成中`;
+  }
+
+  // 3. Toast 提示
+  window.showToast('⚙️ 本体生成中', 3000);
+
+  // 4. 3 秒后跳转
+  setTimeout(() => gotoExternal('graph.html'), 3000);
 }
 // 点击遮罩关闭
 document.getElementById('ontology-modal-overlay').addEventListener('click', function(e) {
