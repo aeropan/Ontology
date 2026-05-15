@@ -465,8 +465,8 @@ body {
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeOntologyModal()">取消</button>
-      <button class="btn btn-primary" onclick="confirmOntology()">创建并编辑</button>
+      <button class="btn btn-secondary" id="onto-cancel-btn" onclick="closeOntologyModal()">取消</button>
+      <button class="btn btn-primary" id="onto-confirm-btn" onclick="confirmOntology()">生成本体</button>
     </div>
   </div>
 </div>
@@ -733,11 +733,29 @@ function closeOntologyModal() {
 function confirmOntology() {
   const name = document.getElementById('onto-name').value.trim();
   if (!name) {
-    document.getElementById('onto-name').focus();
-    document.getElementById('onto-name').style.borderColor = '#ef4444';
+    const input = document.getElementById('onto-name');
+    input.focus();
+    input.style.borderColor = '#ef4444';
+    input.style.boxShadow = '0 0 0 2px rgba(239,68,68,0.2)';
     return;
   }
-  gotoExternal('graph.html');
+
+  // 按钮进入载入中状态
+  const confirmBtn = document.getElementById('onto-confirm-btn');
+  const cancelBtn  = document.getElementById('onto-cancel-btn');
+  confirmBtn.disabled = true;
+  cancelBtn.disabled  = true;
+  confirmBtn.style.opacity = '0.6';
+  confirmBtn.style.cursor  = 'not-allowed';
+  confirmBtn.innerHTML = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      style="animation:spin 0.8s linear infinite;flex-shrink:0">
+      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>
+    </svg>
+    本体生成中`;
+
+  // 2 秒后跳转
+  setTimeout(() => gotoExternal('graph.html'), 2000);
 }
 // 点击遮罩关闭
 document.getElementById('ontology-modal-overlay').addEventListener('click', function(e) {
