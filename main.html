@@ -6972,8 +6972,7 @@
         <div class="oc-footer">
           <span class="oc-time">更新 2小时前</span>
           <div style="display:flex;gap:6px">
-            <span class="action-link" onclick="event.stopPropagation();goPage('onto-editor')">编辑</span>
-            <span class="action-link" onclick="event.stopPropagation();goPage('onto-versions')">版本</span>
+            <span class="action-link" onclick="event.stopPropagation();openModal('onto-edit-ontology-modal')">编辑</span>
             <span class="action-link danger" onclick="event.stopPropagation();showToast('⚠ 请确认是否删除')">删除</span>
           </div>
         </div>
@@ -7008,8 +7007,8 @@
         <div class="oc-footer">
           <span class="oc-time">更新 2天前</span>
           <div style="display:flex;gap:6px">
-            <span class="action-link" onclick="event.stopPropagation();goPage('onto-editor')">编辑</span>
-            <span class="action-link" onclick="event.stopPropagation();goPage('onto-versions')">版本</span>
+            <span class="action-link" onclick="event.stopPropagation();openModal('onto-edit-ontology-modal')">编辑</span>
+            <span class="action-link danger" onclick="event.stopPropagation();showToast('⚠ 请确认是否删除')">删除</span>
           </div>
         </div>
       </div>
@@ -7043,8 +7042,8 @@
         <div class="oc-footer">
           <span class="oc-time">更新 5天前</span>
           <div style="display:flex;gap:6px">
-            <span class="action-link" onclick="event.stopPropagation();goPage('onto-editor')">编辑</span>
-            <span class="action-link" onclick="event.stopPropagation();goPage('onto-versions')">版本</span>
+            <span class="action-link" onclick="event.stopPropagation();openModal('onto-edit-ontology-modal')">编辑</span>
+            <span class="action-link danger" onclick="event.stopPropagation();showToast('⚠ 请确认是否删除')">删除</span>
           </div>
         </div>
       </div>
@@ -7078,7 +7077,8 @@
         <div class="oc-footer">
           <span class="oc-time">更新 刚刚</span>
           <div style="display:flex;gap:6px">
-            <span class="action-link" onclick="event.stopPropagation();goPage('onto-editor')">继续编辑</span>
+            <span class="action-link" onclick="event.stopPropagation();openModal('onto-edit-ontology-modal')">编辑</span>
+            <span class="action-link danger" onclick="event.stopPropagation();showToast('⚠ 请确认是否删除')">删除</span>
           </div>
         </div>
       </div>
@@ -7112,8 +7112,8 @@
         <div class="oc-footer">
           <span class="oc-time">更新 1周前</span>
           <div style="display:flex;gap:6px">
-            <span class="action-link" onclick="event.stopPropagation();goPage('onto-editor')">编辑</span>
-            <span class="action-link" onclick="event.stopPropagation();goPage('onto-versions')">版本</span>
+            <span class="action-link" onclick="event.stopPropagation();openModal('onto-edit-ontology-modal')">编辑</span>
+            <span class="action-link danger" onclick="event.stopPropagation();showToast('⚠ 请确认是否删除')">删除</span>
           </div>
         </div>
       </div>
@@ -8305,6 +8305,43 @@
         <button class="btn btn-ghost" onclick="closeModal('onto-new-ontology-modal')">取消</button>
         <button class="btn btn-primary"
           onclick="closeModal('onto-new-ontology-modal');goPage('onto-editor');showToast('✅ 本体已创建，进入编辑器')">创建并编辑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: 编辑本体 ===== -->
+  <div class="modal-overlay" id="onto-edit-ontology-modal">
+    <div class="modal" style="width:440px">
+      <div class="modal-header">
+        <div class="modal-title">编辑本体</div>
+        <div class="modal-close" onclick="closeModal('onto-edit-ontology-modal')">✕</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">本体名称 *</label><input class="form-input"
+            placeholder="如：风力发电预测本体 v3"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group"><label class="form-label">领域</label><select class="form-input">
+              <option>新能源</option>
+              <option>金融</option>
+              <option>工业</option>
+              <option>气象</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">创建方式</label><select class="form-input">
+              <option>从零创建</option>
+              <option>从抽取任务导入</option>
+              <option>导入 OWL 文件</option>
+            </select></div>
+        </div>
+        <div class="form-group"><label class="form-label">底座本体（选填）</label><select class="form-input">
+            <option value="">不使用</option>
+            <option>风力发电预测本体 v2.0</option>
+            <option>药物靶点关系本体 v1.2</option>
+          </select></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('onto-edit-ontology-modal')">取消</button>
+        <button class="btn btn-primary"
+          onclick="closeModal('onto-edit-ontology-modal');showToast('✅ 本体信息已保存')">保存修改</button>
       </div>
     </div>
   </div>
