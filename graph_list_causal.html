@@ -1,0 +1,843 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>因果本体</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
+<style>
+:root{--bg:#080c18;--sidebar-bg:#0d1220;--surface:#0f1729;--surface2:#131d30;--surface3:#1a2540;--border:#1e2d4a;--border2:#253550;--blue:#3b82f6;--blue-dim:rgba(59,130,246,0.15);--cyan:#06b6d4;--cyan-dim:rgba(6,182,212,0.12);--purple:#8b5cf6;--purple-dim:rgba(139,92,246,0.15);--green:#10b981;--green-dim:rgba(16,185,129,0.12);--amber:#f59e0b;--amber-dim:rgba(245,158,11,0.12);--rose:#f43f5e;--text1:#e2e8f0;--text2:#94a3b8;--text3:#475569}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);font-family:'Noto Sans SC',sans-serif;color:var(--text1);min-height:100vh;overflow-y:auto;padding:20px}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.page-title{font-size:18px;font-weight:700}
+.page-title span{color:var(--blue)}
+.page-subtitle{font-size:12px;color:var(--text2);margin-top:2px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:none;font-family:inherit}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.stat-label{font-size:11px;color:var(--text2);margin-bottom:6px}
+.stat-value{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;gap:0}
+.tab{padding:8px 16px;font-size:12px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab:hover{color:var(--text1)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.search-input{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text2);cursor:text;min-width:180px}
+.filter-btn{display:flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text2);cursor:pointer}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:var(--surface3);border:1px solid var(--border2);border-radius:4px;font-size:10px;color:var(--text2)}
+.ontology-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.ontology-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.ontology-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.ontology-card.blue::before{background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.ontology-card.green::before{background:linear-gradient(90deg,var(--green),var(--cyan))}
+.ontology-card.purple::before{background:linear-gradient(90deg,var(--purple),var(--blue))}
+.ontology-card.amber::before{background:linear-gradient(90deg,var(--amber),var(--rose))}
+.ontology-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.oc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.oc-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.oc-domain{font-size:10px;color:var(--text2)}
+.oc-stats{display:flex;gap:12px;margin:10px 0}
+.oc-stat{text-align:center}
+.oc-stat-val{font-size:14px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.oc-stat-lbl{font-size:9px;color:var(--text3);margin-top:1px}
+.oc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid var(--border)}
+.oc-time{font-size:10px;color:var(--text3)}
+.action-link{font-size:11px;color:var(--blue);cursor:pointer;transition:all .15s}
+.action-link:hover{text-decoration:underline}
+.action-link.danger{color:var(--rose)}
+.action-link.danger:hover{color:#e11d48}
+.dot{width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:3px}
+
+/* ── 视图切换按钮 ── */
+.view-switcher{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.view-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:transparent;border:none;cursor:pointer;transition:all .15s;color:var(--text2)}
+.view-btn:hover{color:var(--text1)}
+.view-btn.active{background:var(--blue-dim);color:var(--blue)}
+.view-btn+.view-btn{border-left:1px solid var(--border)}
+
+/* ── 搜索输入框交互 ── */
+.search-input-wrap{position:relative;min-width:220px}
+.search-input-wrap input{width:100%;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;padding:6px 10px 6px 28px;font-size:11px;color:var(--text1);font-family:inherit;outline:none;transition:all .15s}
+.search-input-wrap input::placeholder{color:var(--text3)}
+.search-input-wrap input:focus{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-dim)}
+.search-input-wrap .search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text3);pointer-events:none}
+
+/* ── 列表视图 ── */
+.ontology-table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+.ontology-table thead{background:var(--bg-3)}
+.ontology-table th{padding:10px 12px;color:var(--text2);font-weight:500;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap}
+.ontology-table tbody tr{border-bottom:1px solid var(--border)}
+.ontology-table tbody tr:last-child{border-bottom:none}
+.ontology-table td{padding:12px;vertical-align:middle;color:var(--text1);font-size:12px}
+.ontology-table tbody tr:hover{background:rgba(59,130,246,0.05)}
+.ontology-table tbody tr:hover .row-arrow{color:var(--blue)}
+
+/* 列表行可点击区域 */
+.row-main{cursor:pointer;display:contents}
+.row-main .row-title{color:var(--text1);font-weight:500}
+.row-main .row-title:hover{color:var(--blue);text-decoration:underline}
+
+/* 展开箭头 */
+.row-arrow{width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s;color:var(--text3);margin-right:6px;border-radius:4px}
+.row-arrow:hover{background:var(--bg-4);color:var(--text1)}
+.row-arrow.expanded{transform:rotate(180deg)}
+
+/* 展开区域 */
+.expand-row{background:var(--bg-1)}
+.expand-cell{padding:0 !important;border:none !important}
+.expand-panel{padding:12px 12px 12px 44px}
+
+/* 子标签页 */
+.sub-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sub-tab{padding:6px 14px;font-size:11px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.sub-tab:hover{color:var(--text1)}
+.sub-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* 子数据表格 */
+.sub-table{width:100%;border-collapse:collapse;font-size:11px;text-align:left}
+.sub-table thead{background:var(--bg-2)}
+.sub-table th{padding:6px 10px;color:var(--text2);font-weight:500;font-size:10px;border-bottom:1px solid var(--border)}
+.sub-table tbody tr{border-bottom:1px solid var(--border2)}
+.sub-table td{padding:8px 10px;color:var(--text1);font-size:11px;vertical-align:middle}
+
+/* 复选框 */
+.row-checkbox{width:14px;height:14px;accent-color:var(--blue);cursor:pointer}
+
+/* 排序下拉 */
+.sort-dropdown{position:relative}
+.sort-dropdown .dropdown-menu{position:absolute;top:100%;right:0;margin-top:4px;min-width:140px;background:var(--bg-4);border:1px solid var(--border2);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.4);display:none;z-index:50;overflow:hidden}
+.sort-dropdown.open .dropdown-menu{display:block}
+.sort-dropdown .dropdown-menu .dropdown-item{padding:7px 12px;font-size:11px;color:var(--text2);cursor:pointer;transition:all .1s}
+.sort-dropdown .dropdown-menu .dropdown-item:hover{background:var(--blue-dim);color:var(--blue)}
+
+/* 图视图 */
+.graph-view-wrap{position:relative}
+.graph-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.graph-toolbar .tool-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--bg-2);color:var(--text2);font-size:12px;cursor:pointer;transition:all .15s}
+.graph-toolbar .tool-btn:hover{border-color:var(--blue);color:var(--text1)}
+.graph-toolbar .tool-btn svg{width:12px;height:12px}
+.graph-view{display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;min-height:400px}
+.graph-view img{max-width:100%;height:auto;border-radius:6px;box-shadow:0 4px 24px rgba(0,0,0,.3);cursor:pointer}
+.graph-fallback{display:none;flex-direction:column;align-items:center;gap:8px;color:var(--text3);font-size:13px;text-align:center}
+
+/* 全屏图片查看器 */
+.img-viewer{position:fixed;inset:0;background:rgba(8,12,24,0.96);z-index:3000;display:none;align-items:center;justify-content:center;cursor:pointer}
+.img-viewer.active{display:flex}
+.img-viewer img{max-width:96vw;max-height:96vh;object-fit:contain;border-radius:4px;box-shadow:0 8px 40px rgba(0,0,0,.4)}
+
+/* 分页 */
+.pagination{display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:16px;font-size:11px;color:var(--text2)}
+.pagination .page-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:6px;cursor:pointer;transition:all .15s;font-size:11px}
+.pagination .page-btn:hover{border-color:var(--blue);color:var(--blue)}
+.pagination .page-btn.active{background:var(--blue-dim);color:var(--blue);border-color:var(--blue-dim)}
+.pagination .page-btn:disabled{opacity:.4;cursor:not-allowed}
+.pagination .page-size{margin-left:8px;display:flex;align-items:center;gap:4px}
+
+/* ══ 卡片聚焦弹窗（从卡片放大）══ */
+.card-focus-overlay{position:fixed;inset:0;background:rgba(8,12,24,0.85);backdrop-filter:blur(4px);z-index:2000;display:none;opacity:0;transition:opacity .3s ease}
+.card-focus-overlay.active{display:block;opacity:1}
+.card-focus{position:fixed;background:var(--bg-3);border:1.5px solid rgba(6,182,212,.25);border-radius:12px;display:none;flex-direction:column;overflow:hidden;box-shadow:0 4px 16px rgba(6,182,212,.1);z-index:2001;transform:scale(1);opacity:1}
+.card-focus-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg-4)}
+.card-focus-title{font-size:15px;font-weight:700;color:var(--text1);display:flex;align-items:center;gap:10px}
+.card-focus-close{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;color:var(--text3);transition:all .15s;font-size:16px}
+.card-focus-close:hover{background:var(--bg-2);color:var(--text1)}
+.card-focus-body{flex:1;overflow:auto;padding:20px}
+.card-focus-info{display:flex;align-items:center;gap:24px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.card-focus-info .info-stat{display:flex;flex-direction:column;gap:2px;min-width:60px}
+.card-focus-info .info-stat .val{font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.card-focus-info .info-stat .lbl{font-size:10px;color:var(--text3)}
+</style>
+</head>
+<body>
+<div class="page-header">
+<div>
+<div class="page-title">因果<span>本体</span></div>
+<div class="page-subtitle">管理因果本体节点、属性与关联关系</div>
+</div>
+<div style="display:flex;gap:8px">
+<button class="btn btn-ghost" onclick="showToast('&#128229; &#23548;&#20837; OWL/RDF &#25991;&#20214;')">&#23548;&#20837; OWL</button>
+<button class="btn btn-primary" onclick="openModal('onto-new-ontology-modal')">&#65291; &#26032;&#24314;&#26412;&#20307;</button>
+</div>
+</div>
+<div class="stats-row">
+<div class="stat-card blue"><div class="stat-label">&#26412;&#20307;&#24635;&#25968;</div><div class="stat-value" style="color:var(--blue)">10</div><div class="stat-sub">&#26412;&#26376;&#26032;&#22686; 2</div></div>
+<div class="stat-card green"><div class="stat-label">&#32047;&#35745;&#27010;&#24565;&#25968;</div><div class="stat-value" style="color:var(--green)">3,341</div><div class="stat-sub">&#36328;&#26412;&#20307;&#21435;&#37325;&#21518;</div></div>
+<div class="stat-card purple"><div class="stat-label">&#32047;&#35745;&#20851;&#31995;&#25968;</div><div class="stat-value" style="color:var(--purple)">1,807</div><div class="stat-sub">&#21547;&#36328;&#26412;&#20307;&#26144;&#23556;</div></div>
+<div class="stat-card cyan"><div class="stat-label">&#29256;&#26412;&#24555;&#29031;&#24635;&#25968;</div><div class="stat-value" style="color:var(--cyan)">38</div><div class="stat-sub">&#26368;&#36817;&#25805;&#20316; 2&#23567;&#26102;&#21069;</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+<div class="tabs" id="domain-tabs" style="margin-bottom:0;border:none">
+<div class="tab active" data-domain="all">全部</div>
+<div class="tab" data-domain="新能源">新能源</div>
+<div class="tab" data-domain="地质">地质</div>
+<div class="tab" data-domain="气象">气象</div>
+<div class="tab" data-domain="环境">环境</div>
+</div>
+<div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+<div class="search-input-wrap">
+<span class="search-icon">&#128269;</span>
+<input type="text" id="search-input" placeholder="&#25628;&#32034;&#26412;&#20307;&#21517;&#31216;..."></div>
+<div class="sort-dropdown" id="sort-dropdown">
+<div class="filter-btn" onclick="toggleSort()">&#25490;&#24207; <span id="sort-label">&#26356;&#26032;&#26085;&#26399;&#25490;&#24207;&#65288;&#26032;&#8594;&#26087;&#65289;</span> &#9660;</div>
+<div class="dropdown-menu">
+<div class="dropdown-item" data-sort="update-desc" onclick="setSort('update-desc')">&#26356;&#26032;&#26085;&#26399;&#25490;&#24207;&#65288;&#26032;&#8594;&#26087;&#65289;</div>
+<div class="dropdown-item" data-sort="update-asc" onclick="setSort('update-asc')">&#26356;&#26032;&#26085;&#26399;&#25490;&#24207;&#65288;&#26087;&#8594;&#26032;&#65289;</div>
+<div class="dropdown-item" data-sort="name-asc" onclick="setSort('name-asc')">&#26412;&#20307;&#21517;&#31216;&#65288;A-Z&#65289;</div>
+<div class="dropdown-item" data-sort="name-desc" onclick="setSort('name-desc')">&#26412;&#20307;&#21517;&#31216;&#65288;Z-A&#65289;</div>
+<div class="dropdown-item" data-sort="concept-desc" onclick="setSort('concept-desc')">&#27010;&#24565;&#25968;&#65288;&#22810;&#8594;&#23569;&#65289;</div>
+</div>
+</div>
+<div class="view-switcher">
+<button class="view-btn" id="btn-view-graph" title="&#22270;&#35270;&#22270;" onclick="switchView('graph')">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="2.5"/><circle cx="4" cy="11" r="2.5"/><circle cx="12" cy="11" r="2.5"/><path d="M7 7l-2 3M9 7l2 3"/></svg>
+</button>
+<button class="view-btn active" id="btn-view-card" title="&#21345;&#29255;&#35270;&#22270;" onclick="switchView('card')">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+</button>
+<button class="view-btn" id="btn-view-list" title="&#21015;&#34920;&#35270;&#22270;" onclick="switchView('list')">
+<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="3" height="3" rx="0.5"/><rect x="6" y="2" width="9" height="3" rx="0.5"/><rect x="1" y="6.5" width="3" height="3" rx="0.5"/><rect x="6" y="6.5" width="9" height="3" rx="0.5"/><rect x="1" y="11" width="3" height="3" rx="0.5"/><rect x="6" y="11" width="9" height="3" rx="0.5"/></svg>
+</button>
+</div>
+</div>
+</div>
+<div id="view-container"></div>
+
+<!-- ===== FULLSCREEN IMAGE VIEWER ===== -->
+<div class="img-viewer" id="img-viewer" onclick="closeImgViewer()">
+  <img src="" alt="&#20840;&#23631;&#22270;&#29255;" id="img-viewer-src">
+</div>
+
+<!-- ===== MODAL: &#26032;&#24314;&#26412;&#20307; ===== -->
+<div class="modal-overlay" id="onto-new-ontology-modal">
+<div class="modal" style="width:440px">
+<div class="modal-header">
+<div class="modal-title">&#26032;&#24314;&#26412;&#20307;</div>
+<div class="modal-close" onclick="closeModal('onto-new-ontology-modal')">&#10005;</div>
+</div>
+<div class="modal-body">
+<div class="form-group"><label class="form-label">&#26412;&#20307;&#21517;&#31216; *</label><input class="form-input" placeholder="&#22914;&#65306;&#39118;&#21147;&#21457;&#30005;&#39044;&#27979;&#26412;&#20307; v3"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="form-group"><label class="form-label">&#39046;&#22495;</label><select class="form-input"><option>&#26032;&#33021;&#28304;</option><option>&#22320;&#36136;</option><option>&#27668;&#35937;</option><option>&#29615;&#22659;</option></select></div>
+<div class="form-group"><label class="form-label">&#21019;&#24314;&#26041;&#24335;</label><select class="form-input"><option>&#20174;&#38646;&#21019;&#24314;</option><option>&#20174;&#25277;&#21462;&#20219;&#21153;&#23548;&#20837;</option><option>&#23548;&#20837; OWL &#25991;&#20214;</option></select></div>
+</div>
+<div class="form-group"><label class="form-label">&#24213;&#23618;&#26412;&#20307;&#65288;&#21487;&#36873;&#65289;</label><select class="form-input"><option value="">&#19981;&#20351;&#29992;</option><option>&#39118;&#21147;&#21457;&#30005;&#39044;&#27979;&#26412;&#20307; v2.0</option><option>&#33647;&#29289;&#38774;&#28857;&#20851;&#31995;&#26412;&#20307; v1.2</option></select></div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('onto-new-ontology-modal')">&#21462;&#28040;</button>
+<button class="btn btn-primary" onclick="closeModal('onto-new-ontology-modal');gotoExternal('ke_literature.html');showToast('&#9989; &#21019;&#24314;&#20219;&#21153;&#24050;&#20998;&#37197;&#65292;&#36827;&#20837;&#19978;&#20256;&#25991;&#29486;&#27493;&#39588;')">&#21019;&#24314;&#24182;&#32487;&#32493;</button>
+</div>
+</div>
+</div>
+<!-- ===== CARD FOCUS MODAL ===== -->
+<div class="card-focus-overlay" id="card-focus-overlay" onclick="closeCardFocus()"></div>
+<div class="card-focus" id="card-focus">
+  <div class="card-focus-header">
+    <div class="card-focus-title" id="cf-title"></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="card-focus-close" onclick="closeCardFocus()">&#10005;</div>
+    </div>
+  </div>
+  <div class="card-focus-body" id="cf-body"></div>
+</div>
+
+<!-- ===== MODAL: &#32534;&#36753;&#26412;&#20307; ===== -->
+<div class="modal-overlay" id="onto-edit-ontology-modal">
+<div class="modal" style="width:440px">
+<div class="modal-header">
+<div class="modal-title">&#32534;&#36753;&#26412;&#20307;</div>
+<div class="modal-close" onclick="closeModal('onto-edit-ontology-modal')">&#10005;</div>
+</div>
+<div class="modal-body">
+<div class="form-group"><label class="form-label">&#26412;&#20307;&#21517;&#31216; *</label><input class="form-input" placeholder="&#22914;&#65306;&#39118;&#21147;&#21457;&#30005;&#39044;&#27979;&#26412;&#20307; v3"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="form-group"><label class="form-label">&#39046;&#22495;</label><select class="form-input"><option>&#26032;&#33021;&#28304;</option><option>&#22320;&#36136;</option><option>&#27668;&#35937;</option><option>&#29615;&#22659;</option></select></div>
+<div class="form-group"><label class="form-label">&#21019;&#24314;&#26041;&#24335;</label><select class="form-input"><option>&#20174;&#38646;&#21019;&#24314;</option><option>&#20174;&#25277;&#21462;&#20219;&#21153;&#23548;&#20837;</option><option>&#23548;&#20837; OWL &#25991;&#20214;</option></select></div>
+</div>
+<div class="form-group"><label class="form-label">&#24213;&#23618;&#26412;&#20307;&#65288;&#21487;&#36873;&#65289;</label><select class="form-input"><option value="">&#19981;&#20351;&#29992;</option><option>&#39118;&#21147;&#21457;&#30005;&#39044;&#27979;&#26412;&#20307; v2.0</option><option>&#33647;&#29289;&#38774;&#28857;&#20851;&#31995;&#26412;&#20307; v1.2</option></select></div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-ghost" onclick="closeModal('onto-edit-ontology-modal')">&#21462;&#28040;</button>
+<button class="btn btn-primary" onclick="closeModal('onto-edit-ontology-modal');showToast('&#9989; &#26412;&#20307;&#20449;&#24687;&#24050;&#20445;&#23384;')">&#20445;&#23384;&#20462;&#25913;</button>
+</div>
+</div>
+</div>
+<script src="scripts/components.js" type="module"></script>
+<script>
+/* ═══════════════════════════════════════
+   数据模型
+   ═══════════════════════════════════════ */
+const COLORS = ['blue','green','purple','amber'];
+const STATUS_MAP = {
+  '&#24050;&#20837;&#24211;':   { cls:'badge-green', dot:'var(--green)' },
+  '&#32534;&#36753;&#20013;':   { cls:'badge-amber', dot:'var(--amber)' },
+  '&#33609;&#31295;':       { cls:'badge-amber', dot:'var(--amber)' },
+};
+
+const ontologiesData = [
+  { id:1, name:'&#39118;&#21147;&#21457;&#30005;&#39044;&#27979;&#26412;&#20307;', domain:'&#26032;&#33021;&#28304;', status:'&#24050;&#20837;&#24211;', version:'v2.0', concepts:79, relations:43, versions:4, creator:'&#24352;&#24037;', updateTime:'2&#23567;&#26102;&#21069;', children:[
+    { id:'1-1', name:'&#39118;&#30005;&#22330;&#25968;&#25454;&#38598;&#26412;&#20307;', domain:'&#26032;&#33021;&#28304;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:24, relations:15, versions:2, creator:'&#24352;&#24037;', updateTime:'2&#23567;&#26102;&#21069;', category:'data' },
+    { id:'1-2', name:'&#39118;&#21151;&#29575;&#39044;&#27979;&#31639;&#27861;&#26412;&#20307;', domain:'&#26032;&#33021;&#28304;', status:'&#24050;&#20837;&#24211;', version:'v1.1', concepts:31, relations:18, versions:3, creator:'&#26446;&#24037;', updateTime:'3&#23567;&#26102;&#21069;', category:'algo' },
+    { id:'1-3', name:'&#27668;&#35937;&#25968;&#25454;&#26412;&#20307;', domain:'&#26032;&#33021;&#28304;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:14, relations:8, versions:1, creator:'&#29579;&#24037;', updateTime:'5&#23567;&#26102;&#21069;', category:'data' },
+  ]},
+  { id:2, name:'&#20809;&#20239;&#21457;&#30005;&#39044;&#27979;&#26412;&#20307;', domain:'&#26032;&#33021;&#28304;', status:'&#24050;&#20837;&#24211;', version:'v1.8', concepts:68, relations:39, versions:3, creator:'&#36213;&#24037;', updateTime:'1&#22825;&#21069;', children:[
+    { id:'2-1', name:'&#20809;&#20239;&#30005;&#31449;&#30417;&#27979;&#25968;&#25454;&#38598;', domain:'&#26032;&#33021;&#28304;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:22, relations:12, versions:1, creator:'&#36213;&#24037;', updateTime:'1&#22825;&#21069;', category:'data' },
+    { id:'2-2', name:'&#20809;&#20239;&#21151;&#29575;&#39044;&#27979;&#31639;&#27861;&#26412;&#20307;', domain:'&#26032;&#33021;&#28304;', status:'&#24050;&#20837;&#24211;', version:'v1.1', concepts:28, relations:17, versions:2, creator:'&#38065;&#24037;', updateTime:'2&#22825;&#21069;', category:'algo' },
+    { id:'2-3', name:'&#36752;&#29031;&#24230;&#25968;&#25454;&#26412;&#20307;', domain:'&#26032;&#33021;&#28304;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:12, relations:6, versions:1, creator:'&#23385;&#24037;', updateTime:'3&#22825;&#21069;', category:'data' },
+  ]},
+  { id:3, name:'&#28798;&#23475;&#39044;&#35686;&#30693;&#35782;&#22270;&#35889;', domain:'&#27668;&#35937;', status:'&#24050;&#20837;&#24211;', version:'v2.0', concepts:63, relations:41, versions:3, creator:'&#26446;&#24037;', updateTime:'2&#22825;&#21069;', children:[
+    { id:'3-1', name:'&#27668;&#35937;&#30417;&#27979;&#25968;&#25454;&#38598;', domain:'&#27668;&#35937;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:19, relations:11, versions:1, creator:'&#26446;&#24037;', updateTime:'2&#22825;&#21069;', category:'data' },
+    { id:'3-2', name:'&#28798;&#23475;&#39118;&#38505;&#35780;&#20272;&#31639;&#27861;&#26412;&#20307;', domain:'&#27668;&#35937;', status:'&#24050;&#20837;&#24211;', version:'v1.2', concepts:28, relations:19, versions:2, creator:'&#24352;&#24037;', updateTime:'3&#22825;&#21069;', category:'algo' },
+    { id:'3-3', name:'&#39044;&#35686;&#35268;&#21017;&#26412;&#20307;', domain:'&#27668;&#35937;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:12, relations:7, versions:1, creator:'&#29579;&#24037;', updateTime:'4&#22825;&#21069;', category:'algo' },
+  ]},
+  { id:4, name:'&#20809;&#23398;&#25506;&#30719;&#22270;&#35889;', domain:'&#22320;&#36136;', status:'&#24050;&#20837;&#24211;', version:'v1.3', concepts:92, relations:56, versions:3, creator:'&#21608;&#30740;&#31350;', updateTime:'4&#22825;&#21069;', children:[
+    { id:'4-1', name:'&#36965;&#24863;&#24433;&#20687;&#25968;&#25454;&#38598;', domain:'&#22320;&#36136;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:35, relations:20, versions:1, creator:'&#21608;&#30740;&#31350;', updateTime:'4&#22825;&#21069;', category:'data' },
+    { id:'4-2', name:'&#30719;&#29289;&#35782;&#21035;&#31639;&#27861;&#26412;&#20307;', domain:'&#22320;&#36136;', status:'&#24050;&#20837;&#24211;', version:'v1.1', concepts:32, relations:22, versions:2, creator:'&#21556;&#30740;&#31350;', updateTime:'5&#22825;&#21069;', category:'algo' },
+    { id:'4-3', name:'&#20809;&#35889;&#29305;&#24449;&#25968;&#25454;&#26412;&#20307;', domain:'&#22320;&#36136;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:18, relations:10, versions:1, creator:'&#37073;&#30740;&#31350;', updateTime:'6&#22825;&#21069;', category:'data' },
+  ]},
+  { id:5, name:'&#30701;&#20020;&#22825;&#27668;&#39044;&#25253;&#26412;&#20307;', domain:'&#27668;&#35937;', status:'&#32534;&#36753;&#20013;', version:'v0.8', concepts:55, relations:28, versions:2, creator:'&#21016;&#24037;', updateTime:'&#21018;&#21018;', children:[
+    { id:'5-1', name:'&#38647;&#36798;&#22238;&#27874;&#25968;&#25454;&#38598;', domain:'&#27668;&#35937;', status:'&#32534;&#36753;&#20013;', version:'v0.5', concepts:22, relations:10, versions:1, creator:'&#21016;&#24037;', updateTime:'&#21018;&#21018;', category:'data' },
+    { id:'5-2', name:'&#38477;&#27700;&#39044;&#25253;&#31639;&#27861;&#26412;&#20307;', domain:'&#27668;&#35937;', status:'&#32534;&#36753;&#20013;', version:'v0.4', concepts:20, relations:12, versions:1, creator:'&#38472;&#24037;', updateTime:'1&#22825;&#21069;', category:'algo' },
+    { id:'5-3', name:'&#21488;&#39118;&#36335;&#24452;&#39044;&#27979;&#31639;&#27861;&#26412;&#20307;', domain:'&#27668;&#35937;', status:'&#32534;&#36753;&#20013;', version:'v0.3', concepts:11, relations:4, versions:1, creator:'&#26472;&#24037;', updateTime:'2&#22825;&#21069;', category:'algo' },
+  ]},
+  { id:6, name:'&#29615;&#22659;&#30417;&#27979;&#26412;&#20307;', domain:'&#29615;&#22659;', status:'&#24050;&#20837;&#24211;', version:'v1.2', concepts:74, relations:48, versions:3, creator:'&#40644;&#24037;', updateTime:'3&#22825;&#21069;', children:[
+    { id:'6-1', name:'&#31354;&#27668;&#36136;&#37327;&#30417;&#27979;&#25968;&#25454;&#38598;', domain:'&#29615;&#22659;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:28, relations:17, versions:1, creator:'&#40644;&#24037;', updateTime:'3&#22825;&#21069;', category:'data' },
+    { id:'6-2', name:'&#27700;&#36136;&#30417;&#27979;&#25968;&#25454;&#38598;', domain:'&#29615;&#22659;', status:'&#24050;&#20837;&#24211;', version:'v1.0', concepts:24, relations:15, versions:1, creator:'&#26446;&#24037;', updateTime:'4&#22825;&#21069;', category:'data' },
+    { id:'6-3', name:'&#27745;&#26579;&#28304;&#35782;&#21035;&#31639;&#27861;&#26412;&#20307;', domain:'&#29615;&#22659;', status:'&#24050;&#20837;&#24211;', version:'v1.1', concepts:18, relations:14, versions:2, creator:'&#29579;&#24037;', updateTime:'5&#22825;&#21069;', category:'algo' },
+  ]},
+];
+
+/* ═══════════════════════════════════════
+   状态
+   ═══════════════════════════════════════ */
+let state = {
+  view: 'card',       // 'card' | 'list' | 'graph'
+  domain: 'all',      // 'all' | '&#26032;&#33021;&#28304;' | '&#22320;&#36136;' | '&#27668;&#35937;' | '&#29615;&#22659;'
+  query: '',
+  sortBy: 'update-desc',
+  expanded: new Set(),// &#24050;&#23637;&#24320;&#30340;&#34892; id
+  subTab: {},         // { parentId: 'all'|'data'|'algo' }
+};
+
+/* ═══════════════════════════════════════
+   跨文件跳转
+   ═══════════════════════════════════════ */
+function gotoExternal(file){
+  if(window.parent!==window){
+    window.parent.postMessage({type:'NAVIGATE_TO',file:file},'*');
+  }else{
+    location.href=file;
+  }
+}
+
+/* ═══════════════════════════════════════
+   模态框
+   ═══════════════════════════════════════ */
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+document.querySelectorAll('.modal-overlay').forEach(function(o){
+  o.addEventListener('click',function(e){if(e.target===o)o.classList.remove('active');});
+});
+
+/* ═══════════════════════════════════════
+   面包屑同步
+   ═══════════════════════════════════════ */
+if(window.parent!==window){
+  window.parent.postMessage({type:'NAV',crumbs:['&#26412;&#20307;&#20013;&#24515;'],navId:'nav-onto'},'*');
+}
+
+/* ═══════════════════════════════════════
+   过滤 + 排序
+   ═══════════════════════════════════════ */
+function decodeHtml(html){
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+}
+function getFilteredData(){
+  let list = ontologiesData.filter(o=>{
+    if(state.domain!=='all' && decodeHtml(o.domain)!==state.domain) return false;
+    if(state.query){
+      const decodedName = decodeHtml(o.name).toLowerCase();
+      if(!decodedName.includes(state.query.toLowerCase())) return false;
+    }
+    return true;
+  });
+  list.sort((a,b)=>{
+    switch(state.sortBy){
+      case 'update-desc': return b.id - a.id;
+      case 'update-asc':  return a.id - b.id;
+      case 'name-asc':    return a.name.localeCompare(b.name,'zh-CN');
+      case 'name-desc':   return b.name.localeCompare(a.name,'zh-CN');
+      case 'concept-desc':return b.concepts - a.concepts;
+      default: return 0;
+    }
+  });
+  return list;
+}
+
+/* ═══════════════════════════════════════
+   视图切换
+   ═══════════════════════════════════════ */
+function switchView(v){
+  state.view = v;
+  document.getElementById('btn-view-graph').classList.toggle('active', v==='graph');
+  document.getElementById('btn-view-card').classList.toggle('active', v==='card');
+  document.getElementById('btn-view-list').classList.toggle('active', v==='list');
+  // 图视图下隐藏领域标签页，其他视图显示
+  document.getElementById('domain-tabs').style.display = v==='graph'?'none':'';
+  render();
+}
+
+/* ═══════════════════════════════════════
+   排序下拉
+   ═══════════════════════════════════════ */
+function toggleSort(){
+  document.getElementById('sort-dropdown').classList.toggle('open');
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#sort-dropdown')) document.getElementById('sort-dropdown').classList.remove('open');
+});
+function setSort(key){
+  state.sortBy = key;
+  const labels = {
+    'update-desc': '&#26356;&#26032;&#26085;&#26399;&#25490;&#24207;&#65288;&#26032;&#8594;&#26087;&#65289;',
+    'update-asc':  '&#26356;&#26032;&#26085;&#26399;&#25490;&#24207;&#65288;&#26087;&#8594;&#26032;&#65289;',
+    'name-asc':    '&#26412;&#20307;&#21517;&#31216;&#65288;A-Z&#65289;',
+    'name-desc':   '&#26412;&#20307;&#21517;&#31216;&#65288;Z-A&#65289;',
+    'concept-desc':'&#27010;&#24565;&#25968;&#65288;&#22810;&#8594;&#23569;&#65289;',
+  };
+  document.getElementById('sort-label').textContent = labels[key];
+  document.getElementById('sort-dropdown').classList.remove('open');
+  render();
+}
+
+/* ═══════════════════════════════════════
+   领域筛选标签
+   ═══════════════════════════════════════ */
+document.getElementById('domain-tabs').addEventListener('click',function(e){
+  const tab = e.target.closest('.tab');
+  if(!tab) return;
+  state.domain = tab.dataset.domain;
+  this.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.domain===state.domain));
+  render();
+});
+
+/* ═══════════════════════════════════════
+   搜索
+   ═══════════════════════════════════════ */
+document.getElementById('search-input').addEventListener('input',function(){
+  state.query = this.value.trim();
+  render();
+});
+
+/* ═══════════════════════════════════════
+   状态徽章 HTML
+   ═══════════════════════════════════════ */
+function statusBadge(status){
+  const m = STATUS_MAP[status]||STATUS_MAP['&#33609;&#31295;'];
+  return `<span class="badge ${m.cls}"><span class="dot" style="background:${m.dot}"></span>${status}</span>`;
+}
+
+/* ═══════════════════════════════════════
+   操作列 HTML
+   ═══════════════════════════════════════ */
+function actionLinks(stopProp){
+  const sp = stopProp ? 'event.stopPropagation();' : '';
+  return `<span class="action-link" onclick="${sp}openModal('onto-edit-ontology-modal')">&#32534;&#36753;</span>
+          <span class="action-link danger" onclick="${sp}showToast('&#9888; &#35831;&#30830;&#35748;&#26159;&#21542;&#21024;&#38500;')">&#21024;&#38500;</span>`;
+}
+
+/* ═══════════════════════════════════════
+   渲染主入口
+   ═══════════════════════════════════════ */
+function render(){
+  const container = document.getElementById('view-container');
+  if(state.view==='graph'){
+    container.innerHTML = `
+      <div class="graph-view-wrap">
+        <div class="graph-toolbar">
+          <button class="tool-btn" onclick="refreshGraphImg()">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 4v3h3M15 12v-3h-3M13.5 10A5 5 0 003 8.5"/></svg> &#21047;&#26032;
+          </button>
+          <button class="tool-btn" onclick="openImgViewer('asset/graph_demo_fullscreen.png')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v14M1 8h14"/></svg> &#20840;&#23631;
+          </button>
+          <button class="tool-btn" onclick="openImgViewer('asset/graph_demo_3D.png')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l6-2 6 2v8l-6 2-6-2V4z"/><path d="M8 2v2M8 6v8M2 4l6 2 6-2"/></svg> 3D
+          </button>
+        </div>
+        <div class="graph-view" id="graph-view-box">
+          <img src="asset/graph_demo.png" id="graph-img" alt="&#26412;&#20307;&#22270;" onclick="openImgViewer('asset/graph_demo.png')" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="graph-fallback">&#22270;&#29255;&#26410;&#33021;&#21152;&#36733;&#65292;&#35831;&#30830;&#35748; asset/graph_demo.png &#26159;&#21542;&#23384;&#22312;</div>
+        </div>
+      </div>`;
+    return;
+  }
+  const data = getFilteredData();
+  if(state.view==='card'){
+    container.innerHTML = renderCards(data);
+  }else{
+    container.innerHTML = renderList(data);
+  }
+}
+
+/* ═══════════════════════════════════════
+   卡片视图渲染
+   ═══════════════════════════════════════ */
+function renderCards(data){
+  let html = '<div class="ontology-grid">';
+  data.forEach((o,idx)=>{
+    const color = COLORS[idx % COLORS.length];
+    html += `
+    <div class="ontology-card ${color}" data-card-id="${o.id}" onclick="gotoExternal('graph_causal.html')">
+      <div class="oc-header">
+        <div>
+          <div class="oc-title" style="cursor:pointer" onclick="gotoExternal('graph_causal.html')">${o.name}</div>
+          <div class="oc-domain"><span class="tag">${o.domain}</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="badge badge-${color==='amber'?'amber':color}">${o.version}</span>
+          ${statusBadge(o.status)}
+        </div>
+      </div>
+      <div class="oc-stats">
+        <div class="oc-stat"><div class="oc-stat-val" style="color:var(--${color})">${o.concepts}</div><div class="oc-stat-lbl">&#27010;&#24565;</div></div>
+        <div class="oc-stat"><div class="oc-stat-val" style="color:var(--cyan)">${o.relations||'-'}</div><div class="oc-stat-lbl">&#20851;&#31995;</div></div>
+        <div class="oc-stat"><div class="oc-stat-val" style="color:var(--purple)">${o.versions}</div><div class="oc-stat-lbl">&#29256;&#26412;</div></div>
+      </div>
+      <div class="oc-footer">
+        <span class="oc-time">&#26356;&#26032; ${o.updateTime}</span>
+        <div style="display:flex;gap:6px">
+          <span class="action-link" onclick="event.stopPropagation();openCardFocus(${o.id},this)">&#31649;&#29702;&#23376;&#38598;</span>
+          <span class="action-link" onclick="event.stopPropagation();openModal('onto-edit-ontology-modal')">&#32534;&#36753;</span>
+          <span class="action-link danger" onclick="event.stopPropagation();showToast('&#9888; &#35831;&#30830;&#35748;&#26159;&#21542;&#21024;&#38500;')">&#21024;&#38500;</span>
+        </div>
+      </div>
+    </div>`;
+  });
+  // &#26032;&#24314;&#21345;&#29255;
+  html += `<div class="ontology-card" style="border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text3);min-height:160px" onclick="openModal('onto-new-ontology-modal')">
+    <div style="font-size:28px">+</div>
+    <div style="font-size:12px">&#26032;&#24314;&#26412;&#20307;</div>
+  </div>`;
+  html += '</div>';
+  return html;
+}
+
+/* ═══════════════════════════════════════
+   列表视图渲染
+   ═══════════════════════════════════════ */
+function renderList(data){
+  let html = `
+  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+  <table class="ontology-table">
+  <thead>
+    <tr>
+      <th>&#26412;&#20307;&#21517;&#31216;</th>
+      <th>&#39046;&#22495;</th>
+      <th>&#29366;&#24577;</th>
+      <th>&#27010;&#24565;</th>
+      <th>&#20851;&#31995;</th>
+      <th>&#29256;&#26412;</th>
+      <th>&#21019;&#24314;&#32773;</th>
+      <th>&#26356;&#26032;&#26102;&#38388;</th>
+      <th style="text-align:center">&#25805;&#20316;</th>
+    </tr>
+  </thead>
+  <tbody>`;
+
+  data.forEach(o=>{
+    const expanded = state.expanded.has(o.id);
+    html += `
+    <tr class="main-row" data-id="${o.id}" onclick="gotoExternal('graph_causal.html')">
+      <td>
+        <span class="row-arrow ${expanded?'expanded':''}" data-id="${o.id}" title="&#23637;&#24320;/&#25910;&#36215;" onclick="event.stopPropagation();toggleExpand(${o.id})">
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="row-title">${o.name}</span>
+      </td>
+      <td><span class="tag">${o.domain}</span></td>
+      <td>${statusBadge(o.status)}</td>
+      <td>${o.concepts}</td>
+      <td>${o.relations||'-'}</td>
+      <td>${o.version}</td>
+      <td>${o.creator}</td>
+      <td style="color:var(--text3)">${o.updateTime}</td>
+      <td style="text-align:center">
+        <span class="action-link" onclick="event.stopPropagation();gotoExternal('graph_causal.html')">&#39044;&#35272;</span>
+        <span class="action-link" style="margin:0 4px" onclick="event.stopPropagation()">&#29256;&#26412;</span>
+        ${actionLinks(true)}
+      </td>
+    </tr>`;
+
+    // &#23637;&#24320;&#34892;
+    if(expanded){
+      html += renderExpandRow(o);
+    }
+  });
+
+  html += `</tbody></table>`;
+  html += `</div>`;
+
+  // &#31616;&#21333;&#20998;&#39029;&#25351;&#31034;（&#38750;&#30495;&#20998;&#39029;&#65292;&#20165;&#23637;&#31034;&#24635;&#25968;&#65289;
+  html += `
+  <div class="pagination">
+    <span>&#20849; ${data.length} &#26465;</span>
+  </div>`;
+
+  return html;
+}
+
+/* ═══════════════════════════════════════
+   展开行渲染
+   ═══════════════════════════════════════ */
+function renderExpandRow(o){
+  const activeTab = state.subTab[o.id] || 'all';
+  const children = o.children || [];
+  const tabs = [
+    {key:'all', label:'&#20840;&#37096;'},
+    {key:'data', label:'&#25968;&#25454;'},
+    {key:'algo', label:'&#31639;&#27861;'},
+  ];
+  let html = `
+  <tr class="expand-row" data-parent="${o.id}">
+    <td colspan="9" class="expand-cell">
+      <div class="expand-panel">
+        <div class="sub-tabs">
+          ${tabs.map(t=>`<div class="sub-tab ${activeTab===t.key?'active':''}" data-parent="${o.id}" data-tab="${t.key}" onclick="setSubTab(${o.id},'${t.key}')">${t.label}</div>`).join('')}
+        </div>
+        ${renderSubTable(children, activeTab)}
+      </div>
+    </td>
+  </tr>`;
+  return html;
+}
+
+/* ═══════════════════════════════════════
+   子数据表格渲染
+   ═══════════════════════════════════════ */
+function renderSubTable(children, activeTab){
+  const list = activeTab==='all' ? children : children.filter(c=>c.category===activeTab);
+  if(!list.length){
+    return `<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">&#26242;&#26080;&#25968;&#25454;</div>`;
+  }
+  let html = `
+  <table class="sub-table">
+  <thead>
+    <tr>
+      <th>&#26412;&#20307;&#21517;&#31216;</th>
+      <th>&#39046;&#22495;</th>
+      <th>&#29366;&#24577;</th>
+      <th>&#27010;&#24565;</th>
+      <th>&#20851;&#31995;</th>
+      <th>&#29256;&#26412;</th>
+      <th>&#21019;&#24314;&#32773;</th>
+      <th>&#26356;&#26032;&#26102;&#38388;</th>
+      <th style="text-align:center">&#25805;&#20316;</th>
+    </tr>
+  </thead>
+  <tbody>`;
+  list.forEach(c=>{
+    html += `
+    <tr>
+      <td><span class="row-title" style="font-weight:400" onclick="gotoExternal('graph_causal.html')">${c.name}</span></td>
+      <td><span class="tag" style="font-size:10px">${c.domain}</span></td>
+      <td>${statusBadge(c.status)}</td>
+      <td>${c.concepts}</td>
+      <td>${c.relations||'-'}</td>
+      <td>${c.version}</td>
+      <td>${c.creator}</td>
+      <td style="color:var(--text3)">${c.updateTime}</td>
+      <td style="text-align:center">
+        <span class="action-link" onclick="event.stopPropagation();gotoExternal('graph_causal.html')">&#39044;&#35272;</span>
+        <span class="action-link" style="margin:0 4px" onclick="event.stopPropagation()">&#29256;&#26412;</span>
+        ${actionLinks(true)}
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+
+
+function toggleExpand(id){
+  if(state.expanded.has(id)){
+    state.expanded.delete(id);
+  }else{
+    state.expanded.add(id);
+    if(!(id in state.subTab)) state.subTab[id] = 'all';
+  }
+  render();
+}
+
+function setSubTab(parentId, tab){
+  state.subTab[parentId] = tab;
+  render();
+}
+
+/* ═══════════════════════════════════════
+   卡片聚焦弹窗
+   ═══════════════════════════════════════ */
+let currentFocusId = null;
+
+function openCardFocus(id, btnEl){
+  const o = ontologiesData.find(x=>x.id===id);
+  if(!o) return;
+  currentFocusId = id;
+
+  // FLIP: measure card position
+  const card = btnEl.closest('.ontology-card');
+  const rect = card.getBoundingClientRect();
+  const overlay = document.getElementById('card-focus-overlay');
+  const modal   = document.getElementById('card-focus');
+
+  // Set initial position/size matching the card
+  modal.style.display = 'flex';
+  modal.style.position = 'fixed';
+  modal.style.top    = rect.top+'px';
+  modal.style.left   = rect.left+'px';
+  modal.style.width  = rect.width+'px';
+  modal.style.height = rect.height+'px';
+  modal.style.opacity = '1';
+  modal.style.transform = 'scale(1)';
+  modal.style.transition = 'none';
+
+  // Fill content
+  document.getElementById('cf-title').innerHTML = o.name + ' <span class="tag">'+o.domain+'</span> ' + statusBadge(o.status);
+
+  const body = document.getElementById('cf-body');
+  const activeTab = state.subTab[o.id]||'all';
+  const children = o.children || [];
+  body.innerHTML = `
+    <div class="sub-tabs">
+      <div class="sub-tab ${activeTab==='all'?'active':''}" onclick="cfSetSubTab(${o.id},'all')">全部</div>
+      <div class="sub-tab ${activeTab==='data'?'active':''}" onclick="cfSetSubTab(${o.id},'data')">数据</div>
+      <div class="sub-tab ${activeTab==='algo'?'active':''}" onclick="cfSetSubTab(${o.id},'algo')">算法</div>
+    </div>
+    <div id="cf-sub-body">${renderSubTable(children, activeTab)}</div>
+  `;
+
+  // Show overlay
+  overlay.style.display = 'block';
+
+  requestAnimationFrame(()=>{
+    overlay.classList.add('active');
+
+    // Force reflow to ensure browser picked up initial position (card location)
+    void modal.offsetHeight;
+
+    // Calculate target: centered 60% of viewport
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const targetTop  = Math.round(vh * 0.20);
+    const targetLeft = Math.round(vw * 0.20);
+    const targetW    = Math.round(vw * 0.60);
+    const targetH    = Math.round(vh * 0.60);
+
+    // Enable transitions and animate to center target
+    modal.style.transition = 'top 500ms ease, left 500ms ease, width 500ms ease, height 500ms ease, border-color 500ms, box-shadow 500ms';
+    modal.style.top    = targetTop + 'px';
+    modal.style.left   = targetLeft + 'px';
+    modal.style.width  = targetW + 'px';
+    modal.style.height = targetH + 'px';
+    modal.style.borderColor    = 'rgba(6,182,212,.5)';
+    modal.style.boxShadow      = '0 0 32px rgba(6,182,212,.2), 0 24px 80px rgba(0,0,0,.6)';
+  });
+}
+
+function cfSetSubTab(parentId, tab){
+  state.subTab[parentId] = tab;
+  const o = ontologiesData.find(x=>x.id===parentId);
+  const children = o.children||[];
+  document.getElementById('cf-body').innerHTML = `
+    <div class="sub-tabs">
+      <div class="sub-tab ${tab==='all'?'active':''}" onclick="cfSetSubTab(${parentId},'all')">全部</div>
+      <div class="sub-tab ${tab==='data'?'active':''}" onclick="cfSetSubTab(${parentId},'data')">数据</div>
+      <div class="sub-tab ${tab==='algo'?'active':''}" onclick="cfSetSubTab(${parentId},'algo')">算法</div>
+    </div>
+    <div>${renderSubTable(children, tab)}</div>`;
+}
+
+function closeCardFocus(){
+  const overlay = document.getElementById('card-focus-overlay');
+  const modal   = document.getElementById('card-focus');
+  overlay.classList.remove('active');
+
+  // Get current card rect (if still visible) for reverse animation
+  const card = document.querySelector('.ontology-card[data-card-id="'+currentFocusId+'"]');
+  let targetRect = card ? card.getBoundingClientRect() : null;
+
+  if(targetRect){
+    // Animate back toward card position
+    modal.style.transition = 'top 450ms ease, left 450ms ease, width 450ms ease, height 450ms ease, border-color 450ms, box-shadow 450ms, opacity 400ms ease';
+    modal.style.top    = targetRect.top+'px';
+    modal.style.left   = targetRect.left+'px';
+    modal.style.width  = targetRect.width+'px';
+    modal.style.height = targetRect.height+'px';
+    modal.style.borderColor = 'rgba(6,182,212,.05)';
+    modal.style.boxShadow   = '0 0 0 transparent';
+    modal.style.opacity = '0';
+  }else{
+    // Card no longer visible; shrink in place
+    modal.style.transition = 'top 350ms ease, left 350ms ease, width 350ms ease, height 350ms ease, opacity 300ms ease';
+    const vw=window.innerWidth, vh=window.innerHeight;
+    modal.style.top    = Math.round(vh/2 - 50)+'px';
+    modal.style.left   = Math.round(vw/2 - 80)+'px';
+    modal.style.width  = '160px';
+    modal.style.height = '100px';
+    modal.style.opacity = '0';
+  }
+
+  setTimeout(()=>{
+    modal.style.display = 'none';
+    overlay.style.display = 'none';
+    modal.style.top = modal.style.left = modal.style.width = modal.style.height = '';
+    modal.style.transition = '';
+    modal.style.opacity = '';
+    modal.style.borderColor = '';
+    modal.style.boxShadow = '';
+    currentFocusId = null;
+  }, 460);
+}
+
+/* ═══════════════════════════════════════
+   全屏图片查看器
+   ═══════════════════════════════════════ */
+function openImgViewer(src){
+  const viewer = document.getElementById('img-viewer');
+  const img = document.getElementById('img-viewer-src');
+  img.src = src;
+  viewer.style.display = 'flex';
+  requestAnimationFrame(()=>{
+    viewer.classList.add('active');
+  });
+}
+function closeImgViewer(){
+  const viewer = document.getElementById('img-viewer');
+  viewer.classList.remove('active');
+  setTimeout(()=>{
+    viewer.style.display = 'none';
+    document.getElementById('img-viewer-src').src = '';
+  }, 200);
+}
+function refreshGraphImg(){
+  const img = document.getElementById('graph-img');
+  if(img) img.src = img.src;
+}
+
+/* ═══════════════════════════════════════
+   初始化渲染
+   ═══════════════════════════════════════ */
+render();
+</script>
+</body>
+</html>

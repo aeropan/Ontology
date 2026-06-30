@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>本体总览 — 本体智见平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
+<script src="scripts/components.js"></script>
+<script src="data/ontology_overview_data.js"></script>
+<style>
+  :root {
+    --causal: #3b82f6;
+    --causal-dim: rgba(59,130,246,0.12);
+    --causal-glow: rgba(59,130,246,0.3);
+    --element: #10b981;
+    --element-dim: rgba(16,185,129,0.10);
+    --element-glow: rgba(16,185,129,0.25);
+    --cross: #22d3a5;
+  }
+
+  body {
+    background: var(--bg-0);
+    color: var(--text-1);
+    font-family: var(--font-sans);
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 272px 1fr;
+    grid-template-rows: auto 1fr 48px;
+    overflow: hidden;
+  }
+
+  .page-header {
+    grid-column: 1 / -1; grid-row: 1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border-1);
+    background: rgba(13,18,32,0.75);
+    backdrop-filter: blur(10px);
+    flex-shrink: 0; z-index: 5;
+  }
+  .header-left { display: flex; flex-direction: column; gap: 1px; }
+  .header-title {
+    font-size: 17px; font-weight: 700;
+    font-family: var(--font-mono); letter-spacing: 0.5px;
+    background: linear-gradient(135deg, var(--causal), var(--cross));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header-subtitle { font-size: 10px; color: var(--text-3); }
+
+  .left-panels {
+    grid-column: 1; grid-row: 2;
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 14px 12px;
+    overflow-y: auto;
+    border-right: 1px solid rgba(30,45,74,0.5);
+    background: rgba(13,18,32,0.6);
+    backdrop-filter: blur(8px);
+    z-index: 5;
+  }
+
+  .info-card {
+    background: rgba(15,23,41,0.5);
+    border: 1px solid rgba(30,45,74,0.5);
+    border-radius: var(--radius-lg);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  }
+  .info-card.causal { border-left: 3px solid var(--causal); }
+  .info-card.element { border-left: 3px solid var(--element); }
+  .info-card.causal:hover {
+    border-color: rgba(59,130,246,0.5);
+    box-shadow: 0 0 20px var(--causal-glow), inset 0 0 20px var(--causal-dim);
+    background: rgba(15,23,41,0.7);
+  }
+  .info-card.element:hover {
+    border-color: rgba(16,185,129,0.5);
+    box-shadow: 0 0 20px var(--element-glow), inset 0 0 20px var(--element-dim);
+    background: rgba(15,23,41,0.7);
+  }
+  .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .card-icon { width: 26px; height: 26px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+  .card-icon.causal { background: var(--causal-dim); color: var(--causal); }
+  .card-icon.element { background: var(--element-dim); color: var(--element); }
+  .card-title { font-size: 12px; font-weight: 600; }
+  .card-badge { margin-left: auto; }
+  .card-desc { font-size: 10px; color: var(--text-3); margin-bottom: 8px; line-height: 1.4; }
+  .card-stats { display: flex; gap: 18px; margin-bottom: 6px; }
+  .card-stat-label { font-size: 9px; color: var(--text-3); margin-bottom: 1px; }
+  .card-stat-value { font-size: 16px; font-weight: 700; font-family: var(--font-mono); }
+  .card-stat-value.causal { color: var(--causal); }
+  .card-stat-value.element { color: var(--element); }
+  .card-link { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--text-3); transition: color 0.2s; text-decoration: none; }
+  .info-card.causal:hover .card-link { color: var(--causal); }
+  .info-card.element:hover .card-link { color: var(--element); }
+
+  .stats-panel {
+    background: rgba(15,23,41,0.45);
+    border: 1px solid rgba(30,45,74,0.4);
+    border-radius: var(--radius-lg); padding: 10px 12px;
+  }
+  .stats-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .stats-title { font-size: 12px; font-weight: 600; }
+  .stats-detail { font-size: 10px; color: var(--text-3); cursor: pointer; transition: color 0.2s; }
+  .stats-detail:hover { color: var(--blue); }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .stats-item { display: flex; flex-direction: column; gap: 1px; }
+  .stats-label { font-size: 9px; color: var(--text-3); }
+  .stats-value { font-size: 13px; font-weight: 700; font-family: var(--font-mono); color: var(--text-1); }
+  .stats-updated { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(30,45,74,0.3); font-size: 9px; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+
+  .canvas-container { grid-column: 2; grid-row: 2 / 4; position: relative; overflow: hidden; }
+  #three-canvas { width: 100%; height: 100%; display: block; }
+  #entry-overlay { position: absolute; inset: 0; background: var(--bg-0); z-index: 20; pointer-events: none; transition: opacity 1s ease; }
+  #entry-overlay.hidden { opacity: 0; }
+
+  .bottom-toolbar {
+    grid-column: 1; grid-row: 3;
+    display: flex; align-items: center; justify-content: center; gap: 2px;
+    padding: 6px 12px;
+    border-top: 1px solid rgba(30,45,74,0.4);
+    background: rgba(13,18,32,0.6);
+    backdrop-filter: blur(8px);
+    flex-shrink: 0; z-index: 5;
+  }
+  .tool-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    background: transparent; border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    color: var(--text-3); cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tool-btn:hover { background: var(--bg-3); color: var(--text-1); border-color: var(--border-2); }
+  .tool-btn.active { color: var(--causal); background: var(--causal-dim); border-color: var(--causal-dim); }
+  .tool-btn svg { width: 14px; height: 14px; }
+
+  .node-tooltip {
+    position: absolute; pointer-events: none;
+    background: rgba(26,37,64,0.9); border: 1px solid var(--border-2);
+    border-radius: var(--radius-sm); padding: 5px 10px;
+    font-size: 11px; color: var(--text-1);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    z-index: 15; white-space: nowrap;
+    opacity: 0; transition: opacity 0.15s;
+    backdrop-filter: blur(4px);
+  }
+  .node-tooltip.visible { opacity: 1; }
+
+  /* ── CSS2D 节点标签（大节点名）── */
+  .node-label {
+    font-size: 11px; font-family: var(--font-sans);
+    color: rgba(226,232,240,0.9); font-weight: 500;
+    pointer-events: none; user-select: none;
+    text-shadow: 0 0 8px rgba(0,0,0,0.8);
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+  }
+  .node-label.causal { color: rgba(147,197,253,0.92); }
+  .node-label.element { color: rgba(110,231,183,0.92); }
+
+  /* ── 底板说明文字 ── */
+  .plane-desc {
+    font-family: var(--font-sans); pointer-events: none; user-select: none;
+    text-align: center; transform: translate(-50%, -50%);
+  }
+  .plane-desc .pd-title { font-size: 15px; font-weight: 600; color: var(--text-1); letter-spacing: 1px; }
+  .plane-desc .pd-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+  /* ── 全屏图片遮罩 ── */
+  #image-overlay {
+    position: fixed; inset: 0;
+    background: rgba(8,12,24,0.95);
+    z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s ease;
+  }
+  #image-overlay.active { opacity: 1; pointer-events: auto; }
+  #image-overlay img {
+    max-width: 92vw; max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 0 60px rgba(59,130,246,0.15);
+  }
+  .img-btn {
+    position: absolute;
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    background: rgba(26,37,64,0.8);
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-md);
+    color: var(--text-1); font-size: 12px;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  .img-btn:hover { background: var(--bg-4); border-color: var(--blue); }
+  .img-btn-back { top: 24px; left: 24px; }
+  .img-btn-fwd { top: 24px; right: 24px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="header-left">
+    <div class="header-title">本体总览</div>
+    <div class="header-subtitle">因果本体与要素本体的双层知识结构</div>
+  </div>
+  <div><span class="badge badge-green" id="badge-updated">更新于 2025-05-15</span></div>
+</div>
+
+<div class="left-panels" id="left-panels">
+  <div class="info-card causal" id="card-causal" onclick="gotoExternal('main.html?page=onto-list')">
+    <div class="card-header">
+      <div class="card-icon causal"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="5" r="2"/><circle cx="11" cy="11" r="2"/><circle cx="11" cy="5" r="2"/><path d="M7 5h2M11 7v2"/></svg></div>
+      <div class="card-title">因果本体</div>
+      <span class="card-badge badge badge-blue" style="font-size:10px;padding:1px 6px;">因果层</span>
+    </div>
+    <div class="card-desc">描述事物间的因果关系与影响机制</div>
+    <div class="card-stats">
+      <div><div class="card-stat-label">节点数</div><div class="card-stat-value causal" id="stat-causal-nodes">1,248</div></div>
+      <div><div class="card-stat-label">关系数</div><div class="card-stat-value causal" id="stat-causal-edges">3,672</div></div>
+    </div>
+    <span class="card-link">进入探索 →</span>
+  </div>
+
+  <div class="info-card element" id="card-element" onclick="gotoExternal('main.html?page=onto-list')">
+    <div class="card-header">
+      <div class="card-icon element"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="4" height="4" rx="1"/><rect x="10" y="2" width="4" height="4" rx="1"/><rect x="6" y="10" width="4" height="4" rx="1"/></svg></div>
+      <div class="card-title">要素本体</div>
+      <span class="card-badge badge badge-green" style="font-size:10px;padding:1px 6px;">要素层</span>
+    </div>
+    <div class="card-desc">定义领域内的核心要素与属性结构</div>
+    <div class="card-stats">
+      <div><div class="card-stat-label">节点数</div><div class="card-stat-value element" id="stat-element-nodes">2,763</div></div>
+      <div><div class="card-stat-label">关系数</div><div class="card-stat-value element" id="stat-element-edges">7,834</div></div>
+    </div>
+    <span class="card-link">进入探索 →</span>
+  </div>
+
+  <div class="stats-panel">
+    <div class="stats-header">
+      <span class="stats-title">本体统计</span>
+      <span class="stats-detail" onclick="gotoExternal('main.html?page=onto-list')">详情 ›</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stats-item"><div class="stats-label">总节点数</div><div class="stats-value" id="stat-total-nodes">4,011</div></div>
+      <div class="stats-item"><div class="stats-label">总关系数</div><div class="stats-value" id="stat-total-edges">11,506</div></div>
+      <div class="stats-item"><div class="stats-label">本体层级</div><div class="stats-value">2</div></div>
+      <div class="stats-item"><div class="stats-label">更新时间</div><div class="stats-value" style="font-size:11px;">2025-05-15</div></div>
+    </div>
+    <div class="stats-updated"><svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v5l3 2"/><circle cx="8" cy="8" r="6"/></svg> 每 24 小时自动更新</div>
+  </div>
+
+</div>
+
+<div class="canvas-container" id="canvas-container">
+  <canvas id="three-canvas"></canvas>
+  <div id="entry-overlay"></div>
+  <div class="node-tooltip" id="node-tooltip"></div>
+
+</div>
+
+<div class="bottom-toolbar">
+  <button class="tool-btn" title="聚焦因果层 (1)" onclick="window._ontoFocusCausal?.()"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="8,2 14,12 2,12"/><line x1="8" y1="12" x2="8" y2="14"/></svg></button>
+  <button class="tool-btn" title="聚焦要素层 (2)" onclick="window._ontoFocusElement?.()"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="8,14 14,4 2,4"/><line x1="8" y1="4" x2="8" y2="2"/></svg></button>
+  <button class="tool-btn" title="重置视角 (R)" onclick="window._ontoResetView?.()"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2"/></svg></button>
+  <button class="tool-btn" id="btn-toggle-grid" title="切换底板 (G)" onclick="window._ontoToggleGrid?.()"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="14" rx="2"/><line x1="1" y1="5" x2="15" y2="5"/><line x1="1" y1="9" x2="15" y2="9"/><line x1="5" y1="1" x2="5" y2="15"/><line x1="9" y1="1" x2="9" y2="15"/></svg></button>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- 全屏图片遮罩 -->
+<div id="image-overlay">
+  <button class="img-btn img-btn-back" id="img-btn-back">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
+    返回
+  </button>
+  <button class="img-btn img-btn-fwd" id="img-btn-fwd" onclick="gotoExternal('graph_list.html')">
+    前进
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5"/></svg>
+  </button>
+  <img src="asset/graph_demo.png" alt="图谱演示">
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ── DOM ──────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const canvas    = document.getElementById('three-canvas');
+const tooltip   = document.getElementById('node-tooltip');
+const overlay   = document.getElementById('entry-overlay');
+
+// ── 数据 ──────────────────────────────────────
+const DATA    = window.ONTOLOGY_OVERVIEW_DATA;
+const CAUSAL  = DATA.causalLayer;
+const ELEMENT = DATA.elementLayer;
+
+// ── 场景常量 ──────────────────────────────────
+const PLANE_SIZE      = 17;
+const PLANE_Y_CAUSAL  = 5.0;
+const PLANE_Y_ELEMENT = -5.0;
+const RADIUS_LARGE    = 0.22;
+const RADIUS_SMALL    = 0.11;
+const ELEVATION_LARGE = 0.45;
+const ELEVATION_SMALL = 0.22;
+
+let showGrid = true;
+
+// ── 工具 ──────────────────────────────────────
+function formatNum(n) { return n.toLocaleString('en-US'); }
+
+function makeLayout(largeNodes, smallNodes, maxR) {
+  const pts = [];
+  const outerR = maxR * 0.78;
+  for (let i = 0; i < largeNodes.length; i++) {
+    const angle = (i / largeNodes.length) * Math.PI * 2 - Math.PI / 2;
+    pts.push({ x: Math.cos(angle) * outerR, z: Math.sin(angle) * outerR, size: 'large' });
+  }
+  // 小节点散布在内圈
+  for (let i = 0; i < smallNodes.length; i++) {
+    const angle = ((i + 0.3) / smallNodes.length) * Math.PI * 2 - Math.PI / 2;
+    const r = maxR * 0.48;
+    pts.push({ x: Math.cos(angle) * r, z: Math.sin(angle) * r, size: 'small' });
+  }
+  return pts;
+}
+
+/** 集群布局：大节点在三角形顶点，小节点围绕归属的大节点 */
+function makeClusterLayout(nodes, maxR) {
+  const largeNodes = nodes.filter(n => n.size === 'large');
+  const smallNodes = nodes.filter(n => n.size === 'small');
+  const outerR = maxR * 0.78;
+  const pts = [];
+  // 大节点位置（地质节点向中心移动）
+  for (let i = 0; i < largeNodes.length; i++) {
+    const angle = (i / largeNodes.length) * Math.PI * 2 - Math.PI / 2;
+    const r = largeNodes[i].id === 'e03' ? outerR * 0.45 : outerR;
+    pts.push({ x: Math.cos(angle) * r, z: Math.sin(angle) * r, size: 'large', id: largeNodes[i].id });
+  }
+  const largePos = {};
+  for (const ln of largeNodes) {
+    const a = (largeNodes.indexOf(ln) / largeNodes.length) * Math.PI * 2 - Math.PI / 2;
+    const r = ln.id === 'e03' ? outerR * 0.45 : outerR;
+    largePos[ln.id] = { x: Math.cos(a) * r, z: Math.sin(a) * r };
+  }
+  for (const sn of smallNodes) {
+    const ctr = sn.cluster ? largePos[sn.cluster] : null;
+    const cx = ctr ? ctr.x : 0;
+    const cz = ctr ? ctr.z : 0;
+    const clusterSmall = smallNodes.filter(n => n.cluster === sn.cluster);
+    const idx = clusterSmall.indexOf(sn);
+    const count = clusterSmall.length;
+    const angle = (idx / count) * Math.PI * 2 + (sn.cluster?.charCodeAt(2) || 0);
+    const dist = 2.2 + (idx * 0.1);
+    pts.push({ x: cx + Math.cos(angle) * dist, z: cz + Math.sin(angle) * dist, size: 'small', id: sn.id, heightOff: sn.heightOff || 0, cluster: sn.cluster });
+  }
+  return pts;
+}
+
+// ── 纹理工厂 ─────────────────────────────────
+function createGridTexture(gridCount, lineColor, bgColor, accentColor) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 512;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, 512, 512);
+  const step = 512 / gridCount;
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 0.6;
+  for (let i = 0; i <= gridCount; i++) {
+    const p = i * step;
+    ctx.beginPath(); ctx.moveTo(p, 0); ctx.lineTo(p, 512); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, p); ctx.lineTo(512, p); ctx.stroke();
+  }
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, 510, 510);
+  ctx.strokeStyle = accentColor.replace('0.6', '0.22');
+  ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.moveTo(256, 0); ctx.lineTo(256, 512); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, 256); ctx.lineTo(512, 256); ctx.stroke();
+  const tex = new THREE.CanvasTexture(c);
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
+/** 径向渐变纹理 — 用于底板边缘渐变和光晕盘 */
+function createRadialGradient(innerColor, outerColor) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 512;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(256, 256, 128, 256, 256, 256);
+  g.addColorStop(0, innerColor);
+  g.addColorStop(1, outerColor);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 512, 512);
+  const tex = new THREE.CanvasTexture(c);
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
+// ── Three.js 初始化 ──────────────────────────
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.setClearColor(0x080c18, 1);
+renderer.toneMapping = THREE.ReinhardToneMapping;
+renderer.toneMappingExposure = 0;
+
+// ── 全屏图片遮罩 ────────────────────────────
+const imageOverlay = document.getElementById('image-overlay');
+let imgVisible = false;
+
+function showImage() {
+  if (imgVisible) return;
+  imgVisible = true;
+  imageOverlay.classList.add('active');
+}
+function hideImage() {
+  if (!imgVisible) return;
+  imgVisible = false;
+  imageOverlay.classList.remove('active');
+}
+document.getElementById('img-btn-back').addEventListener('click', hideImage);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080c18);
+scene.fog = new THREE.Fog(0x080c18, 22, 58);
+
+const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.5, 100);
+camera.position.set(12, 7, 26);
+camera.lookAt(0, 0, 0);
+
+// ── OrbitControls ────────────────────────────
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.enablePan = false;
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minPolarAngle = 0.3;
+controls.maxPolarAngle = 1.25;
+controls.minAzimuthAngle = -0.5;
+controls.maxAzimuthAngle = 0.5;
+controls.minDistance = 14;
+controls.maxDistance = 40;
+controls.update();
+
+// ── Bloom 管线（增强） ───────────────────────
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(container.clientWidth, container.clientHeight),
+  0.7,   // strength ↓ 避免放大刺眼
+  0.35,  // radius  ↓ 光晕更紧致
+  0.3    // threshold ↑ 只让高亮元素参与 Bloom
+);
+composer.addPass(bloomPass);
+
+// ── CSS2DRenderer（节点标签）────────────────
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(container.clientWidth, container.clientHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.left = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+container.appendChild(labelRenderer.domElement);
+
+// ── 灯光 ─────────────────────────────────────
+scene.add(new THREE.AmbientLight(0x334466, 1.2));
+const l1 = new THREE.DirectionalLight(0x6688cc, 3);
+l1.position.set(15, 20, 10);
+scene.add(l1);
+const l2 = new THREE.DirectionalLight(0x448866, 2.2);
+l2.position.set(-10, -5, -10);
+scene.add(l2);
+
+// ══════════════════════════════════════════════
+// 背景 — Fibonacci 球面粒子 + 环境光晕
+// ══════════════════════════════════════════════
+{
+  // 环境光晕大球
+  const haloGeo = new THREE.SphereGeometry(20, 32, 32);
+  const haloMat = new THREE.MeshBasicMaterial({
+    color: 0x112244, transparent: true, opacity: 0.06,
+    side: THREE.BackSide, depthWrite: false,
+  });
+  scene.add(new THREE.Mesh(haloGeo, haloMat));
+
+  // 环境底光（下层偏绿）
+  const haloGeo2 = new THREE.SphereGeometry(18, 32, 32);
+  const haloMat2 = new THREE.MeshBasicMaterial({
+    color: 0x0a2a1a, transparent: true, opacity: 0.04,
+    side: THREE.BackSide, depthWrite: false,
+  });
+  haloMat2.blending = THREE.AdditiveBlending;
+  scene.add(new THREE.Mesh(haloGeo2, haloMat2));
+
+  // Fibonacci 球面分布粒子（均匀稀疏）
+  const fibCount = 300;
+  const fibPos = new Float32Array(fibCount * 3);
+  const phi = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < fibCount; i++) {
+    const y = 1 - (i / (fibCount - 1)) * 2;        // -1 → 1
+    const radius = Math.sqrt(1 - y * y);
+    const theta = phi * i;
+    const r = 22 + Math.random() * 6;               // 大半径包围场景
+    fibPos[i * 3]     = Math.cos(theta) * radius * r;
+    fibPos[i * 3 + 1] = y * r * 0.7;
+    fibPos[i * 3 + 2] = Math.sin(theta) * radius * r;
+  }
+  const fibGeo = new THREE.BufferGeometry();
+  fibGeo.setAttribute('position', new THREE.BufferAttribute(fibPos, 3));
+  const fibMat = new THREE.PointsMaterial({
+    color: 0xaaccff, size: 0.06, transparent: true, opacity: 0.25,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  scene.add(new THREE.Points(fibGeo, fibMat));
+}
+
+// ══════════════════════════════════════════════
+// 底板（三层叠加）— 渐变边缘
+// ══════════════════════════════════════════════
+const planeGroup = new THREE.Group();
+scene.add(planeGroup);
+
+const causalGridTex   = createGridTexture(16, 'rgba(59,130,246,0.18)', 'rgba(8,12,24,0.04)', 'rgba(59,130,246,0.18)');
+const elementGridTex  = createGridTexture(16, 'rgba(16,185,129,0.18)', 'rgba(8,12,24,0.04)', 'rgba(16,185,129,0.18)');
+const causalEdgeTex   = createRadialGradient('rgba(8,12,24,0)', 'rgba(27,80,160,0.15)');
+const elementEdgeTex  = createRadialGradient('rgba(8,12,24,0)', 'rgba(15,100,65,0.15)');
+
+function makePlane(y, colorHex, gridTex, edgeTex) {
+  const geo = new THREE.PlaneGeometry(PLANE_SIZE, PLANE_SIZE);
+
+  // 底层：半透明填充色
+  const fillMat = new THREE.MeshBasicMaterial({
+    color: colorHex, transparent: true, opacity: 0.06,
+    side: THREE.DoubleSide, depthWrite: false,
+  });
+  const fillPlane = new THREE.Mesh(geo, fillMat);
+  fillPlane.rotation.x = -Math.PI / 2;
+  fillPlane.position.y = y;
+
+  // 中层：网格纹理
+  const gridMat = new THREE.MeshBasicMaterial({
+    map: gridTex, transparent: true, opacity: 0.14,
+    side: THREE.DoubleSide, depthWrite: false,
+  });
+  const gridPlane = new THREE.Mesh(geo, gridMat);
+  gridPlane.rotation.x = -Math.PI / 2;
+  gridPlane.position.y = y + 0.006;
+
+  // 上层：径向渐变边缘（中心透→边缘不透）
+  const edgeMat = new THREE.MeshBasicMaterial({
+    map: edgeTex, transparent: true, opacity: 0.66,
+    side: THREE.DoubleSide, depthWrite: false,
+  });
+  const edgePlane = new THREE.Mesh(geo, edgeMat);
+  edgePlane.rotation.x = -Math.PI / 2;
+  edgePlane.position.y = y + 0.010;
+
+  const group = new THREE.Group();
+  group.add(fillPlane);
+  group.add(gridPlane);
+  group.add(edgePlane);
+
+  group.userData = { fillMat, gridMat, y, colorHex };
+  planeGroup.add(group);
+  return group;
+}
+
+const causalPlaneGroup  = makePlane(PLANE_Y_CAUSAL,  0x3b82f6, causalGridTex,  causalEdgeTex);
+const elementPlaneGroup = makePlane(PLANE_Y_ELEMENT, 0x10b981, elementGridTex, elementEdgeTex);
+
+// ── 粗边框 + 辉光光晕（Bloom 驱动）───────
+function makeBorderRects(y, colorHex) {
+  const half = PLANE_SIZE / 2;
+  const group = new THREE.Group();
+
+  // 内层：实心边框（不参与 Bloom，低调衬托）
+  const thick = 0.15;
+  const hh = 0.04;
+  const lighterColor = new THREE.Color(colorHex).multiplyScalar(0.5);
+  const mat = new THREE.MeshBasicMaterial({
+    color: lighterColor, transparent: true, opacity: 0.35, depthTest: true,
+  });
+  const geoLong = new THREE.BoxGeometry(PLANE_SIZE + thick * 2, hh, thick);
+  const geoShort = new THREE.BoxGeometry(thick, hh, PLANE_SIZE);
+  [[0, y + 0.016, -half], [0, y + 0.016, half]].forEach(p => { const m = new THREE.Mesh(geoLong, mat.clone()); m.position.set(p[0], p[1], p[2]); group.add(m); });
+  [[-half, y + 0.016, 0], [half, y + 0.016, 0]].forEach(p => { const m = new THREE.Mesh(geoShort, mat.clone()); m.position.set(p[0], p[1], p[2]); group.add(m); });
+
+  // 外层：扩散光晕 — 减小宽度和透明度
+  const glowThick = 0.35;
+  const glowHh = 0.015;
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: lighterColor, transparent: true, opacity: 0.03,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const geoGlowLong = new THREE.BoxGeometry(PLANE_SIZE + glowThick * 2, glowHh, glowThick);
+  const geoGlowShort = new THREE.BoxGeometry(glowThick, glowHh, PLANE_SIZE);
+  [[0, y + 0.010, -half], [0, y + 0.010, half]].forEach(p => { const m = new THREE.Mesh(geoGlowLong, glowMat.clone()); m.position.set(p[0], p[1], p[2]); group.add(m); });
+  [[-half, y + 0.010, 0], [half, y + 0.010, 0]].forEach(p => { const m = new THREE.Mesh(geoGlowShort, glowMat.clone()); m.position.set(p[0], p[1], p[2]); group.add(m); });
+
+  return group;
+}
+const causalBorderRects  = makeBorderRects(PLANE_Y_CAUSAL,  0x3b82f6);
+const elementBorderRects = makeBorderRects(PLANE_Y_ELEMENT, 0x10b981);
+planeGroup.add(causalBorderRects);
+planeGroup.add(elementBorderRects);
+
+// ══════════════════════════════════════════════
+// 网格交点高亮光点
+// ══════════════════════════════════════════════
+function createGridDots(y, colorHex) {
+  const gridCount = 16;
+  const step = PLANE_SIZE / gridCount;
+  const half = PLANE_SIZE / 2;
+  const posArray = [];
+  for (let i = 0; i <= gridCount; i++) {
+    for (let j = 0; j <= gridCount; j++) {
+      posArray.push(-half + i * step, y + 0.016, -half + j * step);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(posArray, 3));
+  const mat = new THREE.PointsMaterial({
+    color: colorHex, size: 0.06, transparent: true, opacity: 0.5,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  return new THREE.Points(geo, mat);
+}
+
+const causalGridDots  = createGridDots(PLANE_Y_CAUSAL,  0x3b82f6);
+const elementGridDots = createGridDots(PLANE_Y_ELEMENT, 0x10b981);
+planeGroup.add(causalGridDots);
+planeGroup.add(elementGridDots);
+
+// ══════════════════════════════════════════════
+// 节点 & 光晕盘 & 光环
+// ══════════════════════════════════════════════
+const causalLarge  = CAUSAL.nodes.filter(n => n.size === 'large');
+const causalSmall  = CAUSAL.nodes.filter(n => n.size === 'small');
+const elementLarge = ELEMENT.nodes.filter(n => n.size === 'large');
+const elementSmall = ELEMENT.nodes.filter(n => n.size === 'small');
+
+const causalLayout  = makeLayout(causalLarge,  causalSmall,  PLANE_SIZE / 2 - 0.8);
+const elementLayout = makeClusterLayout(ELEMENT.nodes, PLANE_SIZE / 2 - 0.8);
+
+const causalNodesSorted  = [...causalLarge,  ...causalSmall];
+const elementNodesSorted = [...elementLarge, ...elementSmall];
+
+// 按 layout 顺序重排 elementNodesSorted（元素层 layout 顺序不同）
+const elementNodesByLayout = [];
+for (const pt of elementLayout) {
+  if (pt.size === 'large') elementNodesByLayout.push(elementLarge.find(n => n.id === pt.id));
+  else elementNodesByLayout.push(elementSmall.find(n => n.id === pt.id));
+}
+// 重排 elementNodesSorted 以匹配 elementLayout
+elementNodesSorted.length = 0;
+elementNodesSorted.push(...elementNodesByLayout);
+
+const nodeWorldPos = new Map(); // id → { x, y, z, size }
+
+// ── 光晕盘纹理 ───────────────────────────────
+const causalGlowTex  = createRadialGradient('rgba(59,130,246,0.45)', 'rgba(59,130,246,0)');
+const elementGlowTex = createRadialGradient('rgba(16,185,129,0.45)', 'rgba(16,185,129,0)');
+
+const sphereGeoLarge = new THREE.SphereGeometry(RADIUS_LARGE, 24, 24);
+const sphereGeoSmall = new THREE.SphereGeometry(RADIUS_SMALL, 16, 16);
+const discGeo = new THREE.PlaneGeometry(RADIUS_LARGE * 5, RADIUS_LARGE * 5);
+const torusGeo = new THREE.TorusGeometry(RADIUS_LARGE * 1.9, 0.03, 8, 32);
+const glowShellGeo = new THREE.SphereGeometry(RADIUS_LARGE * 2.8, 16, 16);
+
+function createNodeInstances(nodes, layout, planeY, colorHex, colorStr) {
+  const largeNodes = nodes.filter(n => n.size === 'large');
+  const smallNodes = nodes.filter(n => n.size === 'small');
+  const result = [];
+
+  const createIM = (geo, mat, nodeList, elev) => {
+    if (nodeList.length === 0) return null;
+    const mesh = new THREE.InstancedMesh(geo, mat, nodeList.length);
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < nodeList.length; i++) {
+      const idx = nodes.indexOf(nodeList[i]);
+      const pt = layout[idx];
+      const wy = planeY + elev + (pt.heightOff || 0);
+      dummy.position.set(pt.x, wy, pt.z);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+      nodeWorldPos.set(nodeList[i].id, { x: pt.x, y: wy, z: pt.z, size: nodeList[i].size, heightOff: pt.heightOff || 0 });
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.userData = { layerNodes: nodeList, layerColor: colorHex };
+    return mesh;
+  };
+
+  // 大节点核心（抬高）
+  const matL = new THREE.MeshStandardMaterial({
+    color: colorHex, roughness: 0.15, metalness: 0.05,
+    emissive: colorHex, emissiveIntensity: 0.85,
+  });
+  const mL = createIM(sphereGeoLarge, matL, largeNodes, ELEVATION_LARGE);
+  if (mL) result.push(mL);
+
+  // 小节点核心（微抬）
+  const matS = new THREE.MeshStandardMaterial({
+    color: colorHex, roughness: 0.12, metalness: 0.05,
+    emissive: colorHex, emissiveIntensity: 0.55,
+  });
+  const mS = createIM(sphereGeoSmall, matS, smallNodes, ELEVATION_SMALL);
+  if (mS) result.push(mS);
+
+  return result;
+}
+
+// ── 光晕盘（仅大节点，平放在底板上）─────────
+function createGlowDiscs(nodes, layout, planeY, tex) {
+  const largeNodes = nodes.filter(n => n.size === 'large');
+  if (largeNodes.length === 0) return null;
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex, transparent: true, opacity: 0.6,
+    side: THREE.DoubleSide, depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const mesh = new THREE.InstancedMesh(discGeo, mat, largeNodes.length);
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < largeNodes.length; i++) {
+    const idx = nodes.indexOf(largeNodes[i]);
+    const pt = layout[idx];
+    dummy.position.set(pt.x, planeY + ELEVATION_LARGE - 0.05, pt.z);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+  return mesh;
+}
+
+// ── 光环（Toruses，仅大节点）───────────────────
+function createNodeRings(nodes, layout, planeY, colorHex) {
+  const largeNodes = nodes.filter(n => n.size === 'large');
+  if (largeNodes.length === 0) return null;
+  const mat = new THREE.MeshBasicMaterial({
+    color: colorHex, transparent: true, opacity: 0.7,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const mesh = new THREE.InstancedMesh(torusGeo, mat, largeNodes.length);
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < largeNodes.length; i++) {
+    const idx = nodes.indexOf(largeNodes[i]);
+    const pt = layout[idx];
+    dummy.position.set(pt.x, planeY + ELEVATION_LARGE, pt.z);
+    dummy.rotation.x = Math.PI / 2;
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+  mesh.userData = { _ring: true };
+  return mesh;
+}
+
+// ── 辉光壳（仅大节点，半透明大球）─────────────
+function createGlowShells(nodes, layout, planeY, colorHex) {
+  const largeNodes = nodes.filter(n => n.size === 'large');
+  if (largeNodes.length === 0) return null;
+  const mat = new THREE.MeshBasicMaterial({
+    color: colorHex, transparent: true, opacity: 0.12,
+    blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+  const mesh = new THREE.InstancedMesh(glowShellGeo, mat, largeNodes.length);
+  const dummy = new THREE.Object3D();
+  for (let i = 0; i < largeNodes.length; i++) {
+    const idx = nodes.indexOf(largeNodes[i]);
+    const pt = layout[idx];
+    dummy.position.set(pt.x, planeY + ELEVATION_LARGE, pt.z);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+  return mesh;
+}
+
+// ── 构建全部节点组件 ──────────────────────────
+const causalMeshes   = createNodeInstances(causalNodesSorted,  causalLayout,  PLANE_Y_CAUSAL,  0x3b82f6);
+const elementMeshes  = createNodeInstances(elementNodesSorted, elementLayout, PLANE_Y_ELEMENT, 0x10b981);
+const causalDiscs    = createGlowDiscs(CAUSAL.nodes,  causalLayout,  PLANE_Y_CAUSAL,  causalGlowTex);
+const elementDiscs   = createGlowDiscs(ELEMENT.nodes, elementLayout, PLANE_Y_ELEMENT, elementGlowTex);
+const causalRings    = createNodeRings(CAUSAL.nodes,  causalLayout,  PLANE_Y_CAUSAL,  0x3b82f6);
+const elementRings   = createNodeRings(ELEMENT.nodes, elementLayout, PLANE_Y_ELEMENT, 0x10b981);
+const causalShells   = createGlowShells(CAUSAL.nodes,  causalLayout,  PLANE_Y_CAUSAL,  0x3b82f6);
+const elementShells  = createGlowShells(ELEMENT.nodes, elementLayout, PLANE_Y_ELEMENT, 0x10b981);
+
+const allNodeMeshes  = [...causalMeshes, ...elementMeshes];
+const allDiscs       = [causalDiscs, elementDiscs].filter(Boolean);
+const allRings       = [causalRings, elementRings].filter(Boolean);
+const allShells      = [causalShells, elementShells].filter(Boolean);
+
+allNodeMeshes.forEach(m => scene.add(m));
+allDiscs.forEach(m => scene.add(m));
+allRings.forEach(m => scene.add(m));
+allShells.forEach(m => scene.add(m));
+
+// ── CSS2D 标签（大节点名）───────────────────
+const labelGroup = new THREE.Group();
+scene.add(labelGroup);
+function makeLabel(nodeId, labelText, cssClass) {
+  const pos = nodeWorldPos.get(nodeId);
+  if (!pos) return;
+  const div = document.createElement('div');
+  div.className = `node-label ${cssClass}`;
+  div.textContent = labelText;
+  const lbl = new CSS2DObject(div);
+  lbl.position.set(pos.x, pos.y + RADIUS_LARGE + 0.5, pos.z);
+  lbl.userData = { nodeId };
+  labelGroup.add(lbl);
+}
+[...CAUSAL.nodes, ...ELEMENT.nodes].filter(n => n.size === 'large').forEach(n => {
+  const cssClass = n.id.startsWith('c') ? 'causal' : 'element';
+  makeLabel(n.id, n.label, cssClass);
+});
+
+// 底板说明文字（CSS2D 渲染在对应 Y 层平面左下角）
+function addPlaneDesc(html, y) {
+  const div = document.createElement('div');
+  div.className = 'plane-desc';
+  div.innerHTML = html;
+  const obj = new CSS2DObject(div);
+  const cornerX = -(PLANE_SIZE / 2) + 3.2;  // 屏幕左侧（世界 -X）
+  const cornerZ = +(PLANE_SIZE / 2) - 2.5;  // 靠近屏幕（世界 +Z）
+  obj.position.set(cornerX, y + 0.25, cornerZ);
+  labelGroup.add(obj);
+}
+addPlaneDesc('<div class="pd-title">因果本体</div><div class="pd-sub">展示实体之间的因果推理关系</div>', PLANE_Y_CAUSAL);
+addPlaneDesc('<div class="pd-title">要素本体</div><div class="pd-sub">展示要素静态属性</div>', PLANE_Y_ELEMENT);
+
+// 入场动画：全部初始透明
+allNodeMeshes.forEach(m => { m.material.transparent = true; m.material.opacity = 0; });
+allDiscs.forEach(m => { m.material.opacity = 0; });
+allRings.forEach(m => { m.material.opacity = 0; });
+allShells.forEach(m => { m.material.opacity = 0; });
+
+// ══════════════════════════════════════════════
+// 连线（同层，双层叠加模拟发光渐变）
+// ══════════════════════════════════════════════
+function createEdges(nodes, edges, colorHex) {
+  const idToIdx = {};
+  nodes.forEach((n, i) => { idToIdx[n.id] = i; });
+  const verts = [];
+  for (const [s, t] of edges) {
+    const sp = nodeWorldPos.get(s);
+    const tp = nodeWorldPos.get(t);
+    if (!sp || !tp) continue;
+    verts.push(sp.x, sp.y, sp.z, tp.x, tp.y, tp.z);
+  }
+  if (verts.length === 0) return null;
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+
+  // 底层：较粗半透明发光
+  const matBase = new THREE.LineBasicMaterial({
+    color: colorHex, transparent: true, opacity: 0,
+    depthTest: true, blending: THREE.AdditiveBlending,
+  });
+  const lineBase = new THREE.LineSegments(geo, matBase);
+  lineBase.userData = { targetOpacity: 0.12 };
+
+  // 上层：细亮线（靠近节点端更亮的效果通过整体 opacity 模拟）
+  const matBright = new THREE.LineBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0,
+    depthTest: true, blending: THREE.AdditiveBlending,
+  });
+  const lineBright = new THREE.LineSegments(geo.clone(), matBright);
+  lineBright.userData = { targetOpacity: 0.06 };
+
+  const group = new THREE.Group();
+  group.add(lineBase);
+  group.add(lineBright);
+  group.userData = { lineBase, lineBright, targetOpacity: 0.12, targetBrightOpacity: 0.06 };
+  return group;
+}
+
+const causalEdgeGroup  = createEdges(causalNodesSorted,  CAUSAL.edges,  0x3b82f6);
+const elementEdgeGroup = createEdges(elementNodesSorted, ELEMENT.edges, 0x10b981);
+if (causalEdgeGroup)  scene.add(causalEdgeGroup);
+if (elementEdgeGroup) scene.add(elementEdgeGroup);
+const allEdgeGroups = [causalEdgeGroup, elementEdgeGroup].filter(Boolean);
+
+// ══════════════════════════════════════════════
+// 高亮球 & 选中环
+// ══════════════════════════════════════════════
+const highlightGeo = new THREE.SphereGeometry(RADIUS_LARGE * 2, 24, 24);
+const highlightMat = new THREE.MeshBasicMaterial({
+  color: 0xffffff, transparent: true, opacity: 0,
+  depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const highlightSphere = new THREE.Mesh(highlightGeo, highlightMat);
+highlightSphere.renderOrder = 999;
+scene.add(highlightSphere);
+
+const selectRingGeo = new THREE.TorusGeometry(RADIUS_LARGE * 2.2, 0.05, 8, 40);
+const selectRingMat = new THREE.MeshBasicMaterial({
+  color: 0xffffff, transparent: true, opacity: 0,
+  depthTest: false, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const selectRing = new THREE.Mesh(selectRingGeo, selectRingMat);
+selectRing.renderOrder = 998;
+scene.add(selectRing);
+
+// ══════════════════════════════════════════════
+// Raycaster
+// ══════════════════════════════════════════════
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredNode = null;
+let selectedNode = null;
+
+function getIntersections(event) {
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width)  * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  return raycaster.intersectObjects(allNodeMeshes, false);
+}
+
+
+
+function getLayer(nodeHit) {
+  // 判断 hit 属于哪一层
+  for (const m of causalMeshes) if (m === nodeHit) return 'causal';
+  return 'element';
+}
+
+canvas.addEventListener('pointermove', (event) => {
+  const hits = getIntersections(event);
+  if (hits.length > 0) {
+    const hit = hits[0];
+    if (hoveredNode && hoveredNode.mesh === hit.object && hoveredNode.index === hit.instanceId) return;
+    hoveredNode = { mesh: hit.object, index: hit.instanceId };
+
+    const dummy = new THREE.Object3D();
+    hit.object.getMatrixAt(hit.instanceId, dummy.matrix);
+    const wp = new THREE.Vector3().setFromMatrixPosition(dummy.matrix);
+    highlightSphere.position.copy(wp);
+    highlightMat.opacity = 0.7;
+
+    const layer = getLayer(hit.object);
+    const layerNodes = layer === 'causal' ? causalNodesSorted : elementNodesSorted;
+    const node = layerNodes[hit.instanceId];
+    if (node) {
+      tooltip.textContent = `${node.label} · ${node.group}`;
+      tooltip.classList.add('visible');
+      tooltip.style.left = (event.clientX - container.getBoundingClientRect().left + 18) + 'px';
+      tooltip.style.top  = (event.clientY - container.getBoundingClientRect().top - 28) + 'px';
+    }
+    canvas.style.cursor = 'pointer';
+  } else {
+    // 平面 hover（点击跳转引导）
+    const rect2 = canvas.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect2.left) / rect2.width)  * 2 - 1;
+    mouse.y = -((event.clientY - rect2.top) / rect2.height) * 2 + 1;
+    const rp = new THREE.Raycaster();
+    rp.setFromCamera(mouse, camera);
+    let onPlane = false;
+    for (const pg of [causalPlaneGroup, elementPlaneGroup]) {
+      if (rp.intersectObject(pg.children[0], false).length > 0) { onPlane = true; break; }
+    }
+    if (onPlane) { canvas.style.cursor = 'pointer'; return; }
+
+    hoveredNode = null;
+    highlightMat.opacity = 0;
+    tooltip.classList.remove('visible');
+    canvas.style.cursor = 'default';
+  }
+
+});
+
+canvas.addEventListener('click', (event) => {
+  const hits = getIntersections(event);
+  if (hits.length > 0) {
+    const hit = hits[0];
+    const dummy = new THREE.Object3D();
+    hit.object.getMatrixAt(hit.instanceId, dummy.matrix);
+    const wp = new THREE.Vector3().setFromMatrixPosition(dummy.matrix);
+    selectRing.position.copy(wp);
+    selectRing.rotation.x = Math.PI / 2;
+    selectRingMat.opacity = 0.9;
+    const isCausal = getLayer(hit.object) === 'causal';
+    selectRingMat.color.set(isCausal ? 0x3b82f6 : 0x10b981);
+    selectedNode = { mesh: hit.object, index: hit.instanceId };
+    const layerNodes = isCausal ? causalNodesSorted : elementNodesSorted;
+    const layerName = isCausal ? '因果本体' : '要素本体';
+    const node = layerNodes[hit.instanceId];
+    if (node) window.showToast(`${layerName} · ${node.label}（${node.group}）`, 1800);
+  } else {
+    // 检查是否点击了底板 → 显示全屏图片
+    const rect2 = canvas.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect2.left) / rect2.width)  * 2 - 1;
+    mouse.y = -((event.clientY - rect2.top) / rect2.height) * 2 + 1;
+    const rp = new THREE.Raycaster();
+    rp.setFromCamera(mouse, camera);
+    for (const pg of [causalPlaneGroup, elementPlaneGroup]) {
+      if (rp.intersectObject(pg.children[0], false).length > 0) {
+        showImage();
+        return;
+      }
+    }
+    selectedNode = null;
+    selectRingMat.opacity = 0;
+  }
+});
+
+// ══════════════════════════════════════════════
+// 入场动画状态
+// ══════════════════════════════════════════════
+let entryPhase = 0;
+const ENTRY_DELAYS = [0.4, 0.9, 1.5]; // planes, nodes, edges
+
+// 初始化连线材质（入场前透明）
+allEdgeGroups.forEach(g => {
+  if (g.userData.lineBase) g.userData.lineBase.material.transparent = true;
+  if (g.userData.lineBright) g.userData.lineBright.material.transparent = true;
+});
+
+// ══════════════════════════════════════════════
+// 动画循环
+// ══════════════════════════════════════════════
+const clock = new THREE.Clock();
+let timeAccum = 0;
+const TARGET_EXPOSURE = 1.3;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  timeAccum += dt;
+  controls.update();
+
+  // ── 入场动画 ───────────────────────────────
+  if (renderer.toneMappingExposure < TARGET_EXPOSURE) {
+    renderer.toneMappingExposure = Math.min(TARGET_EXPOSURE, renderer.toneMappingExposure + dt * 0.7);
+  }
+
+  // 阶段1：平面淡入
+  if (timeAccum >= ENTRY_DELAYS[0] && entryPhase < 1) entryPhase = 1;
+  if (entryPhase >= 1) {
+    const pe = timeAccum - ENTRY_DELAYS[0];
+    planeGroup.children.forEach(g => {
+      g.children.forEach(c => {
+        if (c.material && c.material._targetOpacity !== undefined) {
+          c.material.opacity = Math.min(c.material._targetOpacity, pe * 0.45);
+        }
+      });
+      const edgeM = g.children[2]?.material; // 径向渐变层
+      if (edgeM) edgeM.opacity = Math.min(0.66, pe * 0.35);
+    });
+  }
+
+  // 阶段2：节点、光环、辉光壳、光晕盘淡入
+  if (timeAccum >= ENTRY_DELAYS[1] && entryPhase < 2) entryPhase = 2;
+  if (entryPhase >= 2) {
+    const ne = timeAccum - ENTRY_DELAYS[1];
+    allNodeMeshes.forEach((m, mi) => { m.material.opacity = Math.min(1, Math.max(0, (ne - mi * 0.06) * 0.7)); });
+    allRings.forEach((m, mi) => { m.material.opacity = Math.min(0.7, Math.max(0, (ne - mi * 0.06 - 0.15) * 0.7)); });
+    allShells.forEach((m, mi) => { m.material.opacity = Math.min(0.12, Math.max(0, (ne - mi * 0.06 - 0.1) * 0.7)); });
+    allDiscs.forEach((m, mi) => { m.material.opacity = Math.min(0.6, Math.max(0, (ne - mi * 0.06 - 0.05) * 0.7)); });
+  }
+
+  // 阶段3：连线淡入
+  if (timeAccum >= ENTRY_DELAYS[2] && entryPhase < 3) entryPhase = 3;
+  if (entryPhase >= 3) {
+    const ee = timeAccum - ENTRY_DELAYS[2];
+    allEdgeGroups.forEach(g => {
+      const lb = g.userData.lineBase;
+      const lbright = g.userData.lineBright;
+      if (lb)  lb.material.opacity = Math.min(g.userData.targetOpacity, Math.max(0, ee * 0.22));
+      if (lbright) lbright.material.opacity = Math.min(g.userData.targetBrightOpacity, Math.max(0, (ee - 0.1) * 0.22));
+    });
+    if (ee > 1.2) { entryPhase = 5; overlay.classList.add('hidden'); }
+  }
+
+  // ── 光环脉冲动画 ────────────────────────────
+  allRings.forEach(ringMesh => {
+    const count = ringMesh.count;
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      ringMesh.getMatrixAt(i, dummy.matrix);
+      dummy.matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+      const pulse = 1 + Math.sin(timeAccum * 1.8 + i * 1.2) * 0.12;
+      dummy.scale.set(pulse, pulse, pulse);
+      dummy.updateMatrix();
+      ringMesh.setMatrixAt(i, dummy.matrix);
+    }
+    ringMesh.instanceMatrix.needsUpdate = true;
+  });
+
+  // ── 大节点核心呼吸 ──────────────────────────
+  // (通过操作 material.emissiveIntensity)
+  const breath = 0.85 + Math.sin(timeAccum * 1.2) * 0.1;
+  causalMeshes.forEach(m => { if (m.userData.layerNodes?.[0]?.size === 'large') m.material.emissiveIntensity = breath; });
+  elementMeshes.forEach(m => { if (m.userData.layerNodes?.[0]?.size === 'large') m.material.emissiveIntensity = breath * 0.7; });
+
+  // ── 辉光壳呼吸 ──────────────────────────────
+  const shellBreath = 0.12 + Math.sin(timeAccum * 0.9 + 0.5) * 0.03;
+  allShells.forEach(m => { if (entryPhase >= 2) m.material.opacity = shellBreath; });
+
+  // ── 底板粗边框呼吸灯（控制外层光晕 opacity）─
+  [causalBorderRects, elementBorderRects].forEach(br => {
+    // 外层光晕在 index 4-7
+    const glowMats = br.children.slice(4, 8).map(c => c.material);
+    const base = 0.03;
+    const pulse = base + Math.sin(timeAccum * 0.8) * 0.015;
+    glowMats.forEach(m => { m.opacity = pulse; });
+  });
+
+  // ── 选中环旋转 ──────────────────────────────
+  if (selectRingMat.opacity > 0) selectRing.rotation.z += dt * 1.5;
+
+
+  composer.render();
+  labelRenderer.render(scene, camera);
+}
+
+animate();
+
+// ── 响应式 ───────────────────────────────────
+const ro = new ResizeObserver(() => {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  if (w === 0 || h === 0) return;
+  renderer.setSize(w, h);
+  composer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+});
+ro.observe(container);
+
+// ── 工具栏方法 ────────────────────────────────
+const STORED_TARGET = new THREE.Vector3(0, 0, 0);
+const STORED_CAM    = new THREE.Vector3(12, 7, 26);
+
+window._ontoFocusCausal = () => {
+  controls.target.set(0, PLANE_Y_CAUSAL, 0);
+  camera.position.set(0, PLANE_Y_CAUSAL + 14, 9);
+  controls.update();
+};
+window._ontoFocusElement = () => {
+  controls.target.set(0, PLANE_Y_ELEMENT, 0);
+  camera.position.set(0, PLANE_Y_ELEMENT - 14, 9);
+  controls.update();
+};
+window._ontoResetView = () => {
+  controls.target.copy(STORED_TARGET);
+  camera.position.copy(STORED_CAM);
+  controls.update();
+};
+window._ontoToggleGrid = () => {
+  showGrid = !showGrid;
+  planeGroup.visible = showGrid;
+  document.getElementById('btn-toggle-grid').classList.toggle('active', !showGrid);
+};
+
+// ── 快捷键 ────────────────────────────────────
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { hideImage(); return; }
+  switch (e.key.toLowerCase()) {
+    case 'r': window._ontoResetView?.(); break;
+    case 'g': window._ontoToggleGrid?.(); break;
+    case '1': window._ontoFocusCausal?.(); break;
+    case '2': window._ontoFocusElement?.(); break;
+  }
+});
+
+// 点击遮罩背景关闭
+imageOverlay.addEventListener('click', (e) => {
+  if (e.target === imageOverlay) hideImage();
+});
+
+// ── gotoExternal ──────────────────────────────
+window.gotoExternal = function(file) {
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'NAVIGATE_TO', file: file }, '*');
+  } else {
+    location.href = file;
+  }
+};
+
+// ── 统计数字 ──────────────────────────────────
+document.getElementById('stat-causal-nodes').textContent  = formatNum(DATA.stats.causalNodes);
+document.getElementById('stat-causal-edges').textContent  = formatNum(DATA.stats.causalEdges);
+document.getElementById('stat-element-nodes').textContent = formatNum(DATA.stats.elementNodes);
+document.getElementById('stat-element-edges').textContent = formatNum(DATA.stats.elementEdges);
+document.getElementById('stat-total-nodes').textContent   = formatNum(DATA.stats.totalNodes);
+document.getElementById('stat-total-edges').textContent   = formatNum(DATA.stats.totalEdges);
+document.getElementById('badge-updated').textContent      = `更新于 ${DATA.stats.updatedAt}`;
+
+console.log('[本体总览] 初始化完成',
+  `因果:${causalNodesSorted.length}N ${CAUSAL.edges.length}E`,
+  `要素:${elementNodesSorted.length}N ${ELEMENT.edges.length}E`,
+  `线段:${CAUSAL.edges.length + ELEMENT.edges.length} | Bloom:0.7/0.35/0.3`);
+</script>
+
+</body>
+</html>
