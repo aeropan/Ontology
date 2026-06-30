@@ -1052,12 +1052,15 @@
 <!-- ── 顶部标题栏 ── -->
 <div class="page-header">
   <div>
-    <div class="header-title">
-      MINGXUAN_TEST_DATABASE
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+      <button class="btn btn-ghost" style="font-size:13px;padding:4px 10px" onclick="window.parent!==window?window.parent.postMessage({type:'NAVIGATE_TO',file:'graph_list.html'},'*'):location.href='graph_list.html'">&#8592; &#36820;&#22238;</button>
+      <div class="header-title">
+        MINGXUAN_TEST_DATABASE
       <span style="color:var(--text-3);font-weight:300">·</span>
       <span style="color:var(--text-2);font-size:15px">草图</span>
       <span class="badge-version">V2.0 版本</span>
       <span class="badge-auto">自动生成</span>
+    </div>
     </div>
     <div class="header-subtitle">基于本体 · 207 个节点 · 153 条关系 · 请确认后进入编辑</div>
   </div>
