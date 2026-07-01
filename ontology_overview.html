@@ -460,7 +460,13 @@ function hideImage() {
 document.getElementById('img-btn-back').addEventListener('click', hideImage);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x080c18);
+if (location.protocol === 'file:') {
+  scene.background = new THREE.Color(0x0a1120);
+} else {
+  var _bgImg = new Image();
+  _bgImg.onload = function () { var t = new THREE.Texture(_bgImg); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; scene.background = t; };
+  _bgImg.src = 'asset/graph_overview_bg.png';
+}
 scene.fog = new THREE.Fog(0x080c18, 22, 58);
 
 const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.5, 100);
