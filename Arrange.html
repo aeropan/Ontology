@@ -76,11 +76,102 @@
     .page-header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 10px; flex-shrink: 0;
+      padding: 12px 16px;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
     }
 
     .page-title { font-size: 16px; font-weight: 700; }
     .page-title span { color: var(--blue); }
     .page-subtitle { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+    .page-meta-line {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    .page-meta-line .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 顶部工具栏按钮 */
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-actions .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      border: 1px solid transparent;
+      font-family: inherit;
+    }
+
+    .toolbar-actions .btn-save {
+      background: var(--blue);
+      color: #fff;
+      border-color: var(--blue);
+    }
+
+    .toolbar-actions .btn-save:hover {
+      background: #2563eb;
+      box-shadow: 0 0 0 3px var(--blue-dim);
+    }
+
+    .toolbar-actions .btn-tool {
+      background: var(--bg-3);
+      color: var(--text-1);
+      border-color: var(--border-2);
+    }
+
+    .toolbar-actions .btn-tool:hover {
+      background: var(--bg-4);
+      border-color: var(--blue);
+    }
+
+    /* ===== ONTO BAR ===== */
+    .onto-bar {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .onto-bar-label {
+      font-size: 11px; font-weight: 600; color: var(--text-2); white-space: nowrap;
+    }
+
+    .onto-bar-divider { width: 1px; height: 20px; background: var(--border-1); }
+
+    .biz-onto-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px;
+      background: linear-gradient(135deg,rgba(59,130,246,.15),rgba(6,182,212,.1));
+      border: 1px solid rgba(59,130,246,.4);
+      border-radius: 20px; font-size: 11px; font-weight: 500; color: var(--blue);
+    }
+
+    .onto-bar-hint {
+      margin-left: auto; font-size: 10px; color: var(--text-3);
+    }
 
     /* ===== BUTTONS (page-specific overrides) ===== */
     /* .btn / .btn-primary 已由 shared.css 提供 */
@@ -210,20 +301,25 @@
 
     /* ── LEFT PANEL ── */
     .wf-left-panel {
-      width: 250px; flex-shrink: 0;
+      width: 360px; flex-shrink: 0;
       background: var(--panel);
       border-right: 1px solid var(--border);
       backdrop-filter: blur(20px);
       display: flex; flex-direction: column; overflow: hidden;
+      transition: width .25s ease;
     }
+
+    .wf-left-panel.wide { width: 560px; }
 
     .panel-tabs { display: flex; border-bottom: 1px solid var(--border); }
 
     .ptab {
-      flex: 1; padding: 10px 6px;
-      text-align: center; font-size: 11px;
+      flex: 1; padding: 12px 8px;
+      text-align: center; font-size: 12px;
       color: var(--text-muted); cursor: pointer;
       transition: all .2s; border-bottom: 2px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      gap: 5px;
     }
 
     .ptab.active {
@@ -232,65 +328,548 @@
       background: var(--accent-cyan-dim);
     }
 
-    .ai-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 2px 6px;
-      background: linear-gradient(90deg,var(--accent-purple-dim),var(--accent-cyan-dim));
-      border: 1px solid rgba(139,92,246,.3);
-      border-radius: 4px; font-size: 10px; color: var(--accent-purple);
-      margin-left: 4px;
+    /* agent 选择器 */
+    .agent-selector {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
     }
 
-    .panel-body {
-      flex: 1; min-height: 0; overflow-y: auto; padding: 14px;
-      display: flex; flex-direction: column; gap: 10px;
+    .agent-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .2s;
     }
 
-    .panel-body::-webkit-scrollbar { width: 3px; }
-    .panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .agent-trigger:hover { border-color: rgba(255,255,255,.18); }
 
-    .ai-output {
+    .agent-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-avatar {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: #fff;
+    }
+
+    .agent-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .agent-role {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .agent-arrow {
+      font-size: 11px;
+      color: var(--text-muted);
+      transition: transform .2s;
+    }
+
+    .agent-selector.open .agent-arrow { transform: rotate(180deg); }
+
+    .agent-dropdown {
+      display: none;
+      margin-top: 6px;
+      background: rgba(8,12,24,.98);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .agent-selector.open .agent-dropdown { display: block; }
+
+    .agent-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px;
+      cursor: pointer;
+      transition: background .15s;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+
+    .agent-option:last-child { border-bottom: none; }
+
+    .agent-option:hover { background: rgba(6,182,212,.08); }
+
+    .agent-option.active { background: rgba(6,182,212,.12); }
+
+    .agent-option-icon {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text);
+    }
+
+    .agent-option-text { flex: 1; min-width: 0; }
+
+    .agent-option-title {
+      font-size: 12px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .agent-option-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* 聊天区域 */
+    .chat-flow {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .chat-flow::-webkit-scrollbar { width: 4px; }
+    .chat-flow::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .chat-msg {
+      display: flex;
+      gap: 10px;
+      max-width: 92%;
+    }
+
+    .chat-msg.ai { align-self: flex-start; }
+    .chat-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+    .chat-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .chat-msg.ai .chat-avatar {
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+      color: #fff;
+    }
+
+    .chat-msg.user .chat-avatar {
+      background: var(--bg-3);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .chat-bubble {
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text-dim);
+    }
+
+    .chat-msg.ai .chat-bubble {
       background: rgba(139,92,246,.08);
       border: 1px solid rgba(139,92,246,.2);
-      border-radius: 10px; padding: 12px;
-      font-size: 11.5px; line-height: 1.7; color: var(--text-dim);
+      border-top-left-radius: 2px;
     }
 
-    .tag-ai {
-      display: inline-block; padding: 1px 7px; border-radius: 3px;
-      font-size: 10px; font-weight: 700; margin-bottom: 6px;
-      background: var(--accent-purple-dim); color: var(--accent-purple);
-      border: 1px solid rgba(139,92,246,.3);
+    .chat-msg.user .chat-bubble {
+      background: rgba(59,130,246,.12);
+      border: 1px solid rgba(59,130,246,.25);
+      border-top-right-radius: 2px;
+      color: var(--text);
     }
 
-    .warn-item {
-      display: flex; align-items: flex-start; gap: 7px;
+    .chat-bubble strong { color: var(--text); font-weight: 600; }
+
+    .chat-bubble ul {
+      margin: 8px 0 0 16px;
+      padding: 0;
+    }
+
+    .chat-bubble li { margin-bottom: 4px; }
+
+    .chat-example-title {
+      font-size: 11px;
+      color: var(--text);
+      font-weight: 600;
+      margin: 12px 0 6px;
+    }
+
+    .chat-example {
       padding: 8px 10px;
-      background: rgba(245,158,11,.06);
-      border: 1px solid rgba(245,158,11,.15);
-      border-radius: 8px; font-size: 11px; color: var(--text-muted);
-      animation: slideIn .4s ease both;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all .15s;
     }
 
-    .warn-icon { color: var(--accent-amber); flex-shrink: 0; margin-top: 1px; }
-
-    .flow-info {
-      background: rgba(16,185,129,.08);
-      border: 1px solid rgba(16,185,129,.2);
-      border-radius: 10px; padding: 12px;
+    .chat-example:hover {
+      background: rgba(6,182,212,.08);
+      border-color: rgba(6,182,212,.25);
+      color: var(--text);
     }
 
-    .flow-info-title {
-      font-size: 11px; color: var(--accent-green);
-      font-weight: 700; margin-bottom: 4px;
-      display: flex; align-items: center; gap: 6px;
+    .chat-example-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+      font-size: 10px;
+      font-weight: 600;
     }
 
-    .flow-info-title::before {
-      content: '●'; font-size: 8px; animation: blink 2s infinite;
+    .tag-branch { color: var(--rose); }
+    .tag-parallel { color: var(--accent-cyan); }
+    .tag-chain { color: var(--accent-green); }
+    .tag-partial { color: var(--accent-amber); }
+
+    .chat-input-wrap {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      background: var(--panel);
     }
 
-    .flow-info-desc { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+    /* 算法库 / 工作流库 / SKILL / MCP 公共面板 */
+    .lib-panel {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .lib-search {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 12px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .lib-search input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    .lib-search input::placeholder { color: var(--text-muted); }
+
+    .lib-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 12px 12px;
+    }
+
+    .lib-body::-webkit-scrollbar { width: 4px; }
+    .lib-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* 算法库：分类折叠 */
+    .algo-category { margin-bottom: 12px; }
+
+    .algo-cat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .algo-cat-header .arrow {
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform .2s;
+    }
+
+    .algo-category.collapsed .algo-cat-header .arrow { transform: rotate(-90deg); }
+    .algo-category.collapsed .algo-cat-body { display: none; }
+
+    .algo-cat-count {
+      margin-left: auto;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      background: rgba(255,255,255,.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .algo-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(59,130,246,.08);
+      border: 1px solid rgba(59,130,246,.18);
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+
+    .algo-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .algo-card-ver { font-size: 10px; color: var(--text-muted); }
+
+    .algo-card-actions { display: flex; align-items: center; gap: 6px; }
+
+    .algo-card-actions .badge-enable {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: rgba(16,185,129,.15);
+      color: var(--accent-green);
+    }
+
+    .algo-card-actions .btn-add {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .lib-footer {
+      padding: 10px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    /* 工作流库 */
+    .wf-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .wf-list-item:last-child { border-bottom: none; }
+
+    .wf-list-name { color: var(--text); font-weight: 500; }
+
+    .wf-list-btn {
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+
+    /* SKILL / MCP 管理表格 */
+    .asset-table-wrap {
+      flex: 1;
+      overflow: auto;
+      padding: 0 12px 12px;
+    }
+
+    .asset-table-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+    .asset-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .asset-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      min-width: 520px;
+    }
+
+    .asset-table th {
+      text-align: left;
+      padding: 10px 8px;
+      font-weight: 500;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      white-space: nowrap;
+    }
+
+    .asset-table td {
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .asset-table tr:hover td { background: rgba(255,255,255,.02); }
+
+    .asset-table .cell-name { color: var(--text); font-weight: 500; }
+
+    .asset-tag {
+      display: inline-flex;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: rgba(59,130,246,.12);
+      color: var(--blue);
+    }
+
+    .asset-status {
+      display: inline-flex;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+    }
+
+    .asset-status.enabled { background: rgba(16,185,129,.12); color: var(--accent-green); }
+    .asset-status.disabled { background: rgba(245,158,11,.12); color: var(--accent-amber); }
+    .asset-status.draft { background: rgba(100,116,139,.15); color: var(--text-muted); }
+
+    .asset-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .asset-actions button {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+
+    .asset-actions button:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .asset-actions button.danger:hover {
+      border-color: var(--rose);
+      color: var(--rose);
+    }
+
+    .asset-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .asset-pagination span {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      cursor: pointer;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .asset-pagination span.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .chat-input {
+      flex: 1;
+      min-height: 40px;
+      max-height: 120px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 12px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      resize: none;
+      line-height: 1.5;
+    }
+
+    .chat-input:focus { border-color: rgba(6,182,212,.4); }
+
+    .chat-input::placeholder { color: var(--text-muted); }
+
+    .chat-send {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--blue);
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+
+    .chat-send:hover { background: #2563eb; box-shadow: 0 0 12px rgba(59,130,246,.35); }
+
+    .chat-tip {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
 
     .apply-btn {
       width: 100%; padding: 11px;
@@ -1023,6 +1602,24 @@
   <!-- 顶部导航栏 -->
   <script src="./scripts/components.js"></script>
   <script>
+    function gotoExternal(file) {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'NAVIGATE_TO', file: file }, '*');
+      } else {
+        window.location.href = file;
+      }
+    }
+
+    function getQueryParam(key) {
+      return new URLSearchParams(window.location.search).get(key);
+    }
+
+    function goBackToSource() {
+      const from = getQueryParam('from');
+      const target = from ? (from.endsWith('.html') ? from : `${from}.html`) : 'arrange_list.html';
+      gotoExternal(target);
+    }
+
     renderPageTopbar({
       module: 'business',
       pageName: '业务本体编排详情',
@@ -1036,36 +1633,43 @@
     <!-- PAGE HEADER -->
     <div class="page-header">
       <div style="display:flex;align-items:center;gap:10px">
-        <button class="btn btn-ghost btn-sm" onclick="window.location.href='arrange_list.html'">← 返回</button>
+        <button class="btn btn-ghost btn-sm" onclick="goBackToSource()">← 返回</button>
         <div>
           <div style="display:flex;align-items:center;gap:8px">
-            <div class="page-title">业务<span>本体</span></div>
-            <span class="badge badge-blue">风力发电预测模型</span>
+            <div class="page-title">业务本体名字业务本体名字</div>
           </div>
-          <div class="page-subtitle">基于行业本体，构建面向风力发电功率预测的流程应用本体</div>
+          <div class="page-meta-line">
+            <span class="meta-item"><span>👤</span> 创建人：ABC</span>
+            <span class="meta-item"><span>🕐</span> 最后更新：2026-06-06 06:06:06</span>
+          </div>
         </div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost btn-sm" onclick="wf_resetFlow()">↺ 重置流程</button>
-        <button class="btn btn-ghost btn-sm" id="wf-saveBtn" onclick="wf_saveToGraph()">⊞ 保存到 Neo4j</button>
-        <button class="btn btn-ghost btn-sm" id="cp-histBtn" onclick="cp_toggleDrawer()">⏱ 运行历史</button>
-        <button class="btn btn-primary btn-sm" id="wf-runBtn" onclick="wf_runFlow()">▶ 执行流程</button>
+      <div class="toolbar-actions">
+        <button class="btn btn-save" id="wf-saveBtn" onclick="wf_saveToGraph()">💾 保存</button>
+        <button class="btn btn-tool" id="wf-runBtn" onclick="wf_runFlow()">▶ 执行</button>
+        <button class="btn btn-tool" id="cp-histBtn" onclick="cp_toggleDrawer()">⏱ 运行历史</button>
+        <button class="btn btn-tool" onclick="wf_resetFlow()">🗑 清空画布</button>
       </div>
     </div>
 
     <!-- ONTO BAR -->
     <div class="onto-bar">
-      <div class="onto-bar-label">行业本体引用</div>
+      <div class="onto-bar-label">约束本体</div>
       <div class="onto-bar-divider"></div>
       <div id="biz-onto-chips" style="display:flex;gap:6px;flex-wrap:wrap">
         <div class="biz-onto-chip">
-          <span>⚡</span> 风力发电预测本体 v2
+          <span>⚡</span> AI探矿业务
+          <span style="cursor:pointer;color:rgba(148,163,184,.5);margin-left:2px"
+                onclick="this.closest('.biz-onto-chip').remove()">×</span>
+        </div>
+        <div class="biz-onto-chip">
+          <span>⚡</span> AI探矿业务
           <span style="cursor:pointer;color:rgba(148,163,184,.5);margin-left:2px"
                 onclick="this.closest('.biz-onto-chip').remove()">×</span>
         </div>
       </div>
-      <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="openModal('biz-onto-modal')">＋ 添加本体</button>
-      <div class="onto-bar-hint">提示：添加行业本体后，AI 将基于其概念体系自动建议工作流节点</div>
+      <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="openModal('biz-onto-modal')">＋</button>
+      <div class="onto-bar-hint"></div>
     </div>
 
     <!-- WORKFLOW CANVAS CONTAINER -->
@@ -1075,39 +1679,107 @@
         <!-- LEFT PANEL -->
         <div class="wf-left-panel">
           <div class="panel-tabs">
-            <div class="ptab active">AI 助手</div>
-            <div class="ptab">节点库</div>
-            <div class="ptab">历史 <span class="ai-badge">AI</span></div>
+            <div class="ptab active" data-tab="assistant" onclick="switchPanelTab('assistant')">智能助手</div>
+            <div class="ptab" data-tab="algo" onclick="switchPanelTab('algo')">算法库</div>
+            <div class="ptab" data-tab="workflow" onclick="switchPanelTab('workflow')">工作流库</div>
+            <div class="ptab" data-tab="skill" onclick="switchPanelTab('skill')">SKILL</div>
+            <div class="ptab" data-tab="mcp" onclick="switchPanelTab('mcp')">MCP</div>
           </div>
-          <div class="panel-body">
-            <div class="ai-output">
-              <div class="tag-ai">● Claude AI</div>
-              <div id="wf-aiText"></div>
+
+          <div id="panel-content">
+
+          <div class="agent-selector" id="agent-selector">
+            <div class="agent-trigger" onclick="toggleAgentDropdown()">
+              <div class="agent-info">
+                <div class="agent-avatar">AI</div>
+                <div>
+                  <div class="agent-name" id="agent-name">本体专家</div>
+                  <div class="agent-role">agent</div>
+                </div>
+              </div>
+              <div class="agent-arrow">▼</div>
             </div>
-            <div class="flow-info">
-              <div class="flow-info-title">流程概览</div>
-              <div class="flow-info-desc">
-                以协议、规范、因果链路为知识来源，通过 RAG 方法增强语义检索；
-                结合多源气象数据经过数据处理后，送入星阙大模型完成风速预测，
-                最终输出功率预测结果，形成完整闭环。
+            <div class="agent-dropdown" id="agent-dropdown">
+              <div class="agent-option active" data-value="ontology" onclick="selectAgent('ontology')">
+                <div class="agent-option-icon">🧠</div>
+                <div class="agent-option-text">
+                  <div class="agent-option-title">本体专家</div>
+                  <div class="agent-option-desc">根据本体帮你自动设计工作流画布</div>
+                </div>
+              </div>
+              <div class="agent-option" data-value="arrange" onclick="selectAgent('arrange')">
+                <div class="agent-option-icon">🛠</div>
+                <div class="agent-option-text">
+                  <div class="agent-option-title">服务编排</div>
+                  <div class="agent-option-desc">优化流程节点与执行顺序</div>
+                </div>
+              </div>
+              <div class="agent-option" data-value="reverse" onclick="selectAgent('reverse')">
+                <div class="agent-option-icon">🔄</div>
+                <div class="agent-option-text">
+                  <div class="agent-option-title">逆向推理</div>
+                  <div class="agent-option-desc">从目标输出反向推导所需节点</div>
+                </div>
               </div>
             </div>
-            <button class="apply-btn" onclick="wf_applyToCanvas()">✦ 应用到画布</button>
-            <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
-              <span style="color:var(--accent-amber)">▲</span> 建议
+          </div>
+
+          <div class="chat-flow" id="chat-flow">
+            <div class="chat-msg ai">
+              <div class="chat-avatar">AI</div>
+              <div class="chat-bubble">
+                你好！我是 <strong>本体专家</strong> 助手。<br>
+                你可以用自然语言描述你需要的流程，例如：
+              </div>
             </div>
-            <div class="warn-item" style="animation-delay:.1s">
-              <span class="warn-icon">⚠</span>
-              <span>RAG方法 → 数据处理：知识向量与时序特征融合方式待确认</span>
+
+            <div class="chat-example-title">条件分支类（根据灾害类型动态选择）</div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-branch">● 条件分支</div>
+              <div>"某地发生6.5级地震，需要启动什么响应？"</div>
             </div>
-            <div class="warn-item" style="animation-delay:.2s">
-              <span class="warn-icon">⚠</span>
-              <span>多源数据接入 → 数据处理：缺失值填充策略需复审</span>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-branch">● 条件分支</div>
+              <div>"化工厂发生泄漏事故，影响周边500人"</div>
             </div>
-            <div class="warn-item" style="animation-delay:.3s">
-              <span class="warn-icon">⚠</span>
-              <span>星阙大模型 → 功率预测输出：模型置信区间缺少超时处理</span>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-branch">● 条件分支</div>
+              <div>"台风即将登陆，预计影响10万人口"</div>
             </div>
+
+            <div class="chat-example-title">并行协同类（多部门同时响应）</div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-parallel">● 并行协同</div>
+              <div>"灾害等级已评估为红色预警，立即启动全面响应"</div>
+            </div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-parallel">● 并行协同</div>
+              <div>"已确认为重大洪水灾害，需要同时开展救援和后勤保障"</div>
+            </div>
+
+            <div class="chat-example-title">链式依赖类（按数据依赖顺序编排）</div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-chain">● 链式依赖</div>
+              <div>"从灾害发生到制定重建规划的完整流程"</div>
+            </div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-chain">● 链式依赖</div>
+              <div>"救援结束后，如何评估损失并制定恢复计划？"</div>
+            </div>
+
+            <div class="chat-example-title">部分流程类（只需要特定环节）</div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-partial">● 部分流程</div>
+              <div>"已收到灾害报告，我只需要完成预警发布"</div>
+            </div>
+          </div>
+
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chat-input" rows="1" placeholder="描述你需要的流程..." onkeydown="handleChatInputKey(event)"></textarea>
+            <button class="chat-send" onclick="sendChat()">➤</button>
+          </div>
+
+          <div class="chat-tip">Enter 发送，Shift+Enter 换行</div>
           </div>
         </div>
 
@@ -2088,6 +2760,317 @@
       setTimeout(() => { wf_buildSVG(); wf_animT0 = null; }, 160);
     }
 
+    // ── Agent 选择器 ──
+    function toggleAgentDropdown() {
+      const sel = document.getElementById('agent-selector');
+      sel.classList.toggle('open');
+    }
+
+    function selectAgent(value) {
+      const agents = {
+        ontology: { name: '本体专家', icon: '🧠', desc: '根据本体帮你自动设计工作流画布' },
+        arrange:  { name: '服务编排', icon: '🛠', desc: '优化流程节点与执行顺序' },
+        reverse:  { name: '逆向推理', icon: '🔄', desc: '从目标输出反向推导所需节点' }
+      };
+      const a = agents[value];
+      if (!a) return;
+      document.getElementById('agent-name').textContent = a.name;
+      document.querySelectorAll('.agent-option').forEach(el => el.classList.toggle('active', el.dataset.value === value));
+      document.getElementById('agent-selector').classList.remove('open');
+
+      // 更新欢迎语
+      const flow = document.getElementById('chat-flow');
+      const firstMsg = flow.querySelector('.chat-msg.ai .chat-bubble');
+      if (firstMsg) {
+        firstMsg.innerHTML = `你好！我是 <strong>${a.name}</strong> 助手。<br>${a.desc}。你可以用自然语言描述你需要的流程，例如：`;
+      }
+    }
+
+    // ── 聊天交互 ──
+    function handleChatInputKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChat();
+      }
+    }
+
+    function sendExample(el) {
+      const text = el.querySelector('div:last-child').textContent;
+      appendUserMsg(text);
+      respondWithAI(text);
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      input.style.height = 'auto';
+      appendUserMsg(text);
+      respondWithAI(text);
+    }
+
+    function appendUserMsg(text) {
+      const flow = document.getElementById('chat-flow');
+      const msg = document.createElement('div');
+      msg.className = 'chat-msg user';
+      msg.innerHTML = `<div class="chat-avatar">我</div><div class="chat-bubble">${escapeHtml(text)}</div>`;
+      flow.appendChild(msg);
+      flow.scrollTop = flow.scrollHeight;
+    }
+
+    function appendAIMsg(html) {
+      const flow = document.getElementById('chat-flow');
+      const msg = document.createElement('div');
+      msg.className = 'chat-msg ai';
+      msg.innerHTML = `<div class="chat-avatar">AI</div><div class="chat-bubble">${html}</div>`;
+      flow.appendChild(msg);
+      flow.scrollTop = flow.scrollHeight;
+      return msg.querySelector('.chat-bubble');
+    }
+
+    function respondWithAI(text) {
+      const agentName = document.getElementById('agent-name').textContent;
+      setTimeout(() => {
+        const reply = `收到你的描述。作为 <strong>${agentName}</strong>，我已识别出这是一个<strong>应急响应流程</strong>需求，包含灾害信息接报、灾害类型识别、灾害等级评估、预警信息发布 4 个关键节点。点击画布右上角「▶ 执行」即可运行。`;
+        const bubble = appendAIMsg(reply);
+        typewriteBubble(bubble, reply);
+      }, 400);
+    }
+
+    function typewriteBubble(bubble, html) {
+      bubble.innerHTML = '';
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      const plain = temp.textContent;
+      let i = 0;
+      function next() {
+        if (i <= plain.length) {
+          bubble.innerHTML = html.slice(0, html.indexOf(plain) >= 0 ? html.indexOf(plain) + i : i);
+          i++;
+          setTimeout(next, 12);
+        } else {
+          bubble.innerHTML = html;
+        }
+      }
+      next();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;' }[m]));
+    }
+
+    // ── 左侧面板标签切换 ──
+    let ASSISTANT_HTML = null;
+
+    function getPanelContent(tab) {
+      if (tab === 'assistant') {
+        if (!ASSISTANT_HTML) ASSISTANT_HTML = document.getElementById('panel-content').innerHTML;
+        return ASSISTANT_HTML;
+      }
+      if (tab === 'algo') return renderAlgoLibrary();
+      if (tab === 'workflow') return renderWorkflowLibrary();
+      if (tab === 'skill') return renderAssetManager('SKILL', SKILL_DATA);
+      if (tab === 'mcp') return renderAssetManager('MCP', MCP_DATA);
+      return '';
+    }
+
+    function switchPanelTab(tab) {
+      const panel = document.querySelector('.wf-left-panel');
+      const content = document.getElementById('panel-content');
+
+      document.querySelectorAll('.ptab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+
+      // SKILL/MCP 用更宽面板
+      if (tab === 'skill' || tab === 'mcp') {
+        panel.classList.add('wide');
+      } else {
+        panel.classList.remove('wide');
+      }
+
+      content.innerHTML = getPanelContent(tab);
+
+      // 重新绑定 agent 事件（如果回到 assistant）
+      if (tab === 'assistant') {
+        bindAgentEvents();
+      }
+    }
+
+    function bindAgentEvents() {
+      const input = document.getElementById('chat-input');
+      if (input) {
+        input.addEventListener('keydown', handleChatInputKey);
+      }
+    }
+
+    function renderAlgoLibrary() {
+      const categories = [
+        { name: '优化分配', items: [
+          { name: 'AGC机组级功率分配', ver: 'v1.0.0' }
+        ]},
+        { name: '深度学习', items: [
+          { name: 'BiLSTM超短期风速预测', ver: 'v1.0.0' },
+          { name: 'GRU风功率映射', ver: 'v1.0.0' }
+        ]},
+        { name: '统计建模', items: [
+          { name: 'Copula多变量相关建模', ver: 'v1.0.0' }
+        ]},
+        { name: '流程触发', items: [
+          { name: '灾害预警阈值触发', ver: 'v1.0.0' }
+        ]}
+      ];
+
+      return `
+        <div class="lib-panel">
+          <div class="lib-search">
+            <span>🔍</span>
+            <input type="text" placeholder="搜索算法...">
+          </div>
+          <div class="lib-body">
+            ${categories.map(cat => `
+              <div class="algo-category">
+                <div class="algo-cat-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                  <span class="arrow">▼</span>
+                  <span>${cat.name}</span>
+                  <span class="algo-cat-count">${cat.items.length}</span>
+                </div>
+                <div class="algo-cat-body">
+                  ${cat.items.map(it => `
+                    <div class="algo-card">
+                      <div>
+                        <div class="algo-card-title">${it.name}</div>
+                        <div class="algo-card-ver">${it.ver}</div>
+                      </div>
+                      <div class="algo-card-actions">
+                        <span class="badge-enable">启用</span>
+                        <button class="btn-add">+</button>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="lib-footer">拖拽算法到画布中</div>
+        </div>
+      `;
+    }
+
+    function renderWorkflowLibrary() {
+      const items = [
+        '恢复重建流程 (v1.0.0) · 3个算法',
+        '风电场风速预测简单场景 (v1.0.0) · 2个算法',
+        '风电场超短期出力预测流程 (v2.0.0) · 7个算法',
+        '风电机组疲劳评估流程 (v2.0.0) · 3个算法',
+        '风况分型与异常识别流程 (v2.0.0) · 3个算法',
+        '川西复杂地形降尺度高精度风速预测流程 (v1.0.0) · 4个算法',
+        '完整应急响应流程 (v1.0.0) · 12个算法',
+        '并行响应流程 (v1.0.0) · 5个算法',
+        '简单线性测试流程 (v1.0.0) · 4个算法',
+        '并行融合测试流程 (v1.0.0) · 8个算法',
+        '条件分支测试流程 (v1.0.0) · 7个算法',
+        '综合测试流程_条件并行融合 (v1.0.0) · 11个算法',
+        '风电超短期滚动预测与爬坡预警流程 (v2.0.0) · 6个算法',
+        '机组健康管理与智能检修流程 (v2.0.0) · 7个算法',
+        '风电参与日前市场申报流程 (v2.0.0) · 5个算法'
+      ];
+
+      return `
+        <div class="lib-panel">
+          <div class="lib-search">
+            <span>🔍</span>
+            <input type="text" placeholder="搜索算法...">
+          </div>
+          <div class="lib-body">
+            ${items.map(it => `
+              <div class="wf-list-item">
+                <span class="wf-list-name">${it}</span>
+                <button class="wf-list-btn">使用</button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="lib-footer">拖拽流程到画布中</div>
+        </div>
+      `;
+    }
+
+    const SKILL_DATA = [
+      { id: 'skill-001', name: '气象要素提取', protocol: 'http', desc: '从多源气象数据中提取关键要素', status: 'enabled' },
+      { id: 'skill-002', name: '功率曲线拟合', protocol: 'http', desc: '根据历史数据拟合风机功率曲线', status: 'disabled' },
+      { id: 'skill-003', name: '灾害阈值判定', protocol: 'http', desc: '根据灾害等级规则判定响应级别', status: 'enabled' },
+      { id: 'skill-004', name: '报告生成', protocol: 'http', desc: '自动生成流程执行审计报告', status: 'draft' },
+      { id: 'skill-005', name: '数据质量检查', protocol: 'http', desc: '检查输入数据完整性与一致性', status: 'enabled' },
+      { id: 'skill-006', name: '预警信息发布', protocol: 'http', desc: '向指定渠道发布预警信息', status: 'disabled' }
+    ];
+
+    const MCP_DATA = [
+      { id: 'baidu-maps', name: '百度地图', protocol: 'stdio', desc: '地图与地理编码服务', status: 'disabled' },
+      { id: 'plinth-weather-mcp', name: '测试02', protocol: 'stdio', desc: '测试用气象 MCP 服务', status: 'disabled' },
+      { id: 'chuk-mcp-open-meteo', name: '测试', protocol: 'stdio', desc: 'Open-Meteo 数据访问', status: 'disabled' },
+      { id: 'weather-forecast', name: '天气预报', protocol: 'stdio', desc: '全球各地当前天气状况和预报', status: 'enabled' },
+      { id: 'weather-mcp', name: '测试03', protocol: 'stdio', desc: '本地气象数据 MCP 服务', status: 'draft' },
+      { id: 'weather_plus', name: 'weather_plus', protocol: 'stdio', desc: '增强型天气预报服务', status: 'enabled' }
+    ];
+
+    function renderAssetManager(title, data) {
+      const rows = data.map(r => `
+        <tr>
+          <td><span class="cell-name">${r.id}</span></td>
+          <td><span class="cell-name">${r.name}</span></td>
+          <td><span class="asset-tag">${r.protocol}</span></td>
+          <td style="white-space:normal;min-width:160px">${r.desc}</td>
+          <td><span class="asset-status ${r.status}">${r.status.toUpperCase()}</span></td>
+          <td>
+            <div class="asset-actions">
+              <button>探测</button>
+              <button>编辑</button>
+              <button>${r.status === 'enabled' ? '禁用' : '启用'}</button>
+              <button class="danger">删除</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="lib-panel">
+          <div class="lib-search">
+            <span>🔍</span>
+            <input type="text" placeholder="搜索 server_id / 名称 / 描述">
+            <button class="wf-list-btn" style="margin-left:auto">按状态筛选 ▾</button>
+            <button class="wf-list-btn">⟳ 刷新</button>
+            <button class="wf-list-btn" style="background:var(--blue);color:#fff;border-color:var(--blue)">+ 新建 ${title} server</button>
+          </div>
+          <div class="asset-table-wrap">
+            <table class="asset-table">
+              <thead>
+                <tr>
+                  <th>${title.toLowerCase()}_id</th>
+                  <th>名称</th>
+                  <th>协议</th>
+                  <th>描述</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          <div class="asset-pagination">
+            <span>‹</span>
+            <span class="active">1</span>
+            <span>›</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // agent 外部点击关闭
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.agent-selector')) {
+        document.getElementById('agent-selector').classList.remove('open');
+      }
+    });
+
     // ── INIT ──
     window.addEventListener('resize', () => {
       clearTimeout(window._resizeTimer);
@@ -2100,11 +3083,7 @@
       wf_rafId = requestAnimationFrame(wf_loop);
       wf_scaleCanvas();
 
-      const aiTextEl = document.getElementById('wf-aiText');
-      if (aiTextEl) {
-        wf_typewrite(aiTextEl,
-          '**流程特点：**\n\n知识增强：协议、规范与因果链路经 RAG 检索后为大模型提供结构化语义背景。\n\n多源融合：NWP预报与SCADA实时数据在数据处理节点完成时序对齐与特征提取。\n\n大模型预测：星阙大模型结合语义上下文完成高精度风速及功率输出预测，形成完整闭环。');
-      }
+      // 左侧智能助手内容由 HTML 静态呈现，无需初始化打字机
     }, 400);
 
     // ══════════════════════════════════════════════

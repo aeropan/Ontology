@@ -15,3 +15,8 @@ README.md
 新功能页面融合手册.md
 PRD.docx
 compress_project.py
+
+# 临时与参考文件
+temp/
+reference/
+.claude/

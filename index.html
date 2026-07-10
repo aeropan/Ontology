@@ -147,6 +147,89 @@ body {
   flex-shrink: 0;
 }
 
+.btn-settings {
+  margin-left: auto;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-settings svg { width: 14px; height: 14px; }
+.btn-settings:hover { background: var(--surface); color: var(--text-1); }
+
+/* ── 设置抽屉（覆盖左侧边栏） ── */
+.settings-drawer {
+  position: absolute;
+  inset: 0;
+  width: 200px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.2s ease, opacity 0.2s ease, visibility 0.2s;
+}
+.settings-drawer.open {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+}
+.settings-drawer-top {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: color 0.15s;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.settings-back:hover { color: var(--text1); }
+.settings-back svg { width: 14px; height: 14px; }
+.settings-drawer-label {
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px 16px 4px;
+}
+.settings-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+}
+.settings-drawer-item:hover { background: var(--surface); color: var(--text1); }
+.settings-drawer-item.active {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border-left-color: var(--blue);
+}
+.settings-drawer-item svg {
+  width: 14px; height: 14px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+.settings-drawer-item.active svg { opacity: 1; }
+
 /* ── 主区域 ── */
 .main {
   flex: 1;
@@ -241,7 +324,7 @@ body {
 
   <div class="nav-section">
     <div class="nav-label">服务中心</div>
-    <div class="nav-item" id="nav-biz" onclick="navigate('arrange_list.html', null, ['业务本体生成'])">
+    <div class="nav-item" id="nav-biz" onclick="navigate('arrange_select.html', null, ['业务本体生成'])">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="5" height="5" rx="1"/><rect x="10" y="4" width="5" height="5" rx="1"/><path d="M6 6.5h4M8 4V2M8 9v2.5M4 11.5c0 1 .5 2 2 2h4c1.5 0 2-1 2-2"/></svg>
       业务本体生成
     </div>
@@ -271,6 +354,32 @@ body {
     <div class="user-row">
       <div class="avatar">工</div>
       <span>图谱工程师</span>
+      <button class="btn-settings" onclick="openSettingsDrawer()" title="系统设置">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- 设置抽屉（覆盖侧边栏） -->
+  <div class="settings-drawer" id="settings-drawer">
+    <div class="settings-drawer-top">
+      <button class="settings-back" onclick="closeSettingsDrawer()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+        返回导航
+      </button>
+    </div>
+    <div class="settings-drawer-label">设置模块</div>
+    <div class="settings-drawer-item active" data-section="llm" onclick="goToSettingSection('llm')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="12" height="8" rx="2"/><path d="M5 6V4a3 3 0 016 0v2"/><circle cx="8" cy="10" r="1.5"/></svg>
+      大模型管理
+    </div>
+    <div class="settings-drawer-item" data-section="params" onclick="goToSettingSection('params')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h2M11 8h2M8 3v2M8 11v2M4.64 4.64l1.42 1.42M9.94 9.94l1.42 1.42M4.64 11.36l1.42-1.42M9.94 6.06l1.42-1.42"/><circle cx="8" cy="8" r="2.5"/></svg>
+      全局参数配置
+    </div>
+    <div class="settings-drawer-item" data-section="library" onclick="goToSettingSection('library')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="5" rx="5" ry="2"/><path d="M3 5v3c0 1.1 2.2 2 5 2s5-.9 5-2V5"/><path d="M3 10v2c0 1.1 2.2 2 5 2s5-.9 5-2v-2"/></svg>
+      参考数据管理
     </div>
   </div>
 </div>
@@ -300,15 +409,58 @@ const NAV_MAP = {
   'nav-onto-overview':  { file: 'ontology_overview.html',    page: null, crumbs: ['本体中心'] },
   'nav-onto-element':  { file: 'graph_list.html',         page: null, crumbs: ['本体中心', '要素本体'] },
   'nav-onto-causal':   { file: 'graph_list_causal.html',  page: null, crumbs: ['本体中心', '因果本体'] },
-  'nav-biz':            { file: 'arrange_list.html',   page: null,             crumbs: ['业务本体生成'] },
+  'nav-biz':            { file: 'arrange_select.html', page: null,             crumbs: ['业务本体生成'] },
   'nav-industry-v2':      { file: 'IndustryInsights_list.html', page: null, crumbs: ['行业洞察'] },
   'nav-industry':         { file: 'data_explorer.html',         page: null, crumbs: ['备份', '行业洞察（旧版备份）'] },
   'nav-setting-backup':   { file: 'setting_backup.html',        page: null, crumbs: ['备份', '数据分析设置'] },
   'nav-rag':              { file: 'RAGrule_list.html',          page: null, crumbs: ['RAG增强管理'] },
+  'nav-system-setting':   { file: 'system_setting.html',        page: null, crumbs: ['系统设置'] },
 };
 
 let currentFile = 'main.html';
+let currentPage = null;
 let toastTimer = null;
+let lastNavBeforeSettings = null; // 打开设置抽屉前记住当前页面，关闭后恢复
+
+// ── 设置抽屉 ──────────────────────────────────
+function openSettingsDrawer() {
+  lastNavBeforeSettings = {
+    file: currentFile,
+    page: currentPage,
+    activeId: document.querySelector('.nav-item.active, .nav-sub-item.active')?.id || ''
+  };
+  document.getElementById('settings-drawer').classList.add('open');
+  // 打开抽屉的同时默认进入大模型管理
+  goToSettingSection('llm');
+}
+
+function closeSettingsDrawer() {
+  document.getElementById('settings-drawer').classList.remove('open');
+  // 返回到进入设置前的页面
+  if (lastNavBeforeSettings) {
+    navigate(lastNavBeforeSettings.file, lastNavBeforeSettings.page, []);
+  }
+}
+
+function goToSettingSection(section) {
+  // 更新抽屉内高亮
+  document.querySelectorAll('.settings-drawer-item').forEach(el => el.classList.remove('active'));
+  document.querySelector('.settings-drawer-item[data-section="' + section + '"]').classList.add('active');
+
+  // 加载设置页面并传递 section 参数
+  const frame = document.getElementById('content-frame');
+  if (currentFile !== 'system_setting.html') {
+    frame.style.opacity = '0';
+    frame.src = 'system_setting.html?section=' + section;
+    currentFile = 'system_setting.html';
+    frame.onload = function() {
+      frame.style.opacity = '1';
+      frame.onload = null;
+    };
+  } else {
+    frame.contentWindow.postMessage({ type: 'GOTO_SETTING_SECTION', section: section }, '*');
+  }
+}
 
 // ── 核心导航函数 ──────────────────────────────
 function navigate(file, page, crumbs) {
@@ -320,6 +472,7 @@ function navigate(file, page, crumbs) {
     // main.html 支持 ?page= 参数在 DOMContentLoaded 时直接定位目标子页面
     frame.src = (file === 'main.html' && page) ? `${file}?page=${page}` : file;
     currentFile = file;
+    currentPage = page;
     frame.onload = function() {
       // URL 参数路由已在 DOMContentLoaded 中处理，无需再发 sendPageCmd
       // （发了反而会触发 goPage 二次调用，产生闪烁）
@@ -328,6 +481,7 @@ function navigate(file, page, crumbs) {
     };
   } else {
     // 同一文件内切换页面，直接发消息
+    currentPage = page;
     if (page) sendPageCmd(page);
   }
 
@@ -339,6 +493,11 @@ function navigate(file, page, crumbs) {
       if (el) el.classList.add('active');
     }
   });
+
+  // 切换其他页面时自动关闭设置抽屉
+  if (file !== 'system_setting.html') {
+    document.getElementById('settings-drawer').classList.remove('open');
+  }
 }
 
 // ── 向 iframe 发送页面切换指令 ────────────────
@@ -361,6 +520,12 @@ window.addEventListener('message', function(e) {
   // 子页面请求 Shell 代为导航（避免 iframe 内部 location.href 绕过 opacity 遮罩）
   if (e.data.type === 'NAVIGATE_TO') {
     navigate(e.data.file, e.data.page || null, e.data.crumbs || []);
+    return;
+  }
+
+  // 设置页请求关闭抽屉并返回原页面
+  if (e.data.type === 'CLOSE_SETTINGS') {
+    closeSettingsDrawer();
     return;
   }
 

@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>业务服务编排 · 本体智见平台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
+  <script src="scripts/components.js"></script>
+  <style>
+    /* ============================================================
+       页面级样式：业务服务编排向导
+       严格复用 shared.css 变量，不重新定义同名 token
+       ============================================================ */
+    :root {
+      /* 仅补充本页需要的局部变量（避免与 shared.css 冲突） */
+      --arrange-step-dot-size: 28px;
+    }
+
+    html, body { height: 100%; }
+    body {
+      background: var(--bg-0);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 主容器 */
+    .arrange-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    /* 顶部步骤条 */
+    .stepper-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-0);
+      flex-shrink: 0;
+    }
+    .stepper-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+    .stepper-dot {
+      width: var(--arrange-step-dot-size);
+      height: var(--arrange-step-dot-size);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      transition: all var(--transition);
+    }
+    .stepper-item.active { color: var(--text-1); }
+    .stepper-item.active .stepper-dot {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .stepper-item.done { color: var(--text-2); }
+    .stepper-item.done .stepper-dot {
+      background: var(--green-dim);
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .stepper-line {
+      width: 60px;
+      height: 1px;
+      background: var(--border-1);
+      margin: 0 4px;
+    }
+
+    /* 内容区 */
+    .arrange-content {
+      flex: 1;
+      padding: 24px;
+    }
+
+    /* 步骤面板 */
+    .step-panel {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+    .step-panel.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* 步骤标题区 */
+    .step-header {
+      margin-bottom: 20px;
+    }
+    .step-badge {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      margin-bottom: 10px;
+    }
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1);
+    }
+    .step-title svg {
+      width: 16px; height: 16px;
+      color: var(--cyan);
+    }
+
+    /* 卡片 / 区块通用 */
+    .card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 14px;
+    }
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-bottom: 14px;
+    }
+
+    /* 业务搜索框 */
+    .biz-search-wrap {
+      position: relative;
+    }
+    .biz-search {
+      position: relative;
+    }
+    .biz-search-input {
+      width: 100%;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-md);
+      padding: 10px 12px 10px 36px;
+      font-size: 13px;
+      color: var(--text-1);
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .biz-search-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px var(--blue-dim);
+    }
+    .biz-search-input::placeholder { color: var(--text-3); }
+    .biz-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-3);
+      font-size: 13px;
+    }
+    .biz-search-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: var(--bg-4);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-md);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 100;
+    }
+    .biz-search-dropdown.open { display: block; }
+    .biz-search-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-1);
+      transition: background var(--transition);
+    }
+    .biz-search-item:last-child { border-bottom: none; }
+    .biz-search-item:hover {
+      background: var(--blue-dim);
+    }
+    .biz-search-item-info { min-width: 0; }
+    .biz-search-item-title {
+      font-size: 13px;
+      color: var(--text-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .biz-search-item-desc {
+      font-size: 11px;
+      color: var(--text-2);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .biz-search-item-label {
+      flex-shrink: 0;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--blue-dim);
+      color: var(--blue);
+    }
+    .biz-search-empty {
+      padding: 14px;
+      font-size: 12px;
+      color: var(--text-3);
+      text-align: center;
+    }
+
+    /* 领域卡片 */
+    .domain-grid {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .domain-card {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 20px 12px;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .domain-card:hover {
+      border-color: var(--border-2);
+      background: var(--bg-3);
+    }
+    .domain-card.selected {
+      border-color: var(--blue);
+      background: var(--blue-dim);
+      box-shadow: 0 0 0 2px var(--blue-dim);
+    }
+    .domain-card.create {
+      flex: 0 0 150px;
+      margin-left: auto;
+      background: transparent;
+      border: 1px dashed var(--border-2);
+      color: var(--text-2);
+    }
+    .domain-card.create:hover {
+      border-color: var(--blue);
+      background: var(--blue-dim);
+      color: var(--text-1);
+    }
+    .domain-card.create .domain-name {
+      color: var(--text-2);
+    }
+    .domain-card.create:hover .domain-name {
+      color: var(--text-1);
+    }
+    .domain-create-divider {
+      width: 1px;
+      background: var(--border-1);
+      margin: 10px 4px;
+      opacity: 0.6;
+    }
+    .domain-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .domain-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1);
+    }
+    .domain-desc {
+      font-size: 11px;
+      color: var(--text-2);
+      text-align: center;
+    }
+
+    /* 子类卡片 */
+    .subtype-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .subtype-section h4 {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-1);
+    }
+    .subtype-section h4 strong {
+      color: var(--blue);
+      font-weight: 600;
+      margin-left: 4px;
+    }
+    .subtype-count {
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .subtype-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .subtype-card {
+      position: relative;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .subtype-card:hover { border-color: var(--border-2); }
+    .subtype-card.selected {
+      border-color: var(--blue);
+      background: var(--blue-dim);
+      box-shadow: 0 0 0 2px var(--blue-dim);
+    }
+    .subtype-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .subtype-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-1);
+      line-height: 1.4;
+    }
+    .subtype-desc {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-bottom: 14px;
+      line-height: 1.5;
+      min-height: 36px;
+    }
+    .subtype-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .subtype-meta {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--cyan);
+    }
+    .subtype-action {
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-4);
+      border: 1px solid var(--border-2);
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .subtype-action:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: var(--blue-dim);
+    }
+    /* 顶部栏 */
+    .page-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: var(--bg-0);
+      border-bottom: 1px solid var(--border-1);
+      flex-shrink: 0;
+    }
+
+    /* Step 2 模板 header */
+    .template-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .template-title-wrap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .template-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-1);
+    }
+    .template-version {
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--cyan-dim);
+      color: var(--cyan);
+    }
+    .template-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 8px;
+    }
+    .template-meta .link {
+      color: var(--green);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .template-meta .link:hover { text-decoration: underline; }
+    .template-actions { display: flex; gap: 10px; }
+
+    /* Step 2 编排工作区：左侧操作栏 + 右侧画布 */
+    .template-workspace {
+      display: flex;
+      gap: 12px;
+      height: calc(100vh - 200px);
+      min-height: 420px;
+      overflow: hidden;
+    }
+    .template-workspace .flow-card { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+    .template-sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .template-sidebar-header {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--border-1);
+      flex-wrap: wrap;
+    }
+    .constraint-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-2);
+      color: var(--text-2);
+    }
+    .constraint-tag.active {
+      background: var(--purple-dim);
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+    .sidebar-tabs {
+      display: flex;
+      gap: 2px;
+      padding: 8px 10px 0;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-1);
+    }
+    .sidebar-tab {
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--text-2);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+    .sidebar-tab:hover { color: var(--text-1); }
+    .sidebar-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .sidebar-search {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 10px 12px;
+      padding: 6px 10px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--text-2);
+    }
+    .sidebar-search input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-1);
+      font-size: 12px;
+      width: 100%;
+      font-family: inherit;
+    }
+    .sidebar-search input::placeholder { color: var(--text-3); }
+    .sidebar-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 10px 10px;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--transition);
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .sidebar-item:hover { background: var(--bg-3); }
+    .sidebar-item-info { flex: 1; min-width: 0; }
+    .sidebar-item-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar-item-meta {
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .sidebar-item-btn {
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: var(--bg-4);
+      border: 1px solid var(--border-2);
+      color: var(--text-2);
+      cursor: pointer;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .sidebar-item-btn:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: var(--blue-dim);
+    }
+
+    /* 右侧画布 */
+    .flow-canvas {
+      position: relative;
+      flex: 1;
+      overflow: auto;
+      background: var(--bg-1);
+    }
+    .canvas-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-1);
+      background: var(--bg-2);
+      flex-shrink: 0;
+    }
+    .canvas-area {
+      position: relative;
+      flex: 1;
+      min-width: 720px;
+      min-height: 360px;
+      overflow: auto;
+    }
+    .flow-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border-1) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-1) 1px, transparent 1px);
+      background-size: 24px 24px;
+      opacity: 0.25;
+    }
+    .flow-nodes-layer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+    }
+    .flow-node {
+      position: absolute;
+      width: 150px;
+      min-height: 92px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-md);
+      padding: 14px 12px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      cursor: grab;
+      transition: transform var(--transition), box-shadow var(--transition);
+      user-select: none;
+    }
+    .flow-node::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
+      border-radius: 0 3px 3px 0;
+      background: currentColor;
+    }
+    .flow-node:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .flow-node-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .flow-node-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      background: rgba(255,255,255,0.06);
+    }
+    .flow-node-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-1);
+      line-height: 1.4;
+    }
+    .flow-node-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      color: var(--text-2);
+      background: rgba(255,255,255,0.05);
+      width: fit-content;
+      margin-top: auto;
+    }
+    .flow-node-status::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+    .flow-arrows {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .flow-arrows path {
+      fill: none;
+      stroke: var(--border-2);
+      stroke-width: 1.5;
+      marker-end: url(#arrowhead);
+    }
+
+    /* Step 3 结果 */
+    .result-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .result-item {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .result-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--blue);
+      font-family: var(--font-mono);
+    }
+    .result-label {
+      font-size: 11px;
+      color: var(--text-2);
+      margin-top: 4px;
+    }
+
+    .flow-preview-btn {
+      position: absolute;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    /* 最近使用模块 */
+    .recent-section {
+      flex-shrink: 0;
+      padding: 20px 24px 8px;
+      background: var(--bg-0);
+    }
+    .recent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .recent-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1);
+    }
+    .recent-title svg {
+      width: 16px; height: 16px;
+      color: var(--cyan);
+    }
+    .recent-more {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--cyan);
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+    .recent-more:hover { text-decoration: underline; }
+    .recent-more svg {
+      width: 12px; height: 12px;
+    }
+    .recent-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+    }
+    .recent-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      transition: all 0.15s;
+    }
+    .recent-card:hover {
+      border-color: var(--border-2);
+      background: var(--bg-3);
+    }
+    .recent-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .recent-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-1);
+      line-height: 1.4;
+    }
+    .recent-card-desc {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .recent-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .recent-card-time {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-3);
+    }
+    .recent-card-time svg {
+      width: 12px; height: 12px;
+    }
+    .recent-card-action {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--cyan);
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+    .recent-card-action:hover { text-decoration: underline; }
+    .recent-card-action svg {
+      width: 12px; height: 12px;
+    }
+
+    /* 响应式 */
+    @media (max-width: 980px) {
+      .template-workspace { flex-direction: column; height: auto; }
+      .template-sidebar { width: 100%; height: 320px; }
+      .canvas-area { min-width: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="arrange-wrap">
+    <div class="page-topbar">
+      <nav class="topbar-breadcrumb">
+        <span class="topbar-module" onclick="gotoExternal('arrange_list.html')">业务本体生成</span>
+        <span class="topbar-sep">›</span>
+        <span class="topbar-current">业务服务编排</span>
+      </nav>
+    </div>
+    <!-- 最近使用 -->
+    <div class="recent-section">
+      <div class="recent-header">
+        <div class="recent-title">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 8a4.5 4.5 0 109 0 4.5 4.5 0 00-9 0z"/><path d="M3.5 8V2.5"/><path d="M3.5 8h2.5"/></svg>
+          最近使用 · 任务概览
+        </div>
+        <button class="recent-more" onclick="gotoExternal('arrange_list.html')">
+          全部流程
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg>
+        </button>
+      </div>
+      <div class="recent-list" id="recent-list">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </div>
+
+    <!-- 内容区 -->
+    <div class="arrange-content">
+      <!-- Step 1: 选择业务类型 -->
+      <div class="step-panel active" id="step-1">
+        <div class="step-header">
+          <div class="step-title">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M8 5v3.5l2.5 1.5"/></svg>
+            业务本体仓库
+          </div>
+        </div>
+
+        <div class="card" style="display:none;">
+          <div class="form-group biz-search-wrap">
+            <label class="form-label">业务问题搜索</label>
+            <div class="biz-search">
+              <span class="biz-search-icon">🔍</span>
+              <input class="biz-search-input" id="biz-search-input" type="text"
+                     placeholder="输入业务关键词，如：降水预报、滑坡、洪水…"
+                     autocomplete="off"
+                     oninput="onBizSearchInput(this.value)"
+                     onfocus="onBizSearchFocus()"
+                     onkeydown="onBizSearchKeydown(event)">
+              <div class="biz-search-dropdown" id="biz-search-dropdown">
+                <!-- 由 JS 渲染 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">选择业务领域</div>
+          <div class="domain-grid" id="domain-grid">
+            <!-- 由 JS 渲染 -->
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="subtype-section">
+            <h4>选择业务流程 <strong id="selected-domain-name">气象</strong></h4>
+            <span class="subtype-count" id="subtype-count">共 4 个流程</span>
+          </div>
+          <div class="subtype-grid" id="subtype-grid">
+            <!-- 由 JS 渲染 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: 查看服务模板 -->
+      <div class="step-panel" id="step-2">
+        <div class="template-header">
+          <div>
+            <div class="template-title-wrap">
+              <span class="template-title" id="template-title">短期预报偏差纠正 服务模板</span>
+              <span class="template-version" id="template-version">v2.4</span>
+            </div>
+            <div class="template-meta">
+              <span class="link" onclick="showToast('已打开本体溯源面板')">🔗 关联本体概念 <span id="template-concepts">4</span> 个</span>
+              <span>最后更新：<span id="template-updated">2026-01-12</span></span>
+            </div>
+          </div>
+          <div class="template-actions">
+            <button class="btn btn-ghost" onclick="showToast('已打开本体溯源')">🔗 溯源本体</button>
+            <button class="btn btn-secondary" onclick="showToast('进入模板编辑')">🖊 编辑模板</button>
+          </div>
+        </div>
+
+        <div class="template-workspace">
+          <!-- 左侧操作栏 -->
+          <div class="template-sidebar">
+            <div class="template-sidebar-header">
+              <span class="constraint-tag active">约束本体</span>
+              <span class="constraint-tag">AI探矿业务</span>
+              <span class="constraint-tag">AI探矿业务</span>
+              <button class="constraint-tag" style="border-style:dashed">+</button>
+            </div>
+            <div class="sidebar-tabs">
+              <div class="sidebar-tab active" data-tab="smart" onclick="switchSidebarTab('smart')">✦ 智能助手</div>
+              <div class="sidebar-tab" data-tab="algo" onclick="switchSidebarTab('algo')">算法库</div>
+              <div class="sidebar-tab" data-tab="workflow" onclick="switchSidebarTab('workflow')">工作流库</div>
+              <div class="sidebar-tab" data-tab="skill" onclick="switchSidebarTab('skill')">SKILL管理</div>
+              <div class="sidebar-tab" data-tab="mcp" onclick="switchSidebarTab('mcp')">MCP管理</div>
+            </div>
+            <div class="sidebar-search">
+              <span>🔍</span>
+              <input type="text" id="sidebar-search-input" placeholder="搜索算法..." oninput="renderSidebarList()">
+            </div>
+            <div class="sidebar-list" id="sidebar-list">
+              <!-- 由 JS 渲染 -->
+            </div>
+          </div>
+
+          <!-- 右侧画布 -->
+          <div class="flow-card">
+            <div class="canvas-toolbar">
+              <button class="btn btn-primary btn-sm" onclick="showToast('模板已保存')">💾 保存</button>
+              <button class="btn btn-secondary btn-sm" onclick="showToast('开始执行流程')">▶ 执行</button>
+              <button class="btn btn-secondary btn-sm" onclick="showToast('打开运行历史')">⏱ 运行历史</button>
+              <button class="btn btn-ghost btn-sm" onclick="showToast('画布已清空')">清空画布</button>
+            </div>
+            <div class="canvas-area" id="flow-canvas">
+              <!-- SVG marker 定义 -->
+              <svg width="0" height="0" style="position:absolute;">
+                <defs>
+                  <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                    <path d="M0,0 L8,3 L0,6 Z" fill="var(--border-2)" />
+                  </marker>
+                </defs>
+              </svg>
+              <div class="flow-grid"></div>
+              <svg class="flow-arrows" id="flow-arrows" xmlns="http://www.w3.org/2000/svg">
+                <!-- 由 JS 渲染 -->
+              </svg>
+              <div class="flow-nodes-layer" id="flow-nodes">
+                <!-- 由 JS 渲染 -->
+              </div>
+              <button class="btn btn-ghost flow-preview-btn" onclick="showToast('正在计算最优执行路径…')" style="bottom:14px">
+                ▶ 快速预览执行路径
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: 确认调试 -->
+      <div class="step-panel" id="step-3">
+        <div class="step-header">
+          <div class="step-badge">步骤 3/3</div>
+          <div class="step-title">确认调试方案</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">执行概览</div>
+          <div class="card-subtitle" id="result-desc">
+            已基于「短期预报偏差纠正」服务模板生成调试任务，可直接调试结果或创建副本后自定义。
+          </div>
+          <div class="result-summary">
+            <div class="result-item">
+              <div class="result-value" id="result-nodes">5</div>
+              <div class="result-label">流程节点</div>
+            </div>
+            <div class="result-item">
+              <div class="result-value" id="result-arrows">4</div>
+              <div class="result-label">执行连线</div>
+            </div>
+            <div class="result-item">
+              <div class="result-value" id="result-algorithms">3</div>
+              <div class="result-label">关联算法</div>
+            </div>
+            <div class="result-item">
+              <div class="result-value" id="result-concepts">4</div>
+              <div class="result-label">引用本体概念</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">调试任务名称</label>
+            <input class="form-input" id="result-task-name" type="text" placeholder="如：短期预报偏差纠正_调试_20260112">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Toast 容器 -->
+  <div id="toast-container"></div>
+
+  <!-- 新建业务本体弹窗 -->
+  <div class="modal-overlay" id="biz-create-modal" onclick="if(event.target===this)closeCreateBizModal()">
+    <div class="modal" style="width:460px">
+      <div class="modal-header">
+        <h3>新建业务本体</h3>
+        <button class="btn-close" onclick="closeCreateBizModal()" aria-label="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">业务本体名称 *</label>
+          <input class="form-input" id="biz-create-name" type="text" placeholder="如：灾害预警业务本体">
+        </div>
+        <div class="form-group">
+          <label class="form-label">业务场景</label>
+          <input class="form-input" id="biz-create-scene" type="text" placeholder="如：洪涝灾害分析">
+        </div>
+        <div class="form-group" style="position:relative;">
+          <label class="form-label">添加知识本体（可多选，仅已入库数据本体）</label>
+          <div class="form-input" style="min-height:38px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:4px 8px;cursor:text;overflow:visible;" onclick="toggleBizCreateDropdown(true)">
+            <div id="biz-create-chips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+            <input type="text" id="biz-create-search" placeholder="搜索并选择已入库本体…" style="background:transparent;border:none;color:var(--text-1);font-size:12px;outline:none;flex:1;min-width:140px;" onfocus="toggleBizCreateDropdown(true)" oninput="renderBizCreateOptions()">
+          </div>
+          <div id="biz-create-dropdown" class="dropdown" style="top:100%;left:0;right:0;margin-top:4px;max-height:180px;">
+            <div class="dropdown-item" onclick="addBizCreateChip('风力发电预测本体 v2');event.stopPropagation();">风力发电预测本体 v2</div>
+            <div class="dropdown-item" onclick="addBizCreateChip('灾害预警知识图谱 v1');event.stopPropagation();">灾害预警知识图谱 v1</div>
+            <div class="dropdown-item" onclick="addBizCreateChip('金融风控实体本体 v1');event.stopPropagation();">金融风控实体本体 v1</div>
+            <div class="dropdown-item" onclick="addBizCreateChip('药物靶点关系本体 v2');event.stopPropagation();">药物靶点关系本体 v2</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeCreateBizModal()">取消</button>
+        <button class="btn btn-primary" onclick="submitCreateBiz()">创建并编排</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // 数据定义
+    // ============================================================
+    const DOMAINS = [
+      { id: 'meteo', name: '气象', icon: '⛅', desc: '短期预报 / 气候服务', theme: 'blue' },
+      { id: 'geo',   name: '地质', icon: '⛰',  desc: '灾害评估 / 资源勘探', theme: 'amber' },
+      { id: 'hydro', name: '水文', icon: '≋',  desc: '洪水 / 径流预测',    theme: 'cyan' },
+      { id: 'new',   name: '使用新建业务', icon: '＋', desc: '自定义创建业务',     theme: 'green', action: 'create' }
+    ];
+
+    const SUBTYPES = {
+      meteo: [
+        { id: 'st-correction', name: '短期预报偏差纠正', desc: '针对数值天气预报的系统性偏差进行实时纠偏', algorithms: 3, score: '92%' },
+        { id: 'extreme-rain',  name: '极端降水事件识别', desc: '基于多源观测与模式输出识别强降水',         algorithms: 2, score: '88%' },
+        { id: 'vis-correction',name: '能见度预报校正',   desc: '雾霾天气下的能见度预报优化',               algorithms: 1, score: '79%' },
+        { id: 'wind-post',     name: '风场预报后处理',   desc: '复杂地形风场偏差订正',                     algorithms: 4, score: '85%' }
+      ],
+      geo: [
+        { id: 'landslide', name: '滑坡风险预警', desc: '基于降雨与地质结构评估滑坡概率', algorithms: 3, score: '89%' },
+        { id: 'mineral',   name: '矿产资源预测', desc: '融合遥感与地球化学数据圈定靶区', algorithms: 2, score: '81%' }
+      ],
+      hydro: [
+        { id: 'flood', name: '洪水过程预报', desc: '耦合气象降水与水文模型进行洪水演进模拟', algorithms: 3, score: '90%' },
+        { id: 'runoff',name: '径流中长期预测', desc: '基于历史径流与气候指数预测季节性径流', algorithms: 2, score: '84%' }
+      ],
+      new: [
+        { id: 'custom', name: '自定义业务场景', desc: '通过自然语言描述创建新的业务服务编排', algorithms: 0, score: '-' }
+      ]
+    };
+
+    const TEMPLATES = {
+      'st-correction': {
+        name: '短期预报偏差纠正 服务模板',
+        version: 'v2.4',
+        concepts: 4,
+        updatedAt: '2026-01-12',
+        steps: [
+          { icon: '🗄', title: '数据接入',         bg: 'var(--blue-dim)',   color: 'var(--blue)'   },
+          { icon: '📊', title: '模式输出解析',       bg: 'var(--purple-dim)', color: 'var(--purple)' },
+          { icon: '🔍', title: '偏差检测',          bg: 'var(--amber-dim)',  color: 'var(--amber)'  },
+          { icon: '📝', title: '纠偏算法\n（气象本体规则）', bg: 'var(--cyan-dim)',   color: 'var(--cyan)'   },
+          { icon: '✅', title: '结果输出\n+ 置信评估',     bg: 'var(--green-dim)',  color: 'var(--green)'  }
+        ]
+      },
+      'extreme-rain': {
+        name: '极端降水事件识别 服务模板',
+        version: 'v1.8',
+        concepts: 3,
+        updatedAt: '2026-01-10',
+        steps: [
+          { icon: '🗄', title: '多源降水数据接入', bg: 'var(--blue-dim)',  color: 'var(--blue)' },
+          { icon: '🔍', title: '强降水特征提取',   bg: 'var(--amber-dim)', color: 'var(--amber)' },
+          { icon: '📊', title: '极端事件判定',     bg: 'var(--purple-dim)', color: 'var(--purple)' },
+          { icon: '✅', title: '预警信息发布',     bg: 'var(--green-dim)',  color: 'var(--green)' }
+        ]
+      },
+      'vis-correction': {
+        name: '能见度预报校正 服务模板',
+        version: 'v1.2',
+        concepts: 2,
+        updatedAt: '2026-01-08',
+        steps: [
+          { icon: '🗄', title: '能见度观测接入', bg: 'var(--blue-dim)',  color: 'var(--blue)' },
+          { icon: '📊', title: '模式预报解析',   bg: 'var(--purple-dim)', color: 'var(--purple)' },
+          { icon: '✅', title: '能见度订正输出', bg: 'var(--green-dim)',  color: 'var(--green)' }
+        ]
+      },
+      'wind-post': {
+        name: '风场预报后处理 服务模板',
+        version: 'v2.1',
+        concepts: 5,
+        updatedAt: '2026-01-11',
+        steps: [
+          { icon: '🗄', title: '模式风场数据接入', bg: 'var(--blue-dim)',  color: 'var(--blue)' },
+          { icon: '📊', title: '地形降尺度',       bg: 'var(--purple-dim)', color: 'var(--purple)' },
+          { icon: '📝', title: '动力／统计后处理', bg: 'var(--cyan-dim)',   color: 'var(--cyan)' },
+          { icon: '✅', title: '订正风场输出',     bg: 'var(--green-dim)',  color: 'var(--green)' }
+        ]
+      }
+    };
+
+    // 默认 fallback 模板
+    const DEFAULT_TEMPLATE = {
+      name: '通用业务服务模板',
+      version: 'v1.0',
+      concepts: 0,
+      updatedAt: '2026-01-07',
+      steps: [
+        { icon: '🗄', title: '数据接入',   bg: 'var(--blue-dim)',  color: 'var(--blue)' },
+        { icon: '🔧', title: '业务处理',   bg: 'var(--cyan-dim)',  color: 'var(--cyan)' },
+        { icon: '✅', title: '结果输出',   bg: 'var(--green-dim)', color: 'var(--green)' }
+      ]
+    };
+
+    const SIDEBAR_ITEMS = {
+      smart: [
+        { name: '恢复重建流程', version: 'v1.0.0', algorithms: 3 },
+        { name: '风电场风速预测简单场景', version: 'v1.0.0', algorithms: 2 },
+        { name: '风电场超短期出力预测流程', version: 'v2.0.0', algorithms: 7 },
+        { name: '风电机组疲劳评估流程', version: 'v2.0.0', algorithms: 3 },
+        { name: '风况分型与异常识别流程', version: 'v2.0.0', algorithms: 3 },
+        { name: '川西复杂地形降尺度高精度风速预测流程', version: 'v1.0.0', algorithms: 4 },
+        { name: '完整应急响应流程', version: 'v1.0.0', algorithms: 12 },
+        { name: '并行响应流程', version: 'v1.0.0', algorithms: 5 },
+        { name: '简单线性测试流程', version: 'v1.0.0', algorithms: 4 },
+        { name: '并行融合测试流程', version: 'v1.0.0', algorithms: 8 },
+        { name: '条件分支测试流程', version: 'v1.0.0', algorithms: 7 },
+        { name: '综合测试流程_多切片融合', version: 'v1.0.0', algorithms: 11 },
+        { name: '风电超短期滚动预测与爬坡预警流程', version: 'v2.0.0', algorithms: 6 },
+        { name: '机组健康管理与智能检修流程', version: 'v2.0.0', algorithms: 7 },
+        { name: '风电参与日前市场申报流程', version: 'v2.0.0', algorithms: 5 }
+      ],
+      algo: [{ name: '通用回归算法', version: 'v1.0.0', algorithms: 8 }],
+      workflow: [{ name: '标准响应工作流', version: 'v1.0.0', algorithms: 5 }],
+      skill: [{ name: '自然语言理解 SKILL', version: 'v1.0.0', algorithms: 2 }],
+      mcp: [{ name: '气象数据 MCP 服务', version: 'v1.0.0', algorithms: 4 }]
+    };
+
+    // 最近使用数据
+    const RECENT_ITEMS = [
+      { id: 1, title: '风场功率预测', desc: '基于气象本体 + 功率曲线模型', status: 'running', statusText: '已发布', badgeClass: 'badge-green', time: '2小时前编辑', action: '查看' },
+      { id: 2, title: '地质灾害预警', desc: '滑坡 + 泥石流多因子耦合模型', status: 'paused', statusText: '进行中', badgeClass: 'badge-amber', time: '昨天编辑', action: '查看' },
+      { id: 3, title: '短期降水纠偏', desc: '气象预测偏差纠正工作流 v2.4', status: 'done', statusText: '已完成', badgeClass: 'badge-blue', time: '3天前', action: '查看' }
+    ];
+
+    // ============================================================
+    // 状态
+    // ============================================================
+    let currentStep = 1;
+    let selectedDomain = 'meteo';
+    let selectedSubtype = null;
+    let activeSidebarTab = 'smart';
+
+    // ============================================================
+    // 初始化
+    // ============================================================
+    function init() {
+      renderRecentList();
+      renderDomains();
+      renderSubtypes();
+      updateStepUI();
+    }
+
+    function renderRecentList() {
+      const container = document.getElementById('recent-list');
+      container.innerHTML = RECENT_ITEMS.map(item => `
+        <div class="recent-card">
+          <div class="recent-card-header">
+            <div class="recent-card-title">${item.title}</div>
+            <span class="badge ${item.badgeClass}">${item.statusText}</span>
+          </div>
+          <div class="recent-card-desc">${item.desc}</div>
+          <div class="recent-card-footer">
+            <div class="recent-card-time">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M8 4.5V8l2.5 1.5"/></svg>
+              ${item.time}
+            </div>
+            <button class="recent-card-action" onclick="gotoExternal('Arrange.html?from=arrange_select')">
+              ${item.action}
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // Step 1 渲染
+    // ============================================================
+    function renderDomains() {
+      const grid = document.getElementById('domain-grid');
+      const normal = DOMAINS.filter(d => d.action !== 'create');
+      const create = DOMAINS.find(d => d.action === 'create');
+
+      let html = normal.map(d => `
+        <div class="domain-card ${d.id === selectedDomain ? 'selected' : ''}" data-id="${d.id}" onclick="onDomainClick('${d.id}')">
+          <div class="domain-icon">${d.icon}</div>
+          <div class="domain-name">${d.name}</div>
+          <div class="domain-desc">${d.desc}</div>
+        </div>
+      `).join('');
+
+      if (create) {
+        html += `
+          <div class="domain-create-divider"></div>
+          <div class="domain-card create" data-id="${create.id}" onclick="onDomainClick('${create.id}')">
+            <div class="domain-icon">${create.icon}</div>
+            <div class="domain-name">${create.name}</div>
+            <div class="domain-desc">${create.desc}</div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    function onDomainClick(id) {
+      const domain = DOMAINS.find(d => d.id === id);
+      if (domain && domain.action === 'create') {
+        openCreateBizModal();
+        return;
+      }
+      selectDomain(id);
+    }
+
+    function renderSubtypes() {
+      const list = SUBTYPES[selectedDomain] || [];
+      const grid = document.getElementById('subtype-grid');
+      const nameEl = document.getElementById('selected-domain-name');
+      const countEl = document.getElementById('subtype-count');
+
+      const domainName = DOMAINS.find(d => d.id === selectedDomain)?.name || '';
+      nameEl.textContent = domainName;
+      countEl.textContent = `共 ${list.length} 个流程`;
+
+      if (!list.length) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📭</div><div class="empty-text">暂无可选业务流程</div></div>`;
+        return;
+      }
+
+      grid.innerHTML = list.map(s => `
+        <div class="subtype-card ${selectedSubtype === s.id ? 'selected' : ''}" data-id="${s.id}" onclick="selectSubtype('${s.id}')">
+          <div class="subtype-header">
+            <div class="subtype-name">${s.name}</div>
+          </div>
+          <div class="subtype-desc">${s.desc}</div>
+          <div class="subtype-footer">
+            <div class="subtype-meta">
+              <span>⚙</span>
+              <span>${s.algorithms} 个算法</span>
+            </div>
+            <button class="subtype-action" onclick="event.stopPropagation();gotoExternal('Arrange.html?from=arrange_select')">查看/使用</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // 交互操作
+    // ============================================================
+    function selectDomain(id) {
+      selectedDomain = id;
+      selectedSubtype = null;
+      renderDomains();
+      renderSubtypes();
+      updateHint();
+      updateNextButtonText();
+    }
+
+    function selectSubtype(id) {
+      selectedSubtype = id;
+      document.querySelectorAll('.subtype-card').forEach(el => el.classList.toggle('selected', el.dataset.id === id));
+      updateHint();
+      updateNextButtonText();
+    }
+
+    // 展开所有业务流程（按领域）
+    function getAllSubtypes() {
+      const list = [];
+      Object.entries(SUBTYPES).forEach(([domainId, subs]) => {
+        const domain = DOMAINS.find(d => d.id === domainId);
+        subs.forEach(sub => {
+          list.push({ ...sub, domainId, domainName: domain ? domain.name : '' });
+        });
+      });
+      return list;
+    }
+
+    function onBizSearchInput(value) {
+      const dropdown = document.getElementById('biz-search-dropdown');
+      const keyword = value.trim().toLowerCase();
+      if (!keyword) {
+        dropdown.classList.remove('open');
+        dropdown.innerHTML = '';
+        return;
+      }
+      renderSearchDropdown(keyword);
+    }
+
+    function onBizSearchFocus() {
+      const input = document.getElementById('biz-search-input');
+      const keyword = input.value.trim().toLowerCase();
+      if (keyword) renderSearchDropdown(keyword);
+    }
+
+    function onBizSearchKeydown(e) {
+      if (e.key === 'Escape') {
+        document.getElementById('biz-search-dropdown').classList.remove('open');
+      }
+    }
+
+    function renderSearchDropdown(keyword) {
+      const dropdown = document.getElementById('biz-search-dropdown');
+      const all = getAllSubtypes();
+      const matches = all.filter(s =>
+        s.name.toLowerCase().includes(keyword) ||
+        s.desc.toLowerCase().includes(keyword) ||
+        s.domainName.toLowerCase().includes(keyword)
+      );
+
+      if (!matches.length) {
+        dropdown.innerHTML = '<div class="biz-search-empty">未找到匹配业务流程</div>';
+        dropdown.classList.add('open');
+        return;
+      }
+
+      dropdown.innerHTML = matches.map(s => `
+        <div class="biz-search-item" onclick="selectSearchSubtype('${s.domainId}', '${s.id}')">
+          <div class="biz-search-item-info">
+            <div class="biz-search-item-title">${highlightKeyword(s.name, keyword)} · ${highlightKeyword(s.domainName, keyword)}</div>
+            <div class="biz-search-item-desc">${highlightKeyword(s.desc, keyword)}</div>
+          </div>
+          <span class="biz-search-item-label">${s.algorithms} 个算法</span>
+        </div>
+      `).join('');
+      dropdown.classList.add('open');
+    }
+
+    function highlightKeyword(text, keyword) {
+      if (!keyword) return text;
+      const regex = new RegExp('(' + keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+      return text.replace(regex, '<span style="color:var(--blue);font-weight:600">$1</span>');
+    }
+
+    function selectSearchSubtype(domainId, subtypeId) {
+      selectedDomain = domainId;
+      selectedSubtype = subtypeId;
+      document.getElementById('biz-search-input').value = '';
+      document.getElementById('biz-search-dropdown').classList.remove('open');
+      renderDomains();
+      renderSubtypes();
+      updateHint();
+      updateNextButtonText();
+      showToast('已选中：' + (SUBTYPES[domainId].find(s => s.id === subtypeId)?.name || ''));
+    }
+
+    // ============================================================
+    // Step 2 渲染
+    // ============================================================
+    function renderTemplate() {
+      const tpl = TEMPLATES[selectedSubtype] || DEFAULT_TEMPLATE;
+      document.getElementById('template-title').textContent = tpl.name;
+      document.getElementById('template-version').textContent = tpl.version;
+      document.getElementById('template-concepts').textContent = tpl.concepts;
+      document.getElementById('template-updated').textContent = tpl.updatedAt;
+
+      const nodesEl = document.getElementById('flow-nodes');
+      const arrowsEl = document.getElementById('flow-arrows');
+
+      // 节点绝对定位：水平居中排列
+      const startX = 40;
+      const startY = 120;
+      const gapX = 220;
+      const nodePositions = tpl.steps.map((_, idx) => ({
+        x: startX + idx * gapX,
+        y: startY
+      }));
+
+      nodesEl.innerHTML = tpl.steps.map((step, idx) => `
+        <div class="flow-node" style="left:${nodePositions[idx].x}px;top:${nodePositions[idx].y}px;color:${step.color};border-color:${step.color}30">
+          <div class="flow-node-top">
+            <div class="flow-node-dot" style="color:${step.color};background:${step.bg}">${step.icon}</div>
+            <div class="flow-node-title">${step.title}</div>
+          </div>
+          <div class="flow-node-status">启用</div>
+        </div>
+      `).join('');
+
+      // 绘制曲线箭头
+      let arrowsSvg = '';
+      for (let i = 0; i < tpl.steps.length - 1; i++) {
+        const p1 = nodePositions[i];
+        const p2 = nodePositions[i + 1];
+        const x1 = p1.x + 150; // 节点右侧
+        const y1 = p1.y + 46;  // 节点垂直中心
+        const x2 = p2.x;       // 节点左侧
+        const y2 = p2.y + 46;
+        const cx1 = x1 + (x2 - x1) * 0.5;
+        const cy1 = y1;
+        const cx2 = x1 + (x2 - x1) * 0.5;
+        const cy2 = y2;
+        arrowsSvg += `<path d="M${x1},${y1} C${cx1},${cy1} ${cx2},${cy2} ${x2},${y2}" />`;
+      }
+      arrowsEl.innerHTML = arrowsSvg;
+      arrowsEl.setAttribute('width', Math.max(800, startX + tpl.steps.length * gapX));
+      arrowsEl.setAttribute('height', 320);
+
+      renderSidebarList();
+
+      // Step 3 摘要同步
+      const sub = (SUBTYPES[selectedDomain] || []).find(s => s.id === selectedSubtype);
+      document.getElementById('result-desc').innerHTML =
+        `已基于「<strong style="color:var(--text-1)">${tpl.name.replace(/ 服务模板$/, '')}</strong>」服务模板生成调试任务，可直接调试结果或创建副本后自定义。`;
+      document.getElementById('result-nodes').textContent = tpl.steps.length;
+      document.getElementById('result-arrows').textContent = Math.max(0, tpl.steps.length - 1);
+      document.getElementById('result-algorithms').textContent = sub ? sub.algorithms : 0;
+      document.getElementById('result-concepts').textContent = tpl.concepts;
+      document.getElementById('result-task-name').value = `${tpl.name.replace(/ 服务模板$/, '')}_调试_${tpl.updatedAt.replace(/-/g, '')}`;
+    }
+
+    function switchSidebarTab(tab) {
+      activeSidebarTab = tab;
+      document.querySelectorAll('.sidebar-tab').forEach(el => {
+        el.classList.toggle('active', el.dataset.tab === tab);
+      });
+      renderSidebarList();
+    }
+
+    function renderSidebarList() {
+      const listEl = document.getElementById('sidebar-list');
+      const keyword = (document.getElementById('sidebar-search-input')?.value || '').trim().toLowerCase();
+      const items = SIDEBAR_ITEMS[activeSidebarTab] || [];
+      const filtered = items.filter(it => it.name.toLowerCase().includes(keyword));
+
+      if (!filtered.length) {
+        listEl.innerHTML = `<div class="empty-state" style="padding:32px 16px"><div class="empty-icon">📭</div><div class="empty-text">暂无匹配项</div></div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(it => `
+        <div class="sidebar-item" onclick="showToast('已添加：${it.name.replace(/'/g, '&#39;')}')">
+          <div class="sidebar-item-info">
+            <div class="sidebar-item-title">${it.name}</div>
+            <div class="sidebar-item-meta">${it.version} · ${it.algorithms} 个算法</div>
+          </div>
+          <button class="sidebar-item-btn" onclick="event.stopPropagation();showToast('已添加：${it.name.replace(/'/g, '&#39;')}')">使用</button>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // 步骤切换
+    // ============================================================
+    function goNext() {
+      if (currentStep === 1) {
+        if (!selectedSubtype) {
+          showToast('请先选择一个业务流程');
+          return;
+        }
+
+        // 新建业务：直接打开弹窗
+        if (selectedDomain === 'new' && selectedSubtype === 'custom') {
+          openCreateBizModal();
+          return;
+        }
+
+        // 其他流程：确认并查看后直接跳转到编排页
+        showToast('正在进入编排…');
+        setTimeout(() => {
+          if (typeof gotoExternal === 'function') {
+            gotoExternal('Arrange.html?from=arrange_select');
+          } else {
+            location.href = 'Arrange.html?from=arrange_select';
+          }
+        }, 600);
+        return;
+      }
+
+      if (currentStep < 3) {
+        currentStep++;
+        updateStepUI();
+      } else {
+        showToast('正在创建调试任务…');
+        setTimeout(() => {
+          if (typeof gotoExternal === 'function') {
+            gotoExternal('Arrange.html?from=arrange_select');
+          } else {
+            location.href = 'Arrange.html?from=arrange_select';
+          }
+        }, 800);
+      }
+    }
+
+    function goPrev() {
+      if (currentStep > 1) {
+        currentStep--;
+        updateStepUI();
+      }
+    }
+
+    function updateStepUI() {
+      // 面板
+      document.querySelectorAll('.step-panel').forEach((el, idx) => {
+        el.classList.toggle('active', idx + 1 === currentStep);
+      });
+
+      // 步骤条（如页面未挂载则跳过）
+      for (let i = 1; i <= 3; i++) {
+        const item = document.getElementById('stepper-' + i);
+        if (!item) continue;
+        const dot = item.querySelector('.stepper-dot');
+        item.classList.remove('active', 'done');
+        if (i === currentStep) {
+          item.classList.add('active');
+          dot.textContent = i;
+        } else if (i < currentStep) {
+          item.classList.add('done');
+          dot.textContent = '✓';
+        } else {
+          dot.textContent = i;
+        }
+      }
+
+      // 底部按钮（当前布局已移除，保留函数兼容性）
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+      const hint = document.getElementById('step-hint');
+      if (!btnPrev || !btnNext || !hint) {
+        updateHint();
+        return;
+      }
+
+      btnPrev.style.display = currentStep === 1 ? 'none' : 'inline-flex';
+
+      if (currentStep === 1) {
+        updateNextButtonText();
+        hint.textContent = '请选择业务领域与子类后进入下一步';
+      } else if (currentStep === 2) {
+        btnNext.innerHTML = '确认并查看 ▶';
+        hint.textContent = '请确认服务流程模板符合业务需求';
+      } else {
+        btnNext.innerHTML = '直接调试结果 ▶';
+        hint.textContent = '确认任务名称后可直接开始调试';
+      }
+
+      updateHint();
+    }
+
+    function updateHint() {
+      const hint = document.getElementById('step-hint');
+      if (!hint || currentStep !== 1) return;
+      if (selectedDomain === 'new' && selectedSubtype === 'custom') {
+        hint.textContent = '将创建新的业务编排任务';
+      } else if (selectedDomain && !selectedSubtype) {
+        hint.textContent = '请选择一个业务流程';
+      } else if (selectedSubtype) {
+        const sub = (SUBTYPES[selectedDomain] || []).find(s => s.id === selectedSubtype);
+        hint.textContent = `已选择：${sub ? sub.name : ''}`;
+      }
+    }
+
+    // ============================================================
+    // 新建业务本体弹窗
+    // ============================================================
+    function openCreateBizModal() {
+      document.getElementById('biz-create-modal').classList.add('active');
+      document.getElementById('biz-create-name').focus();
+      renderBizCreateOptions();
+    }
+
+    function closeCreateBizModal() {
+      document.getElementById('biz-create-modal').classList.remove('active');
+      toggleBizCreateDropdown(false);
+    }
+
+    function toggleBizCreateDropdown(show) {
+      const dropdown = document.getElementById('biz-create-dropdown');
+      dropdown.classList.toggle('open', show);
+    }
+
+    function renderBizCreateOptions() {
+      const keyword = (document.getElementById('biz-create-search').value || '').trim().toLowerCase();
+      const items = [
+        '风力发电预测本体 v2',
+        '灾害预警知识图谱 v1',
+        '金融风控实体本体 v1',
+        '药物靶点关系本体 v2'
+      ];
+      const chips = document.getElementById('biz-create-chips');
+      const existed = new Set(Array.from(chips.children).map(c => c.dataset.name));
+      const filtered = items.filter(name => !existed.has(name) && name.toLowerCase().includes(keyword));
+
+      const dropdown = document.getElementById('biz-create-dropdown');
+      if (!filtered.length) {
+        dropdown.innerHTML = '<div class="dropdown-item" style="color:var(--text-3);cursor:default">无匹配本体</div>';
+      } else {
+        dropdown.innerHTML = filtered.map(name =>
+          `<div class="dropdown-item" onclick="addBizCreateChip('${name.replace(/'/g, '\\\'')}');event.stopPropagation();">${name}</div>`
+        ).join('');
+      }
+      toggleBizCreateDropdown(true);
+    }
+
+    function addBizCreateChip(name) {
+      const chips = document.getElementById('biz-create-chips');
+      if (Array.from(chips.children).some(c => c.dataset.name === name)) return;
+      const chip = document.createElement('div');
+      chip.dataset.name = name;
+      chip.className = 'badge badge-blue';
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:2px 8px;';
+      chip.innerHTML = name + ' <span style="cursor:pointer;opacity:0.7" onclick="this.parentNode.remove();renderBizCreateOptions()">×</span>';
+      chips.appendChild(chip);
+      document.getElementById('biz-create-search').value = '';
+      renderBizCreateOptions();
+    }
+
+    function submitCreateBiz() {
+      const name = document.getElementById('biz-create-name').value.trim();
+      const scene = document.getElementById('biz-create-scene').value.trim();
+      const chips = document.getElementById('biz-create-chips');
+      const ontologies = Array.from(chips.children).map(c => c.dataset.name);
+      if (!name) {
+        showToast('请填写业务本体名称');
+        return;
+      }
+      closeCreateBizModal();
+      showToast(`创建业务本体「${name}」并进入编排`);
+      setTimeout(() => {
+        if (typeof gotoExternal === 'function') {
+          gotoExternal('Arrange.html');
+        } else {
+          location.href = 'Arrange.html';
+        }
+      }, 600);
+    }
+
+    // 点击弹窗外或 Escape 关闭下拉
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#biz-create-modal .form-group')) {
+        toggleBizCreateDropdown(false);
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('biz-create-modal');
+        if (modal.classList.contains('active')) closeCreateBizModal();
+      }
+    });
+
+    function updateNextButtonText() {
+      const btnNext = document.getElementById('btn-next');
+      if (!btnNext || currentStep !== 1) return;
+      if (selectedDomain === 'new' && selectedSubtype === 'custom') {
+        btnNext.innerHTML = '新建业务编排任务 →';
+      } else {
+        btnNext.innerHTML = '确认并查看服务模板 →';
+      }
+    }
+
+    // ============================================================
+    // 跨页面跳转（兼容 iframe 与独立打开）
+    // ============================================================
+    function gotoExternal(file) {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'NAVIGATE_TO', file: file }, '*');
+      } else {
+        location.href = file;
+      }
+    }
+
+    // 全局点击：关闭业务搜索下拉
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.biz-search')) {
+        const dropdown = document.getElementById('biz-search-dropdown');
+        if (dropdown) dropdown.classList.remove('open');
+      }
+    });
+
+    // 启动
+    init();
+  </script>
+</body>
+</html>
