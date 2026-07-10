@@ -535,7 +535,8 @@
                 <th>模型名称</th>
                 <th>Base URL</th>
                 <th>参数</th>
-                <th>状态</th>
+                <th>连接状态</th>
+                <th>使用状态</th>
                 <th>最后更新时间</th>
                 <th class="actions">操作</th>
               </tr>
@@ -939,9 +940,9 @@
     };
 
     let models = [
-      { id: 1, name: 'Kimi-1.5', provider: 'Kimi', url: 'https://api.moonshot.cn/v1', modelId: 'moonshot-v1-128k', apiKey: 'sk-****************************', temperature: 0.7, maxTokens: 8192, status: MODEL_TEST_RESULT['Kimi-1.5'], lastTest: '刚刚', updatedAt: '2026-07-09 13:07' },
-      { id: 2, name: 'DeepSeek-V3', provider: 'DeepSeek', url: 'https://api.deepseek.com', modelId: 'deepseek-chat', apiKey: 'sk-****************************', temperature: 0.6, maxTokens: 4096, status: MODEL_TEST_RESULT['DeepSeek-V3'], lastTest: '10分钟前', updatedAt: '2026-07-08 22:15' },
-      { id: 3, name: 'GLM-4-Plus', provider: '智谱GLM', url: 'https://open.bigmodel.cn/api/paas/v4', modelId: 'glm-4-plus', apiKey: '************************', temperature: 0.8, maxTokens: 8192, status: MODEL_TEST_RESULT['GLM-4-Plus'], lastTest: '昨天', updatedAt: '2026-07-07 09:30' }
+      { id: 1, name: 'Kimi-1.5', provider: 'Kimi', url: 'https://api.moonshot.cn/v1', modelId: 'moonshot-v1-128k', apiKey: 'sk-****************************', temperature: 0.7, maxTokens: 8192, status: MODEL_TEST_RESULT['Kimi-1.5'], lastTest: '刚刚', updatedAt: '2026-07-09 13:07', usageStatus: 'enabled' },
+      { id: 2, name: 'DeepSeek-V3', provider: 'DeepSeek', url: 'https://api.deepseek.com', modelId: 'deepseek-chat', apiKey: 'sk-****************************', temperature: 0.6, maxTokens: 4096, status: MODEL_TEST_RESULT['DeepSeek-V3'], lastTest: '10分钟前', updatedAt: '2026-07-08 22:15', usageStatus: 'enabled' },
+      { id: 3, name: 'GLM-4-Plus', provider: '智谱GLM', url: 'https://open.bigmodel.cn/api/paas/v4', modelId: 'glm-4-plus', apiKey: '************************', temperature: 0.8, maxTokens: 8192, status: MODEL_TEST_RESULT['GLM-4-Plus'], lastTest: '昨天', updatedAt: '2026-07-07 09:30', usageStatus: 'disabled' }
     ];
 
     let domains = ['气象', '地质', '水文', '环境'];
@@ -996,6 +997,11 @@
         const statusHTML = model.status === 'connected'
           ? '<span class="badge badge-green">已连接</span>'
           : '<span class="badge badge-rose">失败</span>';
+        const usageLabel = model.usageStatus === 'enabled' ? '启用' : '停用';
+        const usageBadge = model.usageStatus === 'enabled'
+          ? '<span class="badge badge-green">启用</span>'
+          : '<span class="badge badge-rose">停用</span>';
+        const toggleLabel = model.usageStatus === 'enabled' ? '停用' : '启用';
         const row = document.createElement('tr');
         row.dataset.modelId = model.id;
         row.innerHTML = `
@@ -1005,10 +1011,12 @@
           <td><div class="cell-mono" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">${model.url}</div></td>
           <td><div class="cell-sub">默认</div></td>
           <td class="model-status-cell"><div class="status-content">${statusHTML}<div class="cell-sub status-time">${model.lastTest}</div></div></td>
+          <td><div class="cell-sub">${usageBadge}</div></td>
           <td><div class="cell-sub">${model.updatedAt || '-'}</div></td>
           <td class="actions">
             <button class="action-link blue" onclick="testModelConnection(${model.id}, this)">测试</button>
             <button class="action-link blue" onclick="editModel(${model.id})">编辑</button>
+            <button class="action-link blue" onclick="toggleModelUsage(${model.id})">${toggleLabel}</button>
             <button class="action-link danger" onclick="deleteModel(${model.id})">删除</button>
           </td>
         `;
@@ -1239,6 +1247,15 @@
 
     function editModel(modelId) {
       openEditModelModal(modelId);
+    }
+
+    function toggleModelUsage(modelId) {
+      const model = models.find(m => m.id === modelId);
+      if (!model) return;
+      model.usageStatus = model.usageStatus === 'enabled' ? 'disabled' : 'enabled';
+      model.updatedAt = formatDateTime(new Date());
+      renderModelsTable();
+      window.showToast(`${model.name} 已${model.usageStatus === 'enabled' ? '启用' : '停用'}`);
     }
 
     function deleteModel(modelId) {
