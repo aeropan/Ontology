@@ -499,56 +499,15 @@
   <!-- 顶部栏 -->
   <div class="page-topbar">
     <nav class="topbar-breadcrumb">
-      <span class="topbar-current" id="topbar-title">大模型管理</span>
+      <span class="topbar-current" id="topbar-title">全局参数配置</span>
     </nav>
   </div>
 
   <!-- 内容区 -->
   <div class="page-content">
 
-    <!-- 1. 大模型管理 -->
-    <div class="module-view active" id="view-llm">
-      <div class="settings-panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="12" height="8" rx="2"/><path d="M5 6V4a3 3 0 016 0v2"/><circle cx="8" cy="10" r="1.5"/></svg>
-              大模型管理
-            </div>
-            <div class="panel-desc">配置大模型服务地址、认证信息与默认参数。每个模型独立测试与保存。</div>
-          </div>
-          <div style="display:flex;gap:10px;">
-            <button class="btn btn-primary" onclick="openAddModelModal()">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
-              新增模型
-            </button>
-            <button class="btn btn-secondary" onclick="batchTestModels()">
-              批量测试
-            </button>
-          </div>
-        </div>
-
-        <div class="data-table-wrap">
-          <table class="data-table" id="models-table">
-            <thead>
-              <tr>
-                <th>模型名称</th>
-                <th>Base URL</th>
-                <th>参数</th>
-                <th>连接状态</th>
-                <th>使用状态</th>
-                <th>最后更新时间</th>
-                <th class="actions">操作</th>
-              </tr>
-            </thead>
-            <tbody id="models-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. 全局参数配置 -->
-    <div class="module-view" id="view-params">
+    <!-- 1. 全局参数配置 -->
+    <div class="module-view active" id="view-params">
       <div class="settings-panel">
         <div class="panel-header">
           <div>
@@ -625,6 +584,47 @@
               <input type="number" id="timeout-input" class="form-input" value="300" min="10" max="3600">
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 大模型管理 -->
+    <div class="module-view" id="view-llm">
+      <div class="settings-panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="12" height="8" rx="2"/><path d="M5 6V4a3 3 0 016 0v2"/><circle cx="8" cy="10" r="1.5"/></svg>
+              大模型管理
+            </div>
+            <div class="panel-desc">配置大模型服务地址、认证信息与默认参数。每个模型独立测试与保存。</div>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary" onclick="openAddModelModal()">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+              新增模型
+            </button>
+            <button class="btn btn-secondary" onclick="batchTestModels()">
+              批量测试
+            </button>
+          </div>
+        </div>
+
+        <div class="data-table-wrap">
+          <table class="data-table" id="models-table">
+            <thead>
+              <tr>
+                <th>模型名称</th>
+                <th>Base URL</th>
+                <th>参数</th>
+                <th>连接状态</th>
+                <th>使用状态</th>
+                <th>最后更新时间</th>
+                <th class="actions">操作</th>
+              </tr>
+            </thead>
+            <tbody id="models-table-body"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -924,7 +924,7 @@
     }
 
     // 当前激活模块
-    let currentSection = 'llm';
+    let currentSection = 'params';
 
     const SECTION_TITLES = {
       llm: '大模型管理',
@@ -986,7 +986,7 @@
     // ── URL 参数读取 ──
     function getQuerySection() {
       const params = new URLSearchParams(window.location.search);
-      return params.get('section') || 'llm';
+      return params.get('section') || 'params';
     }
 
     // ── 大模型管理 ──

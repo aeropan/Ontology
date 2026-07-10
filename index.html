@@ -369,17 +369,17 @@ body {
       </button>
     </div>
     <div class="settings-drawer-label">设置模块</div>
-    <div class="settings-drawer-item active" data-section="llm" onclick="goToSettingSection('llm')">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="12" height="8" rx="2"/><path d="M5 6V4a3 3 0 016 0v2"/><circle cx="8" cy="10" r="1.5"/></svg>
-      大模型管理
-    </div>
-    <div class="settings-drawer-item" data-section="params" onclick="goToSettingSection('params')">
+    <div class="settings-drawer-item active" data-section="params" onclick="goToSettingSection('params')">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8h2M11 8h2M8 3v2M8 11v2M4.64 4.64l1.42 1.42M9.94 9.94l1.42 1.42M4.64 11.36l1.42-1.42M9.94 6.06l1.42-1.42"/><circle cx="8" cy="8" r="2.5"/></svg>
       全局参数配置
     </div>
+    <div class="settings-drawer-item" data-section="llm" onclick="goToSettingSection('llm')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="12" height="8" rx="2"/><path d="M5 6V4a3 3 0 016 0v2"/><circle cx="8" cy="10" r="1.5"/></svg>
+      大模型管理
+    </div>
     <div class="settings-drawer-item" data-section="library" onclick="goToSettingSection('library')">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="8" cy="5" rx="5" ry="2"/><path d="M3 5v3c0 1.1 2.2 2 5 2s5-.9 5-2V5"/><path d="M3 10v2c0 1.1 2.2 2 5 2s5-.9 5-2v-2"/></svg>
-      参考数据管理
+      数据管理
     </div>
   </div>
 </div>
@@ -430,8 +430,8 @@ function openSettingsDrawer() {
     activeId: document.querySelector('.nav-item.active, .nav-sub-item.active')?.id || ''
   };
   document.getElementById('settings-drawer').classList.add('open');
-  // 打开抽屉的同时默认进入大模型管理
-  goToSettingSection('llm');
+  // 打开抽屉的同时默认进入全局参数配置
+  goToSettingSection('params');
 }
 
 function closeSettingsDrawer() {
