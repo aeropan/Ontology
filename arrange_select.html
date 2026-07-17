@@ -1244,7 +1244,7 @@
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5.5"/><path d="M8 4.5V8l2.5 1.5"/></svg>
               ${item.time}
             </div>
-            <button class="recent-card-action" onclick="gotoExternal('Arrange.html?from=arrange_select')">
+            <button class="recent-card-action" onclick="gotoExternal('Arrange_white.html?from=arrange_select')">
               ${item.action}
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg>
             </button>
@@ -1318,7 +1318,7 @@
               <span>⚙</span>
               <span>${s.algorithms} 个算法</span>
             </div>
-            <button class="subtype-action" onclick="event.stopPropagation();gotoExternal('Arrange.html?from=arrange_select')">查看/使用</button>
+            <button class="subtype-action" onclick="event.stopPropagation();gotoExternal('Arrange_white.html?from=arrange_select')">查看/使用</button>
           </div>
         </div>
       `).join('');
@@ -1536,11 +1536,7 @@
         // 其他流程：确认并查看后直接跳转到编排页
         showToast('正在进入编排…');
         setTimeout(() => {
-          if (typeof gotoExternal === 'function') {
-            gotoExternal('Arrange.html?from=arrange_select');
-          } else {
-            location.href = 'Arrange.html?from=arrange_select';
-          }
+          gotoExternal('Arrange_white.html?from=arrange_select');
         }, 600);
         return;
       }
@@ -1551,11 +1547,7 @@
       } else {
         showToast('正在创建调试任务…');
         setTimeout(() => {
-          if (typeof gotoExternal === 'function') {
-            gotoExternal('Arrange.html?from=arrange_select');
-          } else {
-            location.href = 'Arrange.html?from=arrange_select';
-          }
+          gotoExternal('Arrange_white.html?from=arrange_select');
         }, 800);
       }
     }
@@ -1695,11 +1687,7 @@
       closeCreateBizModal();
       showToast(`创建业务本体「${name}」并进入编排`);
       setTimeout(() => {
-        if (typeof gotoExternal === 'function') {
-          gotoExternal('Arrange.html');
-        } else {
-          location.href = 'Arrange.html';
-        }
+        gotoExternal('Arrange_white.html');
       }, 600);
     }
 

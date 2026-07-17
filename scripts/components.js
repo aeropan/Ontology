@@ -182,6 +182,28 @@ window.showToast = showToast;
 
 
 /* ============================================================
+   跨页面跳转（gotoExternal）
+   ============================================================
+   页面内如需跳转到另一个 HTML 文件，禁止直接使用 location.href，
+   必须通过 gotoExternal(file) 让 Shell 先处理 opacity 遮罩或转场动效。
+
+   - 目标为 Arrange_white.html 时：通知 Shell 播放全屏 3D 转场并顶层跳转
+   - 其他页面：沿用 NAVIGATE_TO 消息，由 Shell 代为 navigate
+   ============================================================ */
+function gotoExternal(file) {
+  if (!file) return;
+  // iframe 内统一发消息给 Shell，由 index.html 决定转场或直接 navigate
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'NAVIGATE_TO', file: file }, '*');
+    return;
+  }
+  // 独立打开（非 iframe）时直接跳转
+  window.location.href = file;
+}
+window.gotoExternal = gotoExternal;
+
+
+/* ============================================================
    组件注册区
    新增组件时在此处 export，并遵循上方调用规范
    ============================================================ */

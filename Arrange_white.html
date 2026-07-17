@@ -1,0 +1,3559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>业务本体详情 · 风力发电预测模型（白底）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
+  <style>
+
+    /* -----------------------------------------------------------
+       白色主题：硬编码覆盖，完全独立于 Arrange.html 的深色风格
+       ----------------------------------------------------------- */
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #ffffff;
+      color: #1f2937;
+    }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      height: 48px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .breadcrumb {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #6b7280;
+      margin-left: 16px;
+    }
+
+    .breadcrumb .sep { color: #9ca3af; }
+    .breadcrumb .current { color: #111827; font-weight: 500; }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .icon-btn {
+      width: 28px; height: 28px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #f9fafb;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 12px; color: #6b7280;
+    }
+    .icon-btn:hover { background: #f3f4f6; border-color: #d1d5db; color: #374151; }
+
+    /* ===== PAGE WRAPPER ===== */
+    .page-wrap {
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+      padding: 16px 20px 0;
+      overflow: hidden;
+      background: #ffffff;
+      opacity: 0;
+      transition: opacity 0.45s ease-out;
+    }
+    .page-wrap.ready {
+      opacity: 1;
+    }
+
+    /* ===== BADGES ===== */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 20px;
+      font-size: 10px; font-weight: 500;
+    }
+
+    .badge-green { background: rgba(16,185,129,.12); color: #059669; }
+    .badge-blue  { background: rgba(59,130,246,.12); color: #2563eb; }
+
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; flex-shrink: 0;
+      padding: 12px 16px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+
+    .page-title { font-size: 16px; font-weight: 700; color: #111827; }
+    .page-title span { color: #2563eb; }
+    .page-subtitle { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+    .page-meta-line {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 6px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .page-meta-line .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 顶部工具栏按钮 */
+    .toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-actions .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      border: 1px solid transparent;
+      font-family: inherit;
+    }
+
+    .toolbar-actions .btn-save {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .toolbar-actions .btn-save:hover {
+      background: #1d4ed8;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.2);
+    }
+
+    .toolbar-actions .btn-tool {
+      background: #ffffff;
+      color: #374151;
+      border-color: #e5e7eb;
+    }
+
+    .toolbar-actions .btn-tool:hover {
+      background: #f9fafb;
+      border-color: #2563eb;
+      color: #2563eb;
+    }
+
+    /* ===== ONTO BAR ===== */
+    .onto-bar {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 10px 16px;
+      margin-bottom: 10px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .onto-bar-label {
+      font-size: 11px; font-weight: 600; color: #6b7280; white-space: nowrap;
+    }
+
+    .onto-bar-divider { width: 1px; height: 20px; background: #e5e7eb; }
+
+    .biz-onto-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px;
+      background: linear-gradient(135deg, rgba(59,130,246,.12), rgba(6,182,212,.08));
+      border: 1px solid rgba(59,130,246,.35);
+      border-radius: 20px; font-size: 11px; font-weight: 500; color: #2563eb;
+    }
+
+    .onto-bar-hint {
+      margin-left: auto; font-size: 10px; color: #9ca3af;
+    }
+
+    /* ===== BUTTONS (page-specific overrides) ===== */
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid #d1d5db;
+      color: #6b7280;
+    }
+
+    .btn-ghost:hover { border-color: #2563eb; color: #2563eb; background: rgba(37,99,235,.04); }
+
+    /* shared.css 无 btn-sm，此页专属 */
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.45);
+      display: none; align-items: center; justify-content: center;
+      z-index: 200; backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px; width: 540px;
+      max-height: 80vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+    }
+
+    .modal-header {
+      padding: 16px 20px; border-bottom: 1px solid #f3f4f6;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .modal-title { font-size: 14px; font-weight: 600; color: #111827; }
+    .modal-close { cursor: pointer; color: #9ca3af; font-size: 16px; }
+    .modal-close:hover { color: #374151; }
+    .modal-body { padding: 20px; color: #374151; }
+
+    .modal-footer {
+      padding: 14px 20px; border-top: 1px solid #f3f4f6;
+      display: flex; justify-content: flex-end; gap: 8px;
+      background: #fafafa;
+    }
+
+    .search-input {
+      display: flex; align-items: center; gap: 6px;
+      background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 6px; padding: 6px 10px;
+      font-size: 11px; color: #6b7280; margin-bottom: 12px;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #ffffff; border: 1px solid #e5e7eb;
+      border-radius: 8px; padding: 12px 16px;
+      font-size: 12px; color: #374151;
+      box-shadow: 0 8px 30px rgba(0,0,0,.14);
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.3s; z-index: 300;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* 全局 scrollbar 已由 shared.css 统一定义 */
+
+    /* ===== WORKFLOW CANVAS (scoped) ===== */
+    #wf-scope {
+      position: relative; overflow: hidden;
+      background: #ffffff;
+      font-family: 'Noto Sans SC', sans-serif;
+      flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+
+      --bg: #ffffff;
+      --panel: #f9fafb;
+      --panel-solid: #f9fafb;
+      --border: #e5e7eb;
+      --accent-amber: #d97706;
+      --accent-amber-dim: rgba(245,158,11,.18);
+      --accent-cyan: #0891b2;
+      --accent-cyan-dim: rgba(6,182,212,.16);
+      --accent-purple: #7c3aed;
+      --accent-purple-dim: rgba(139,92,246,.18);
+      --accent-green: #059669;
+      --accent-red: #dc2626;
+      --text: #111827;
+      --text-muted: #525867;
+      --text-dim: #374151;
+    }
+
+    .wf-workspace {
+      display: flex; flex: 1; overflow: hidden;
+      position: relative; z-index: 1;
+    }
+
+    /* ── LEFT PANEL ── */
+    .wf-left-panel {
+      width: 360px; flex-shrink: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+      transition: width .25s ease;
+    }
+
+    .wf-left-panel.wide { width: 560px; }
+
+    .panel-tabs { display: flex; border-bottom: 1px solid var(--border); background: #ffffff; }
+
+    .ptab {
+      flex: 1; padding: 12px 8px;
+      text-align: center; font-size: 12px;
+      color: var(--text-muted); cursor: pointer;
+      transition: all .2s; border-bottom: 2px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      gap: 5px;
+    }
+
+    .ptab:hover { color: var(--text); background: #f3f4f6; }
+    .ptab.active {
+      color: var(--accent-cyan);
+      border-bottom-color: var(--accent-cyan);
+      background: rgba(6,182,212,.08);
+    }
+
+    /* agent 选择器 */
+    .agent-selector {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .agent-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .agent-trigger:hover { border-color: #cbd5e1; background: #ffffff; }
+
+    .agent-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-avatar {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: #fff;
+    }
+
+    .agent-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .agent-role {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .agent-arrow {
+      font-size: 11px;
+      color: var(--text-muted);
+      transition: transform .2s;
+    }
+
+    .agent-selector.open .agent-arrow { transform: rotate(180deg); }
+
+    .agent-dropdown {
+      display: none;
+      margin-top: 6px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,.10);
+    }
+
+    .agent-selector.open .agent-dropdown { display: block; }
+
+    .agent-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px;
+      cursor: pointer;
+      transition: background .15s;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .agent-option:last-child { border-bottom: none; }
+
+    .agent-option:hover { background: rgba(6,182,212,.06); }
+
+    .agent-option.active { background: rgba(6,182,212,.10); }
+
+    .agent-option-icon {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text);
+    }
+
+    .agent-option-text { flex: 1; min-width: 0; }
+
+    .agent-option-title {
+      font-size: 12px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .agent-option-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* 聊天区域 */
+    .chat-flow {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: #ffffff;
+    }
+
+    .chat-flow::-webkit-scrollbar { width: 4px; }
+    .chat-flow::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+
+    .chat-msg {
+      display: flex;
+      gap: 10px;
+      max-width: 92%;
+    }
+
+    .chat-msg.ai { align-self: flex-start; }
+    .chat-msg.user { align-self: flex-end; flex-direction: row-reverse; }
+
+    .chat-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .chat-msg.ai .chat-avatar {
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+      color: #fff;
+    }
+
+    .chat-msg.user .chat-avatar {
+      background: #f3f4f6;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+
+    .chat-bubble {
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text-dim);
+    }
+
+    .chat-msg.ai .chat-bubble {
+      background: rgba(139,92,246,.08);
+      border: 1px solid rgba(139,92,246,.18);
+      border-top-left-radius: 2px;
+    }
+
+    .chat-msg.user .chat-bubble {
+      background: rgba(59,130,246,.10);
+      border: 1px solid rgba(59,130,246,.22);
+      border-top-right-radius: 2px;
+      color: var(--text);
+    }
+
+    .chat-bubble strong { color: var(--text); font-weight: 600; }
+
+    .chat-bubble ul {
+      margin: 8px 0 0 16px;
+      padding: 0;
+    }
+
+    .chat-bubble li { margin-bottom: 4px; }
+
+    .chat-example-title {
+      font-size: 11px;
+      color: var(--text);
+      font-weight: 600;
+      margin: 12px 0 6px;
+    }
+
+    .chat-example {
+      padding: 8px 10px;
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .chat-example:hover {
+      background: rgba(6,182,212,.06);
+      border-color: rgba(6,182,212,.25);
+      color: var(--text);
+    }
+
+    .chat-example-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .tag-branch { color: #e11d48; }
+    .tag-parallel { color: var(--accent-cyan); }
+    .tag-chain { color: var(--accent-green); }
+    .tag-partial { color: var(--accent-amber); }
+
+    .chat-input-wrap {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      background: var(--panel);
+    }
+
+    /* 算法库 / 工作流库 / SKILL / MCP 公共面板 */
+    .lib-panel {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .lib-search {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 12px;
+      padding: 8px 10px;
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .lib-search input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    .lib-search input::placeholder { color: var(--text-muted); }
+
+    .lib-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 12px 12px;
+    }
+
+    .lib-body::-webkit-scrollbar { width: 4px; }
+    .lib-body::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+
+    /* 算法库：分类折叠 */
+    .algo-category { margin-bottom: 12px; }
+
+    .algo-cat-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .algo-cat-header .arrow {
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform .2s;
+    }
+
+    .algo-category.collapsed .algo-cat-header .arrow { transform: rotate(-90deg); }
+    .algo-category.collapsed .algo-cat-body { display: none; }
+
+    .algo-cat-count {
+      margin-left: auto;
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .algo-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(59,130,246,.06);
+      border: 1px solid rgba(59,130,246,.14);
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+
+    .algo-card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .algo-card-ver { font-size: 10px; color: var(--text-muted); }
+
+    .algo-card-actions { display: flex; align-items: center; gap: 6px; }
+
+    .algo-card-actions .badge-enable {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: rgba(16,185,129,.12);
+      color: var(--accent-green);
+    }
+
+    .algo-card-actions .btn-add {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .algo-card-actions .btn-add:hover { border-color: #2563eb; color: #2563eb; background: rgba(37,99,235,.04); }
+
+    .lib-footer {
+      padding: 10px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    /* 工作流库 */
+    .wf-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .wf-list-item:last-child { border-bottom: none; }
+
+    .wf-list-name { color: var(--text); font-weight: 500; }
+
+    .wf-list-btn {
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+    .wf-list-btn:hover { border-color: #2563eb; color: #2563eb; background: rgba(37,99,235,.04); }
+
+    /* SKILL / MCP 管理表格 */
+    .asset-table-wrap {
+      flex: 1;
+      overflow: auto;
+      padding: 0 12px 12px;
+    }
+
+    .asset-table-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+    .asset-table-wrap::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+
+    .asset-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      min-width: 520px;
+    }
+
+    .asset-table th {
+      text-align: left;
+      padding: 10px 8px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: #f9fafb;
+      white-space: nowrap;
+    }
+
+    .asset-table td {
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .asset-table tr:hover td { background: #f9fafb; }
+
+    .asset-table .cell-name { color: var(--text); font-weight: 500; }
+
+    .asset-tag {
+      display: inline-flex;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: rgba(59,130,246,.10);
+      color: #2563eb;
+    }
+
+    .asset-status {
+      display: inline-flex;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .asset-status.enabled { background: rgba(16,185,129,.10); color: var(--accent-green); }
+    .asset-status.disabled { background: rgba(245,158,11,.10); color: var(--accent-amber); }
+    .asset-status.draft { background: #f3f4f6; color: var(--text-muted); }
+
+    .asset-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .asset-actions button {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+
+    .asset-actions button:hover {
+      border-color: #2563eb;
+      color: #2563eb;
+    }
+
+    .asset-actions button.danger:hover {
+      border-color: #dc2626;
+      color: #dc2626;
+    }
+
+    .asset-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .asset-pagination span {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      cursor: pointer;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .asset-pagination span.active {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: #fff;
+    }
+
+    .chat-input {
+      flex: 1;
+      min-height: 40px;
+      max-height: 120px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 12px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      resize: none;
+      line-height: 1.5;
+    }
+
+    .chat-input:focus { border-color: rgba(6,182,212,.6); box-shadow: 0 0 0 2px rgba(6,182,212,.12); }
+
+    .chat-input::placeholder { color: var(--text-muted); }
+
+    .chat-send {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #2563eb;
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .2s;
+      flex-shrink: 0;
+    }
+
+    .chat-send:hover { background: #1d4ed8; box-shadow: 0 0 12px rgba(37,99,235,.25); }
+
+    .chat-tip {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+      background: var(--panel);
+    }
+
+    .apply-btn {
+      width: 100%; padding: 11px;
+      background: linear-gradient(135deg,var(--accent-cyan),var(--accent-purple));
+      border: none; border-radius: 10px;
+      color: white; font-size: 13px; font-weight: 700;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer; transition: all .3s;
+      box-shadow: 0 4px 20px rgba(6,182,212,.18);
+      letter-spacing: .05em;
+    }
+
+    .apply-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(6,182,212,.28); }
+
+    /* ── CANVAS ── */
+    .wf-canvas { flex: 1; position: relative; overflow: hidden; cursor: grab; background: #ffffff; }
+    .wf-canvas.panning { cursor: grabbing; }
+
+    /* ── NODES ── */
+    .node {
+      position: absolute; width: 148px;
+      border-radius: 14px; padding: 12px 12px 10px;
+      cursor: pointer; z-index: 3;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
+      animation: nodeIn .6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+
+    .node:hover { transform: translateY(-4px) scale(1.02); }
+
+    .node::before {
+      content: ''; position: absolute; left: 0;
+      top: 14px; bottom: 14px; width: 3px; border-radius: 2px;
+    }
+
+    .node-amber {
+      background: linear-gradient(145deg, rgba(245,158,11,.18), #fff7ed);
+      border: 1px solid rgba(245,158,11,.55);
+      box-shadow: 0 2px 0 rgba(245,158,11,.15), 0 6px 18px rgba(245,158,11,.12);
+    }
+
+    .node-amber::before { background: var(--accent-amber); }
+    .node-amber:hover   { box-shadow: 0 2px 0 rgba(245,158,11,.25), 0 10px 26px rgba(245,158,11,.22); border-color: rgba(245,158,11,.75); }
+    .node-amber.active  { box-shadow: 0 0 0 2px rgba(245,158,11,.35), 0 10px 26px rgba(245,158,11,.22); }
+
+    .node-cyan {
+      background: linear-gradient(145deg, rgba(6,182,212,.15), #ecfeff);
+      border: 1px solid rgba(6,182,212,.50);
+      box-shadow: 0 2px 0 rgba(6,182,212,.12), 0 6px 18px rgba(6,182,212,.10);
+    }
+
+    .node-cyan::before { background: var(--accent-cyan); }
+    .node-cyan:hover   { box-shadow: 0 2px 0 rgba(6,182,212,.22), 0 10px 26px rgba(6,182,212,.18); border-color: rgba(6,182,212,.70); }
+    .node-cyan.active  { box-shadow: 0 0 0 2px rgba(6,182,212,.30), 0 10px 26px rgba(6,182,212,.18); }
+
+    .node-purple {
+      background: linear-gradient(145deg, rgba(139,92,246,.14), #f5f3ff);
+      border: 1px solid rgba(139,92,246,.48);
+      box-shadow: 0 2px 0 rgba(139,92,246,.11), 0 6px 18px rgba(139,92,246,.10);
+    }
+
+    .node-purple::before { background: var(--accent-purple); }
+    .node-purple:hover   { box-shadow: 0 2px 0 rgba(139,92,246,.20), 0 10px 26px rgba(139,92,246,.18); border-color: rgba(139,92,246,.68); }
+    .node-purple.active  { box-shadow: 0 0 0 2px rgba(139,92,246,.28), 0 10px 26px rgba(139,92,246,.18); }
+
+    .node-green {
+      background: linear-gradient(145deg, rgba(16,185,129,.14), #ecfdf5);
+      border: 1px solid rgba(16,185,129,.48);
+      box-shadow: 0 2px 0 rgba(16,185,129,.11), 0 6px 18px rgba(16,185,129,.10);
+    }
+
+    .node-green::before { background: var(--accent-green); }
+    .node-green:hover   { box-shadow: 0 2px 0 rgba(16,185,129,.20), 0 10px 26px rgba(16,185,129,.18); border-color: rgba(16,185,129,.68); }
+    .node-green.active  { box-shadow: 0 0 0 2px rgba(16,185,129,.28), 0 10px 26px rgba(16,185,129,.18); }
+
+    .node-icon {
+      width: 26px; height: 26px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; margin-bottom: 7px;
+    }
+
+    .icon-amber  { background: rgba(245,158,11,.18); }
+    .icon-cyan   { background: rgba(6,182,212,.14); }
+    .icon-purple { background: rgba(139,92,246,.14); }
+    .icon-green  { background: rgba(16,185,129,.14); }
+
+    .node-name  { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .node-type  { font-size: 10px; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+
+    .node-status {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 7px; font-size: 10px; padding: 2px 7px; border-radius: 4px;
+    }
+
+    .status-idle    { background: #f3f4f6; color: var(--text-muted); }
+    .status-running { background: rgba(6,182,212,.12); color: #0e7490; }
+    .status-done    { background: rgba(16,185,129,.12); color: #047857; }
+
+    .status-dot {
+      width: 5px; height: 5px; border-radius: 50%; background: currentColor;
+    }
+
+    .status-running .status-dot { animation: blink .8s infinite; }
+
+    /* ── CANVAS INFO BAR ── */
+    .wf-canvas-infobar {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      z-index: 10;
+      display: flex;
+      align-items: stretch;
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      pointer-events: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,.06);
+    }
+
+    .wf-canvas-infobar .ib-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 28px;
+      gap: 2px;
+    }
+
+    .wf-canvas-infobar .ib-stat + .ib-stat {
+      border-left: 1px solid var(--border);
+    }
+
+    .wf-canvas-infobar .ib-val {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      line-height: 1;
+    }
+
+    .wf-canvas-infobar .ib-lbl {
+      font-size: 9px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* ── DRAWER (overlay right panel) ── */
+    .wf-drawer {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 280px;
+      z-index: 20;
+      background: #ffffff;
+      border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      transition: transform .25s ease;
+      box-shadow: -4px 0 20px rgba(0,0,0,.06);
+    }
+
+    .wf-drawer.open { transform: translateX(0); }
+
+    .drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .drawer-title {
+      font-size: 11px; color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+
+    .drawer-close {
+      width: 22px; height: 22px; border-radius: 5px;
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; cursor: pointer; transition: all .15s;
+    }
+
+    .drawer-close:hover { background: #e5e7eb; color: var(--text); }
+
+    .drawer-body {
+      flex: 1; min-height: 0;
+      overflow-y: auto;
+      padding: 14px;
+      display: flex; flex-direction: column; gap: 12px;
+      background: #ffffff;
+    }
+
+    .prop-title {
+      font-size: 11px; color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    }
+
+    .prop-group { display: flex; flex-direction: column; gap: 8px; }
+    .prop-label { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+
+    .prop-input {
+      width: 100%; padding: 7px 10px;
+      background: #ffffff;
+      border: 1px solid var(--border); border-radius: 7px;
+      color: var(--text); font-size: 11px;
+      font-family: 'Noto Sans SC', sans-serif;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+
+    .prop-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(6,182,212,.12); }
+
+    /* 隐藏 number 原生微调箭头 */
+    .prop-input[type=number] { -moz-appearance: textfield; }
+    .prop-input[type=number]::-webkit-inner-spin-button,
+    .prop-input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none; margin: 0;
+    }
+
+    .prop-select {
+      width: 100%; padding: 7px 26px 7px 10px;
+      background: #ffffff;
+      border: 1px solid var(--border); border-radius: 7px;
+      color: var(--text); font-size: 11px; outline: none; cursor: pointer;
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%236b7280' stroke-width='1.8'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .prop-select:focus { border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(6,182,212,.12); }
+
+    /* option 浅色背景 */
+    .prop-select option {
+      background: #ffffff;
+      color: #111827;
+    }
+
+    /* 抽屉滚动条 */
+    .drawer-body::-webkit-scrollbar { width: 3px; }
+    .drawer-body::-webkit-scrollbar-track { background: transparent; }
+    .drawer-body::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+
+    .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .stat-card {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px; text-align: center;
+    }
+
+    .stat-val { font-size: 20px; font-weight: 700; font-family: 'Space Mono', monospace; }
+    .stat-lbl { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+
+    .val-cyan   { color: var(--accent-cyan); }
+    .val-amber  { color: var(--accent-amber); }
+    .val-purple { color: var(--accent-purple); }
+    .val-green  { color: var(--accent-green); }
+
+    .empty-prop {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; color: var(--text-muted); font-size: 11px;
+      text-align: center; opacity: .5;
+    }
+
+    .empty-prop .icon { font-size: 32px; opacity: .4; }
+
+    /* ── NODE EXTRA INTERACTIONS ── */
+    .node-extra-box {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ds-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 4px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .ds-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 8px;
+      font-size: 10px;
+      background: #ffffff;
+    }
+
+    .ds-field + .ds-field { border-top: 1px solid var(--border); }
+
+    .ds-field-lbl { color: var(--text-muted); }
+    .ds-field-val { color: var(--accent-cyan); font-family: 'Space Mono', monospace; font-size: 9px; }
+
+    .model-cmp-btn {
+      width: 100%;
+      padding: 9px;
+      background: linear-gradient(135deg, rgba(245,158,11,.10), rgba(245,158,11,.04));
+      border: 1px solid rgba(245,158,11,.35);
+      border-radius: 8px;
+      color: var(--accent-amber);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Noto Sans SC', sans-serif;
+      cursor: pointer;
+      transition: all .2s;
+      letter-spacing: .04em;
+    }
+
+    .model-cmp-btn:hover {
+      background: rgba(245,158,11,.14);
+      border-color: var(--accent-amber);
+      box-shadow: 0 0 10px rgba(245,158,11,.14);
+    }
+
+    /* ── ASSET LINK ROW ── */
+    .asset-link-row {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 8px;
+      background: rgba(6,182,212,.06);
+      border: 1px solid rgba(6,182,212,.18);
+      border-radius: 6px;
+      font-size: 10px; color: var(--accent-cyan); cursor: pointer;
+    }
+    .asset-link-row:hover { background: rgba(6,182,212,.10); }
+
+    /* ── SYNC TABLE ── */
+    .sync-table { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .sync-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 5px 8px; font-size: 10px; background: #ffffff;
+    }
+    .sync-row + .sync-row { border-top: 1px solid var(--border); }
+    .sync-row-lbl { color: var(--text-muted); }
+    .sync-row-val { color: var(--text-dim); font-family: 'Space Mono', monospace; font-size: 9px; }
+    .sync-row.highlight .sync-row-lbl { color: var(--accent-cyan); }
+    .sync-row.highlight .sync-row-val { color: var(--accent-cyan); }
+
+    /* ── CHECK GROUP ── */
+    .check-group { display: flex; flex-direction: column; gap: 6px; }
+    .check-item {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 8px;
+      background: #ffffff;
+      border: 1px solid var(--border); border-radius: 6px;
+      font-size: 11px; color: var(--text-dim); cursor: pointer;
+    }
+    .check-item:hover { background: #f9fafb; }
+    .check-item input[type=checkbox] { accent-color: var(--accent-cyan); }
+
+    /* ── SEMANTIC PREVIEW ── */
+    .semantic-preview {
+      background: rgba(139,92,246,.06);
+      border: 1px solid rgba(139,92,246,.18);
+      border-radius: 8px; padding: 10px;
+    }
+    .semantic-preview-title {
+      font-size: 9px; color: var(--accent-purple);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+    }
+    .semantic-quote {
+      font-size: 11px; color: var(--text-dim); line-height: 1.6;
+      border-left: 2px solid var(--accent-purple); padding-left: 8px;
+    }
+
+    /* ── DIFF TABLE ── */
+    .diff-table { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .diff-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 8px; font-size: 10px; background: #ffffff;
+    }
+    .diff-row + .diff-row { border-top: 1px solid var(--border); }
+    .diff-row-key { color: var(--text-muted); }
+    .diff-badge { padding: 1px 7px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+    .diff-badge-warn { background: rgba(245,158,11,.12); color: var(--accent-amber); }
+    .diff-badge-ok   { background: rgba(16,185,129,.12);  color: var(--accent-green); }
+    .diff-note {
+      font-size: 10px; color: var(--text-muted); line-height: 1.6;
+      padding: 6px 8px; background: #f9fafb;
+      border: 1px solid var(--border); border-radius: 6px;
+    }
+
+    /* ── AUDIT BOX ── */
+    .audit-box {
+      background: rgba(245,158,11,.06);
+      border: 1px solid rgba(245,158,11,.16);
+      border-radius: 8px; padding: 10px;
+    }
+    .audit-box-title {
+      font-size: 9px; color: var(--accent-amber);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+    }
+    .audit-box-text { font-size: 11px; color: var(--text-dim); line-height: 1.6; }
+
+    /* ── DOC PREVIEW ── */
+    .doc-preview {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px;
+    }
+    .doc-preview-title {
+      font-size: 9px; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
+    }
+    .doc-page {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px; padding: 8px;
+      font-size: 9.5px; color: var(--text-dim); line-height: 1.7;
+    }
+    .doc-highlight {
+      background: rgba(245,158,11,.20); color: var(--accent-amber);
+      padding: 0 2px; border-radius: 2px;
+    }
+    .export-pdf-btn {
+      width: 100%; padding: 8px;
+      background: rgba(16,185,129,.06);
+      border: 1px solid rgba(16,185,129,.20); border-radius: 7px;
+      color: var(--accent-green); font-size: 11px; font-weight: 600;
+      font-family: 'Noto Sans SC', sans-serif; cursor: pointer;
+      transition: all .2s; letter-spacing: .04em;
+    }
+    .export-pdf-btn:hover {
+      background: rgba(16,185,129,.12); border-color: var(--accent-green);
+      box-shadow: 0 0 8px rgba(16,185,129,.12);
+    }
+
+    /* ── COMPARISON POOL: SAVE BUTTON ── */
+    #cp-saveBtn.cp-save-ready {
+      border-color: rgba(6,182,212,.4); color: var(--accent-cyan); background: rgba(6,182,212,.05);
+    }
+    #cp-saveBtn.cp-save-ready:hover { background: rgba(6,182,212,.10); border-color: var(--accent-cyan); }
+
+    /* ── COMPARISON POOL: EDGE TAB ── */
+    .cp-edge-tab {
+      position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+      z-index: 15; writing-mode: vertical-rl;
+      padding: 18px 8px;
+      background: #ffffff; border: 1px solid var(--border); border-right: none;
+      border-radius: 8px 0 0 8px;
+      font-size: 11px; color: var(--text-muted); cursor: pointer;
+      user-select: none; letter-spacing: .06em; transition: all .2s;
+      box-shadow: -4px 0 14px rgba(0,0,0,.05);
+    }
+    .cp-edge-tab:hover { color: var(--accent-cyan); border-color: rgba(6,182,212,.4); }
+    .cp-edge-tab.active { color: var(--accent-cyan); border-color: rgba(6,182,212,.25); background: rgba(6,182,212,.06); }
+
+    /* ── COMPARISON POOL DRAWER ── */
+    .cp-drawer {
+      position: absolute; right: 0; top: 0; bottom: 0; width: 280px; z-index: 20;
+      background: #ffffff; border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform .25s ease;
+      box-shadow: -4px 0 20px rgba(0,0,0,.06);
+    }
+    .cp-drawer.open { transform: translateX(0); }
+
+    .cp-drw-header { padding: 12px 14px 8px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .cp-drw-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .cp-drw-title { font-size: 12px; font-weight: 600; color: var(--text); }
+    .cp-meta-row { display: flex; align-items: center; justify-content: space-between; }
+    .cp-meta-left { font-size: 10px; color: var(--text-muted); display: flex; gap: 8px; }
+    .cp-meta-btn { background: none; border: none; font-size: 10px; color: var(--text-muted); cursor: pointer; font-family: 'Noto Sans SC', sans-serif; padding: 0; }
+    .cp-meta-btn:hover { color: var(--accent-cyan); }
+
+    .cp-sel-bar { display: none; align-items: center; gap: 8px; padding: 6px 14px; background: rgba(6,182,212,.06); border-bottom: 1px solid rgba(6,182,212,.18); font-size: 11px; color: var(--accent-cyan); flex-shrink: 0; }
+    .cp-sel-bar.show { display: flex; }
+    .cp-sel-line { flex: 1; height: 1px; background: rgba(6,182,212,.18); }
+    .cp-sel-clear { background: none; border: none; color: var(--text-muted); font-size: 10px; cursor: pointer; font-family: 'Noto Sans SC', sans-serif; }
+
+    .cp-list { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .cp-list::-webkit-scrollbar { width: 3px; }
+    .cp-list::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+
+    .cp-rc { background: #f9fafb; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; transition: border-color .2s; position: relative; }
+    .cp-rc:hover { border-color: #d1d5db; }
+    .cp-rc.on { border-color: var(--accent-cyan); background: rgba(6,182,212,.04); }
+
+    .cp-rc-main { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; }
+    .cp-rc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .cpd-ok  { background: var(--accent-green); box-shadow: 0 0 6px rgba(16,185,129,.35); }
+    .cpd-par { background: var(--accent-amber); box-shadow: 0 0 6px rgba(245,158,11,.35); }
+    .cpd-err { background: #dc2626; box-shadow: 0 0 6px rgba(220,38,38,.35); }
+    .cp-rc-info { flex: 1; min-width: 0; }
+    .cp-rc-r1 { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+    .cp-rc-ver { font-size: 11px; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent-cyan); flex-shrink: 0; }
+    .cp-rc-lbl { font-size: 11px; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cp-rc-st  { font-size: 9px; padding: 1px 6px; border-radius: 3px; flex-shrink: 0; }
+    .cpst-ok  { background: rgba(16,185,129,.10); color: var(--accent-green); }
+    .cpst-par { background: rgba(245,158,11,.10);  color: var(--accent-amber); }
+    .cpst-err { background: rgba(220,38,38,.08);   color: var(--accent-red); }
+    .cp-rc-r2 { font-size: 10px; color: var(--text-muted); display: flex; gap: 8px; }
+    .cp-rc-out { font-size: 10px; color: var(--text-muted); padding: 0 10px 6px; }
+
+    .cp-rc-chk { width: 15px; height: 15px; flex-shrink: 0; border: 1px solid var(--border); border-radius: 3px; background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; color: transparent; font-size: 10px; }
+    .cp-rc-chk.on { background: var(--accent-cyan); border-color: var(--accent-cyan); color: #fff; }
+
+    .cp-rc-acts { display: none; position: absolute; right: 8px; top: 8px; gap: 4px; }
+    .cp-rc:hover:not(.on) .cp-rc-acts { display: flex; }
+    .cp-act-ic { width: 20px; height: 20px; border-radius: 4px; background: #ffffff; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; color: var(--text-muted); transition: all .15s; }
+    .cp-act-ic:hover { background: #f3f4f6; color: var(--text); }
+    .cp-act-ic.del:hover { background: rgba(220,38,38,.06); color: var(--accent-red); border-color: rgba(220,38,38,.25); }
+
+    .cp-rc-detail { display: none; padding: 10px; border-top: 1px solid var(--border); background: #ffffff; }
+    .cp-rc-detail.show { display: block; }
+    .cp-det-summ { font-size: 11px; color: var(--text-dim); line-height: 1.6; margin-bottom: 8px; padding: 8px; background: rgba(139,92,246,.06); border: 1px solid rgba(139,92,246,.14); border-radius: 6px; }
+    .cp-nl { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+    .cp-ni { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-muted); padding: 3px 6px; border-radius: 4px; background: #f9fafb; }
+    .cp-ps { display: flex; flex-direction: column; gap: 3px; }
+    .cp-pr { display: flex; align-items: center; justify-content: space-between; font-size: 10px; }
+    .cp-pr-k { color: var(--text-muted); }
+    .cp-pr-v { color: var(--accent-cyan); font-family: 'Space Mono', monospace; font-size: 9px; }
+
+    .cp-bot-bar { padding: 10px 14px; border-top: 1px solid var(--border); flex-shrink: 0; min-height: 44px; display: flex; flex-direction: column; justify-content: center; background: #ffffff; }
+    .cp-bot-hint { font-size: 10px; color: var(--text-muted); text-align: center; }
+    .cp-bot-acts { display: flex; gap: 8px; }
+
+    /* Compare mode */
+    .cp-cmp-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .cp-back { background: none; border: none; color: var(--text-muted); font-size: 11px; cursor: pointer; font-family: 'Noto Sans SC', sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; }
+    .cp-back:hover { color: var(--accent-cyan); }
+    .cp-cmp-ttl { flex: 1; font-size: 11px; color: var(--text-muted); font-family: 'Space Mono', monospace; letter-spacing: .06em; }
+    .cp-sum-grid { display: flex; gap: 8px; padding: 12px; flex: 1; overflow-x: auto; }
+    .cp-sum-col { flex: 1; min-width: 68px; background: #f9fafb; border: 1px solid var(--border); border-radius: 8px; padding: 10px 8px; text-align: center; display: flex; flex-direction: column; gap: 5px; }
+    .csc-ver   { font-size: 15px; font-weight: 700; color: var(--accent-cyan); font-family: 'Space Mono', monospace; }
+    .csc-lbl   { font-size: 9px; color: var(--text-muted); line-height: 1.3; }
+    .csc-sep   { height: 1px; background: var(--border); }
+    .csc-stat  { font-size: 11px; }
+    .csc-dur   { font-size: 12px; font-weight: 600; font-family: 'Space Mono', monospace; color: var(--text-dim); }
+    .csc-power { font-size: 12px; font-weight: 600; font-family: 'Space Mono', monospace; color: var(--accent-green); }
+
+    /* ── BOTTOM COMPARISON DRAWER ── */
+    .cmp-btm-drw {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: 42vh; min-height: 240px; z-index: 30;
+      background: #ffffff; border-top: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform .3s ease;
+      box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+    }
+    .cmp-btm-drw.open { transform: translateY(0); }
+
+    .cmp-dh { height: 18px; display: flex; align-items: center; justify-content: center; cursor: ns-resize; flex-shrink: 0; }
+    .cmp-dh::before { content: ''; width: 36px; height: 3px; background: #e5e7eb; border-radius: 2px; }
+    .cmp-bhead { display: flex; align-items: center; justify-content: space-between; padding: 0 16px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .cmp-btitle { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .cmp-vpill { font-size: 10px; font-weight: 600; font-family: 'Space Mono', monospace; padding: 1px 7px; border-radius: 3px; background: rgba(6,182,212,.08); color: var(--accent-cyan); }
+
+    .cmp-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+    .cmp-nav { width: 148px; flex-shrink: 0; border-right: 1px solid var(--border); overflow-y: auto; padding: 10px 0; background: #f9fafb; }
+    .cmp-nav::-webkit-scrollbar { width: 2px; }
+    .cmp-nav::-webkit-scrollbar-thumb { background: #e5e7eb; }
+    .cmp-ns { padding: 6px 12px 4px; font-size: 10px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: color .15s; }
+    .cmp-ns:hover, .cmp-ns.act { color: var(--accent-cyan); }
+    .cmp-ni { padding: 3px 12px 3px 22px; font-size: 10px; color: var(--text-muted); cursor: pointer; transition: color .15s; }
+    .cmp-ni:hover { color: var(--text); }
+
+    .cmp-cont { flex: 1; overflow: auto; padding: 12px; }
+    .cmp-cont::-webkit-scrollbar { width: 4px; height: 4px; }
+    .cmp-cont::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+    .cmp-sec { margin-bottom: 16px; }
+    .cmp-sec-ttl { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+    .cmp-ch { background: #f9fafb; border: 1px solid var(--border); border-radius: 6px; padding: 8px; text-align: center; }
+    .cch-v { font-size: 13px; font-weight: 700; color: var(--accent-cyan); font-family: 'Space Mono', monospace; }
+    .cch-l { font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+    .cch-s { font-size: 11px; margin-top: 4px; }
+    .cmp-row { display: grid; margin-bottom: 3px; }
+    .cmp-rl { font-size: 10px; color: var(--text-muted); padding: 5px 8px; background: #f9fafb; display: flex; align-items: center; border: 1px solid var(--border); border-radius: 4px 0 0 4px; }
+    .cmp-rc { font-size: 10px; color: var(--text-dim); padding: 5px 8px; text-align: center; background: #f9fafb; border: 1px solid var(--border); border-left: none; font-family: 'Space Mono', monospace; }
+    .cmp-rc:last-child { border-radius: 0 4px 4px 0; }
+    .cc-best  { background: rgba(16,185,129,.12) !important; color: var(--accent-green); }
+    .cc-worst { background: rgba(220,38,38,.08)  !important; color: var(--accent-red); }
+    .cc-same  { opacity: .4; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes blink {
+      0%,100% { opacity: 1 } 50% { opacity: .25 }
+    }
+
+    @keyframes nodeIn {
+      from { opacity: 0; transform: translateY(20px) scale(.9) }
+      to   { opacity: 1; transform: translateY(0) scale(1) }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px) }
+      to   { opacity: 1; transform: translateX(0) }
+    }
+
+    @keyframes runPulse {
+      0%,100% { box-shadow: 0 0 20px rgba(6,182,212,.15) }
+      50%      { box-shadow: 0 0 40px rgba(6,182,212,.3) }
+    }
+
+    /* ── TIMELINE RUN HISTORY ── */
+    .cp-tl { display: flex; flex-direction: column; padding: 6px 8px; }
+    .cp-tl-row { display: flex; gap: 8px; }
+    .cp-tl-spine { display: flex; flex-direction: column; align-items: center; width: 14px; flex-shrink: 0; padding-top: 10px; }
+    .cp-tl-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .cp-tl-line { flex: 1; width: 1px; background: #e5e7eb; margin-top: 4px; min-height: 8px; }
+    .cp-tl-body { flex: 1; min-width: 0; padding-bottom: 10px; }
+    .cp-tl-card {
+      background: #f9fafb; border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 10px; transition: border-color .15s;
+    }
+    .cp-tl-card:hover { border-color: #d1d5db; }
+    .cp-tl-card.on { border-color: var(--accent-cyan); background: rgba(6,182,212,.04); }
+    .cp-tl-card.pinned { border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.05); }
+    .cp-tl-r1 { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .cp-tl-ver { font-size: 10px; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent-cyan); flex-shrink: 0; }
+    .cp-tl-name { font-size: 11px; color: var(--text); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cp-tl-pin-icon { font-size: 11px; flex-shrink: 0; }
+    .cp-tl-chk { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); background: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .15s; color: transparent; font-size: 9px; flex-shrink: 0; }
+    .cp-tl-chk.on { background: var(--accent-cyan); border-color: var(--accent-cyan); color: #fff; }
+    .cp-tl-metrics { display: flex; gap: 10px; font-size: 9px; color: var(--text-muted); margin-bottom: 3px; }
+    .cp-tl-metric { display: flex; align-items: center; gap: 3px; }
+    .cp-tl-metric-val { color: var(--text-dim); font-family: 'Space Mono', monospace; }
+    .cp-tl-actions { display: flex; gap: 4px; margin-top: 5px; }
+    .cp-tl-btn { height: 20px; padding: 0 7px; border-radius: 4px; border: 1px solid var(--border); background: #ffffff; color: var(--text-muted); font-size: 9px; cursor: pointer; transition: all .15s; font-family: 'Noto Sans SC', sans-serif; display: flex; align-items: center; }
+    .cp-tl-btn:hover { border-color: #d1d5db; color: var(--text); }
+    .cp-tl-btn.pin-btn:hover { border-color: rgba(245,158,11,.4); color: var(--accent-amber); }
+    .cp-tl-btn.del-btn:hover { border-color: rgba(220,38,38,.25); color: var(--accent-red); }
+
+    /* ── FLOATING COMPARE BAR ── */
+    .cp-float-bar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 10px 14px;
+      background: #ffffff; border-top: 1px solid var(--accent-cyan);
+      display: flex; align-items: center; gap: 8px;
+      transform: translateY(100%); transition: transform .25s ease;
+      z-index: 30;
+      box-shadow: 0 -4px 16px rgba(0,0,0,.06);
+    }
+    .cp-float-bar.show { transform: translateY(0); }
+    .cp-float-bar-cnt { font-size: 11px; color: var(--accent-cyan); flex: 1; }
+
+    /* ── FULLSCREEN COMPARE OVERLAY ── */
+    #cmp-fullscreen {
+      position: fixed; inset: 0; z-index: 600;
+      background: #ffffff;
+      display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform .35s cubic-bezier(.4,0,.2,1);
+    }
+    #cmp-fullscreen.open { transform: translateY(0); }
+
+    .cmpfs-topbar {
+      height: 48px; flex-shrink: 0;
+      background: #ffffff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 12px;
+    }
+    .cmpfs-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .cmpfs-vpills { display: flex; gap: 6px; }
+    .cmpfs-vpill { font-size: 10px; font-weight: 700; font-family: 'Space Mono', monospace; padding: 2px 8px; border-radius: 3px; background: rgba(6,182,212,.10); color: var(--accent-cyan); }
+    .cmpfs-vpill.baseline { background: rgba(245,158,11,.12); color: var(--accent-amber); }
+    .cmpfs-spacer { flex: 1; }
+    .cmpfs-close { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: #f9fafb; color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: all .15s; }
+    .cmpfs-close:hover { background: #f3f4f6; color: var(--text); }
+
+    .cmpfs-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+    .cmpfs-nav { width: 140px; flex-shrink: 0; border-right: 1px solid var(--border); overflow-y: auto; padding: 12px 0; background: #f9fafb; }
+    .cmpfs-nav::-webkit-scrollbar { width: 2px; }
+    .cmpfs-nav::-webkit-scrollbar-thumb { background: #e5e7eb; }
+    .cmpfs-ns { padding: 6px 12px 4px; font-size: 10px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: color .15s; }
+    .cmpfs-ns:hover, .cmpfs-ns.act { color: var(--accent-cyan); }
+    .cmpfs-ni { padding: 3px 12px 3px 22px; font-size: 10px; color: var(--text-muted); cursor: pointer; transition: color .15s; }
+    .cmpfs-ni:hover { color: var(--text); }
+    .cmpfs-cont { flex: 1; overflow: auto; padding: 20px 24px; }
+    .cmpfs-cont::-webkit-scrollbar { width: 4px; height: 4px; }
+    .cmpfs-cont::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+    .cmpfs-sec { margin-bottom: 28px; }
+    .cmpfs-sec-ttl { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .cmpfs-sec-badge { font-size: 9px; padding: 1px 6px; border-radius: 3px; font-weight: 600; }
+
+    /* Version columns */
+    .cmpfs-ver-col { background: #f9fafb; border: 1px solid var(--border); border-radius: 8px; padding: 12px 10px; text-align: center; }
+    .cmpfs-ver-col.baseline-col { border-color: rgba(245,158,11,.25); background: rgba(245,158,11,.05); }
+    .cmpfs-ver-num { font-size: 16px; font-weight: 700; font-family: 'Space Mono', monospace; color: var(--accent-cyan); }
+    .cmpfs-ver-num.b { color: var(--accent-amber); }
+    .cmpfs-ver-lbl { font-size: 10px; color: var(--text-muted); margin: 3px 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cmpfs-ver-st { font-size: 11px; margin-bottom: 10px; }
+    .cmpfs-apply-btn { width: 100%; padding: 7px; background: rgba(6,182,212,.08); border: 1px solid rgba(6,182,212,.25); border-radius: 6px; color: var(--accent-cyan); font-size: 11px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: 'Noto Sans SC', sans-serif; }
+    .cmpfs-apply-btn:hover { background: rgba(6,182,212,.15); border-color: var(--accent-cyan); box-shadow: 0 0 8px rgba(6,182,212,.10); }
+    .cmpfs-apply-btn.b { background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.25); color: var(--accent-amber); }
+    .cmpfs-apply-btn.b:hover { background: rgba(245,158,11,.14); border-color: var(--accent-amber); }
+
+    /* Config diff */
+    .cfgdiff-key { font-size: 10px; color: var(--text-muted); padding: 6px 8px; display: flex; align-items: flex-start; padding-top: 8px; }
+    .cfgdiff-cell { font-size: 10px; padding: 6px 8px; border-radius: 5px; border: 1px solid var(--border); background: #f9fafb; color: var(--text-dim); font-family: 'Space Mono', monospace; line-height: 1.5; word-break: break-all; }
+    .cfgdiff-cell.same { opacity: .4; }
+    .cfgdiff-cell.changed { background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.25); color: var(--accent-amber); }
+    .cfgdiff-cell.baseline { background: rgba(6,182,212,.06); border-color: rgba(6,182,212,.18); }
+
+    /* Node diff */
+    .ndiff-key { font-size: 10px; color: var(--text-muted); padding: 5px 8px; background: #f9fafb; display: flex; align-items: center; border: 1px solid var(--border); border-radius: 4px 0 0 4px; }
+    .ndiff-cell { font-size: 10px; color: var(--text-dim); padding: 5px 8px; background: #f9fafb; border: 1px solid var(--border); border-left: none; text-align: center; font-family: 'Space Mono', monospace; cursor: pointer; transition: background .15s; }
+    .ndiff-cell:last-child { border-radius: 0 4px 4px 0; }
+    .ndiff-cell:hover { background: #f3f4f6; }
+    .ndiff-cell.fast { background: rgba(16,185,129,.10); color: var(--accent-green); }
+    .ndiff-cell.slow { background: rgba(220,38,38,.06); color: var(--accent-red); }
+    .ndiff-cell.failed { background: rgba(220,38,38,.08); color: var(--accent-red); }
+    .ndiff-cell.hidden-same { opacity: .3; }
+    .ndiff-bubble { background: rgba(139,92,246,.06); border: 1px solid rgba(139,92,246,.14); border-radius: 6px; padding: 10px 12px; font-size: 10px; display: none; margin-bottom: 4px; }
+    .ndiff-bubble.show { display: block; }
+    .ndiff-bubble-title { color: var(--accent-purple); font-weight: 600; margin-bottom: 6px; font-size: 9px; text-transform: uppercase; letter-spacing: .06em; }
+    .ndiff-bubble-row { display: flex; gap: 8px; margin-bottom: 4px; color: var(--text-dim); line-height: 1.5; }
+    .ndiff-bubble-ver { color: var(--accent-cyan); font-family: 'Space Mono', monospace; flex-shrink: 0; font-size: 9px; }
+
+    /* Dynamic output stat cards */
+    .dyn-stat-card { background: #f9fafb; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; text-align: center; }
+    .dyn-stat-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .dyn-stat-val { font-size: 20px; font-weight: 700; font-family: 'Space Mono', monospace; line-height: 1; }
+    .dyn-stat-trend { font-size: 10px; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 3px; }
+    .trend-up { color: var(--accent-green); }
+    .trend-dn { color: var(--accent-red); }
+    .trend-eq { color: var(--text-muted); }
+    .dyn-placeholder { background: #f9fafb; border: 1px dashed var(--border); border-radius: 8px; padding: 20px; text-align: center; font-size: 10px; color: var(--text-muted); opacity: .5; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部导航栏 -->
+  <script src="./scripts/components.js"></script>
+  <script>
+    function gotoExternal(file) {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'NAVIGATE_TO', file: file }, '*');
+      } else {
+        window.location.href = file;
+      }
+    }
+
+    function getQueryParam(key) {
+      return new URLSearchParams(window.location.search).get(key);
+    }
+
+    function goBackToSource() {
+      const from = getQueryParam('from');
+      const target = from ? (from.endsWith('.html') ? from : `${from}.html`) : 'arrange_list.html';
+      // 当前 Arrange_white.html 在顶层全屏打开，返回时需要回到 Shell 框架的 iframe 内
+      window.top.location.href = 'index.html?recoverIframe=' + encodeURIComponent(target);
+    }
+
+    renderPageTopbar({
+      module: 'business',
+      pageName: '业务本体编排详情',
+      showBack: false
+    });
+  </script>
+
+  <!-- ===== PAGE WRAPPER ===== -->
+  <div class="page-wrap">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button class="btn btn-ghost btn-sm" onclick="goBackToSource()">← 返回</button>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="page-title">业务本体名字业务本体名字</div>
+          </div>
+          <div class="page-meta-line">
+            <span class="meta-item"><span>👤</span> 创建人：ABC</span>
+            <span class="meta-item"><span>🕐</span> 最后更新：2026-06-06 06:06:06</span>
+          </div>
+        </div>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-save" id="wf-saveBtn" onclick="wf_saveToGraph()">💾 保存</button>
+        <button class="btn btn-tool" id="wf-runBtn" onclick="wf_runFlow()">▶ 执行</button>
+        <button class="btn btn-tool" id="cp-histBtn" onclick="cp_toggleDrawer()">⏱ 运行历史</button>
+        <button class="btn btn-tool" onclick="wf_resetFlow()">🗑 清空画布</button>
+      </div>
+    </div>
+
+    <!-- ONTO BAR -->
+    <div class="onto-bar">
+      <div class="onto-bar-label">约束本体</div>
+      <div class="onto-bar-divider"></div>
+      <div id="biz-onto-chips" style="display:flex;gap:6px;flex-wrap:wrap">
+        <div class="biz-onto-chip">
+          <span>⚡</span> AI探矿业务
+          <span style="cursor:pointer;color:rgba(148,163,184,.5);margin-left:2px"
+                onclick="this.closest('.biz-onto-chip').remove()">×</span>
+        </div>
+        <div class="biz-onto-chip">
+          <span>⚡</span> AI探矿业务
+          <span style="cursor:pointer;color:rgba(148,163,184,.5);margin-left:2px"
+                onclick="this.closest('.biz-onto-chip').remove()">×</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="openModal('biz-onto-modal')">＋</button>
+      <div class="onto-bar-hint"></div>
+    </div>
+
+    <!-- WORKFLOW CANVAS CONTAINER -->
+    <div id="wf-scope">
+      <div class="wf-workspace">
+
+        <!-- LEFT PANEL -->
+        <div class="wf-left-panel">
+          <div class="panel-tabs">
+            <div class="ptab active" data-tab="assistant" onclick="switchPanelTab('assistant')">智能助手</div>
+            <div class="ptab" data-tab="algo" onclick="switchPanelTab('algo')">算法库</div>
+            <div class="ptab" data-tab="workflow" onclick="switchPanelTab('workflow')">工作流库</div>
+            <div class="ptab" data-tab="skill" onclick="switchPanelTab('skill')">SKILL</div>
+            <div class="ptab" data-tab="mcp" onclick="switchPanelTab('mcp')">MCP</div>
+          </div>
+
+          <div id="panel-content">
+
+          <div class="agent-selector" id="agent-selector">
+            <div class="agent-trigger" onclick="toggleAgentDropdown()">
+              <div class="agent-info">
+                <div class="agent-avatar">AI</div>
+                <div>
+                  <div class="agent-name" id="agent-name">本体专家</div>
+                  <div class="agent-role">agent</div>
+                </div>
+              </div>
+              <div class="agent-arrow">▼</div>
+            </div>
+            <div class="agent-dropdown" id="agent-dropdown">
+              <div class="agent-option active" data-value="ontology" onclick="selectAgent('ontology')">
+                <div class="agent-option-icon">🧠</div>
+                <div class="agent-option-text">
+                  <div class="agent-option-title">本体专家</div>
+                  <div class="agent-option-desc">根据本体帮你自动设计工作流画布</div>
+                </div>
+              </div>
+              <div class="agent-option" data-value="arrange" onclick="selectAgent('arrange')">
+                <div class="agent-option-icon">🛠</div>
+                <div class="agent-option-text">
+                  <div class="agent-option-title">服务编排</div>
+                  <div class="agent-option-desc">优化流程节点与执行顺序</div>
+                </div>
+              </div>
+              <div class="agent-option" data-value="reverse" onclick="selectAgent('reverse')">
+                <div class="agent-option-icon">🔄</div>
+                <div class="agent-option-text">
+                  <div class="agent-option-title">逆向推理</div>
+                  <div class="agent-option-desc">从目标输出反向推导所需节点</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-flow" id="chat-flow">
+            <div class="chat-msg ai">
+              <div class="chat-avatar">AI</div>
+              <div class="chat-bubble">
+                你好！我是 <strong>本体专家</strong> 助手。<br>
+                你可以用自然语言描述你需要的流程，例如：
+              </div>
+            </div>
+
+            <div class="chat-example-title">条件分支类（根据灾害类型动态选择）</div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-branch">● 条件分支</div>
+              <div>"某地发生6.5级地震，需要启动什么响应？"</div>
+            </div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-branch">● 条件分支</div>
+              <div>"化工厂发生泄漏事故，影响周边500人"</div>
+            </div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-branch">● 条件分支</div>
+              <div>"台风即将登陆，预计影响10万人口"</div>
+            </div>
+
+            <div class="chat-example-title">并行协同类（多部门同时响应）</div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-parallel">● 并行协同</div>
+              <div>"灾害等级已评估为红色预警，立即启动全面响应"</div>
+            </div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-parallel">● 并行协同</div>
+              <div>"已确认为重大洪水灾害，需要同时开展救援和后勤保障"</div>
+            </div>
+
+            <div class="chat-example-title">链式依赖类（按数据依赖顺序编排）</div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-chain">● 链式依赖</div>
+              <div>"从灾害发生到制定重建规划的完整流程"</div>
+            </div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-chain">● 链式依赖</div>
+              <div>"救援结束后，如何评估损失并制定恢复计划？"</div>
+            </div>
+
+            <div class="chat-example-title">部分流程类（只需要特定环节）</div>
+            <div class="chat-example" onclick="sendExample(this)">
+              <div class="chat-example-tag tag-partial">● 部分流程</div>
+              <div>"已收到灾害报告，我只需要完成预警发布"</div>
+            </div>
+          </div>
+
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chat-input" rows="1" placeholder="描述你需要的流程..." onkeydown="handleChatInputKey(event)"></textarea>
+            <button class="chat-send" onclick="sendChat()">➤</button>
+          </div>
+
+          <div class="chat-tip">Enter 发送，Shift+Enter 换行</div>
+          </div>
+        </div>
+
+        <!-- CANVAS -->
+        <div class="wf-canvas" id="wf-canvasWrap">
+          <!-- 对比池入口 tab（右边缘常驻） -->
+          <div class="cp-edge-tab" id="cp-edge-tab" onclick="cp_toggleDrawer()">对比池</div>
+          <!-- Grid background -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0"
+               xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="wf-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+                <path d="M 36 0 L 0 0 0 36" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="0.8"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#wf-grid)"/>
+          </svg>
+
+          <!-- scaleWrap: 980×780 design space -->
+          <div id="wf-scaleWrap" style="position:absolute;top:0;left:0;width:980px;height:780px;transform-origin:top left;">
+
+            <svg id="wf-svgLayer"
+                 style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;"></svg>
+            <canvas id="wf-glowCanvas"
+                    style="position:absolute;inset:0;pointer-events:none;z-index:1;width:980px;height:780px;"></canvas>
+            <canvas id="wf-pCanvas"
+                    style="position:absolute;inset:0;pointer-events:none;z-index:2;width:980px;height:780px;"></canvas>
+
+            <!--
+              Layout (design 980×560):
+              Col 1 x≈55   : n1(协议), n2(规范), n3(因果链路)    — top/mid/bot
+              Col 2 x≈260  : n4(RAG方法)                          — vertically centered
+              Col 3 x≈260  : n5(多源数据接入)                     — bottom area
+              Col 4 x≈470  : n6(数据处理)                         — vertically centered
+              Col 5 x≈670  : n7(星阙大模型)                       — vertically centered
+              Col 6 x≈840  : n8(功率预测结果输出)                  — vertically centered
+            -->
+
+            <!-- n1: 协议 -->
+            <div class="node node-amber" id="wf-n1"
+                 style="left:55px;top:80px;animation-delay:.10s"
+                 onclick="wf_selectNode('wf-n1','协议','protocol_doc','行业标准协议文档，提供风力发电领域的术语规范与约束条件，作为 RAG 检索的知识来源。')">
+              <div class="node-icon icon-amber">📄</div>
+              <div class="node-name">协议</div>
+              <div class="node-type">protocol_doc</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+            </div>
+
+            <!-- n2: 规范 -->
+            <div class="node node-amber" id="wf-n2"
+                 style="left:55px;top:230px;animation-delay:.20s"
+                 onclick="wf_selectNode('wf-n2','规范','standard_spec','工程规范文档，定义风机运行参数与数据采集标准，增强本体的领域覆盖度。')">
+              <div class="node-icon icon-amber">📋</div>
+              <div class="node-name">规范</div>
+              <div class="node-type">standard_spec</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+            </div>
+
+            <!-- n3: 因果链路 -->
+            <div class="node node-amber" id="wf-n3"
+                 style="left:55px;top:380px;animation-delay:.30s"
+                 onclick="wf_selectNode('wf-n3','因果链路','causal_chain','因果关系链路图谱，描述气象因素与发电功率之间的因果依赖，支撑 RAG 推理路径构建。')">
+              <div class="node-icon icon-amber">🔗</div>
+              <div class="node-name">因果链路</div>
+              <div class="node-type">causal_chain</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+            </div>
+
+            <!-- n4: RAG方法 -->
+            <div class="node node-cyan" id="wf-n4"
+                 style="left:270px;top:210px;animation-delay:.40s"
+                 onclick="wf_selectNode('wf-n4','RAG方法','rag_retrieval','检索增强生成模块，融合协议、规范与因果链路的向量化知识，为后续预测提供语义上下文。')">
+              <div class="node-icon icon-cyan">🔍</div>
+              <div class="node-name">RAG方法</div>
+              <div class="node-type">rag_retrieval</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+            </div>
+
+            <!-- n5: 多源数据接入 -->
+            <div class="node node-amber" id="wf-n5"
+                 style="left:270px;top:390px;animation-delay:.48s"
+                 onclick="wf_selectNode('wf-n5','多源数据接入','multi_source_input','接入 NWP 数值天气预报、SCADA 实时传感器、历史功率曲线等多路异构数据流。')">
+              <div class="node-icon icon-amber">📡</div>
+              <div class="node-name">多源数据接入</div>
+              <div class="node-type">multi_source_input</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+            </div>
+
+            <!-- n6: 数据处理 -->
+            <div class="node node-purple" id="wf-n6"
+                 style="left:480px;top:290px;animation-delay:.56s"
+                 onclick="wf_selectNode('wf-n6','数据处理','data_processing','对多源输入进行清洗、归一化、特征工程与时序对齐，融合 RAG 语义向量后输出统一特征张量。')">
+              <div class="node-icon icon-purple">⚙</div>
+              <div class="node-name">数据处理</div>
+              <div class="node-type">data_processing</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+            </div>
+
+            <!-- n7: 星阙大模型 -->
+            <div class="node node-cyan" id="wf-n7"
+                 style="left:680px;top:250px;animation-delay:.64s"
+                 onclick="wf_selectNode('wf-n7','星阙大模型 风速预测','llm_wind_forecast','基于Transformer架构的星阙大语言模型，结合时序编码与RAG上下文，执行超短期与短期风速预测任务。')">
+              <div class="node-icon icon-cyan">🌀</div>
+              <div class="node-name">星阙大模型</div>
+              <div class="node-type">llm_wind_forecast</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+            </div>
+
+            <!-- n8: 功率预测结果输出 -->
+            <div class="node node-green" id="wf-n8"
+                 style="left:855px;top:250px;animation-delay:.72s"
+                 onclick="wf_selectNode('wf-n8','功率预测结果输出','power_output','汇总风速预测结果，换算为风机功率曲线输出，含置信区间与不确定度评估，对接调度系统。')">
+              <div class="node-icon icon-green">⚡</div>
+              <div class="node-name">功率预测</div>
+              <div class="node-type">power_output</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+            </div>
+
+            <!-- n9: 输入节点模板 -->
+            <div class="node node-purple" id="wf-n9"
+                 style="left:55px;top:630px;animation-delay:.80s"
+                 onclick="wf_selectNode('wf-n9','输入节点模板','api_input','数据输入节点模板，支持多类气象数据集接入，配置再分析与预报数据，作为下游检索的标准化数据源。')">
+              <div class="node-icon icon-purple">🔌</div>
+              <div class="node-name">输入节点模板</div>
+              <div class="node-type">api_input</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+              <div style="font-size:9px;color:var(--accent-purple);margin-top:3px;opacity:0.7">点击查看</div>
+            </div>
+
+            <!-- n10: 知识检索节点 -->
+            <div class="node node-cyan" id="wf-n10"
+                 style="left:270px;top:630px;animation-delay:.88s"
+                 onclick="wf_selectNode('wf-n10','知识检索节点','rag_target','基于语义向量的知识检索节点，在配置的知识库范围内执行语义解析与文献匹配。')">
+              <div class="node-icon icon-cyan">📚</div>
+              <div class="node-name">知识检索节点</div>
+              <div class="node-type">rag_target</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+              <div style="font-size:9px;color:var(--accent-cyan);margin-top:3px;opacity:0.7">点击查看</div>
+            </div>
+
+            <!-- n11: 推理对比节点 -->
+            <div class="node node-amber" id="wf-n11"
+                 style="left:490px;top:630px;animation-delay:.96s"
+                 onclick="wf_selectNode('wf-n11','推理对比节点','inference_compare','对多模型推理结果进行差分比对，识别异常属性值并输出置信度评分，支持超标预警标注。')">
+              <div class="node-icon icon-amber">⚖️</div>
+              <div class="node-name">推理对比节点</div>
+              <div class="node-type">inference_compare</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+              <div style="font-size:9px;color:var(--accent-amber);margin-top:3px;opacity:0.7">点击查看</div>
+            </div>
+
+            <!-- n12: 文献结果输出 -->
+            <div class="node node-green" id="wf-n12"
+                 style="left:700px;top:630px;animation-delay:1.04s"
+                 onclick="wf_selectNode('wf-n12','文献结果输出','doc_output_confirm','汇总推理比对结果，输出带原文溯源的审计报告，支持导出为 PDF 格式供决策使用。')">
+              <div class="node-icon icon-green">📋</div>
+              <div class="node-name">文献结果输出</div>
+              <div class="node-type">doc_output_confirm</div>
+              <div class="node-status status-idle"><div class="status-dot"></div>未知</div>
+              <div style="font-size:9px;color:var(--accent-green);margin-top:3px;opacity:0.7">点击查看</div>
+            </div>
+
+          </div><!-- /wf-scaleWrap -->
+
+          <!-- 画布顶部流程基础信息 -->
+          <div class="wf-canvas-infobar">
+            <div class="ib-stat">
+              <div class="ib-val val-cyan">12</div>
+              <div class="ib-lbl">节点</div>
+            </div>
+            <div class="ib-stat">
+              <div class="ib-val val-amber">10</div>
+              <div class="ib-lbl">连线</div>
+            </div>
+            <div class="ib-stat">
+              <div class="ib-val val-purple">0</div>
+              <div class="ib-lbl">分支</div>
+            </div>
+            <div class="ib-stat">
+              <div class="ib-val val-green" id="wf-runCountEl">0</div>
+              <div class="ib-lbl">运行次数</div>
+            </div>
+          </div>
+
+        </div><!-- /wf-canvas -->
+
+        <!-- DRAWER (overlay right panel) -->
+        <div class="wf-drawer" id="wf-drawer">
+          <div class="drawer-header">
+            <div class="drawer-title" id="wf-drawerTitle">⚙ 属性配置</div>
+            <div class="drawer-close" onclick="wf_closeDrawer()">×</div>
+          </div>
+          <div class="drawer-body" id="wf-propContent">
+            <!-- content injected by wf_selectNode -->
+          </div>
+        </div>
+
+        <!-- COMPARISON POOL DRAWER -->
+        <div class="cp-drawer" id="cp-drawer"></div>
+
+      </div><!-- /wf-workspace -->
+
+      <!-- BOTTOM COMPARISON DETAIL DRAWER -->
+      <div class="cmp-btm-drw" id="cmp-btm-drw"></div>
+
+    </div><!-- /wf-scope -->
+
+  </div><!-- /page-wrap -->
+
+  <!-- ===== MODAL: 选择行业本体 ===== -->
+  <div class="modal-overlay" id="biz-onto-modal" onclick="if(event.target===this)closeModal('biz-onto-modal')">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">选择行业本体</div>
+        <div class="modal-close" onclick="closeModal('biz-onto-modal')">×</div>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">
+          从本体中心选择已配置的行业本体，作为业务本体的构建基础
+        </div>
+        <div class="search-input">🔍 搜索本体名称、领域...</div>
+        <div style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto">
+
+          <!-- Already selected -->
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--blue-dim);border:1px solid rgba(59,130,246,.4);border-radius:8px;cursor:pointer"
+               onclick="showToast('✓ 已选择：风力发电预测本体 v2')">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(6,182,212,.2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚡</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">风力发电预测本体 v2</div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:2px">新能源 · 79个概念 · 43条关系 · 2026-03-01</div>
+            </div>
+            <div style="width:16px;height:16px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;flex-shrink:0">✓</div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-3);border:1px solid var(--border-1);border-radius:8px;cursor:pointer;transition:all 0.15s"
+               onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border-1)'"
+               onclick="addOntoChip('灾害预警知识图谱 v1','⚠️','#f59e0b')">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚠️</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">灾害预警知识图谱 v1</div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:2px">气象 · 62个概念 · 38条关系 · 2026-02-28</div>
+            </div>
+            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border-2);flex-shrink:0"></div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-3);border:1px solid var(--border-1);border-radius:8px;cursor:pointer;transition:all 0.15s"
+               onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border-1)'"
+               onclick="addOntoChip('工业设备故障诊断 v1','⚙','#06b6d4')">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(6,182,212,.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚙</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">工业设备故障诊断 v1</div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:2px">工业 · 48个概念 · 31条关系 · 2026-02-15</div>
+            </div>
+            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border-2);flex-shrink:0"></div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg-3);border:1px solid var(--border-1);border-radius:8px;cursor:pointer;transition:all 0.15s"
+               onmouseenter="this.style.borderColor='var(--blue)'" onmouseleave="this.style.borderColor='var(--border-1)'"
+               onclick="addOntoChip('金融风控实体本体 v1','💰','#10b981')">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(16,185,129,.15);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">💰</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:600">金融风控实体本体 v1</div>
+              <div style="font-size:10px;color:#94a3b8;margin-top:2px">金融 · 91个概念 · 55条关系 · 2026-02-25</div>
+            </div>
+            <div style="width:16px;height:16px;border-radius:3px;border:1.5px solid var(--border-2);flex-shrink:0"></div>
+          </div>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('biz-onto-modal')">取消</button>
+        <button class="btn btn-primary"
+                onclick="closeModal('biz-onto-modal');showToast('✅ 本体引用已更新，AI 将重新分析节点建议')">确认选择</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: 固化基准版本 ===== -->
+  <div class="modal-overlay" id="cp-pin-modal" onclick="if(event.target===this)cp_closePinModal()">
+    <div class="modal" style="width:400px">
+      <div class="modal-header">
+        <div class="modal-title">📌 固化为基准版本</div>
+        <div class="modal-close" onclick="cp_closePinModal()">×</div>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:11px;color:var(--text-2,#94a3b8);margin-bottom:8px">为此次运行命名，固化后将作为对比基准</div>
+        <input id="cp-pin-label" class="prop-input" placeholder="如：基准配置 · 调整 RAG 阈值后"
+               style="width:100%;font-size:12px"
+               onkeydown="if(event.key==='Enter')cp_confirmPin()"/>
+        <div style="margin-top:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:8px 10px;font-size:10px;color:var(--text-muted)">
+          固化的版本不会被自动清理，并在对比时以 <span style="color:var(--accent-amber)">📌 基准</span> 标记展示
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="cp_closePinModal()">取消</button>
+        <button class="btn btn-primary" onclick="cp_confirmPin()">确认固化</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FULLSCREEN COMPARE ===== -->
+  <div id="cmp-fullscreen"></div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast" id="toast"><span id="toast-msg">操作成功</span></div>
+
+  <!-- ===== SCRIPTS ===== -->
+  <script>
+
+    // ── Toast ──
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      const m = document.getElementById('toast-msg');
+      if (!t || !m) return;
+      m.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    // ── Modal ──
+    function openModal(id)  { const m = document.getElementById(id); if (m) m.classList.add('show'); }
+    function closeModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('show'); }
+
+    // ── Add onto chip ──
+    function addOntoChip(name, icon, color) {
+      const chips = document.getElementById('biz-onto-chips');
+      const exists = [...chips.querySelectorAll('.biz-onto-chip')].some(c => c.textContent.includes(name));
+      if (exists) { showToast('已添加：' + name); return; }
+      const chip = document.createElement('div');
+      chip.className = 'biz-onto-chip';
+      chip.style.color = color;
+      chip.innerHTML = `<span>${icon}</span> ${name}
+        <span style="cursor:pointer;color:rgba(148,163,184,.5);margin-left:2px"
+              onclick="this.closest('.biz-onto-chip').remove()">×</span>`;
+      chips.appendChild(chip);
+      showToast('✅ 已添加本体：' + name);
+    }
+
+    // ── Node select ──
+    // 节点分组：datasource / llm / model(默认)
+    const WF_NODE_GROUP = {
+      'wf-n1': 'datasource',         // 协议
+      'wf-n2': 'datasource',         // 规范
+      'wf-n3': 'datasource',         // 因果链路
+      'wf-n5': 'datasource',         // 多源数据接入
+      'wf-n7': 'llm',                // 星阙大模型
+      'wf-n9':  'api_input',         // 输入节点模板
+      'wf-n10': 'rag_target',        // 知识检索节点
+      'wf-n11': 'inference_compare', // 推理对比节点
+      'wf-n12': 'doc_output',        // 文献结果输出
+    };
+
+    // 两级联动数据集映射
+    const WF_DATASET_MAP = {
+      '再分析数据': ['ERA5-single levels-40years', 'ERA5-pressure-levels-40years'],
+      '预报数据':   ['NCEP GFS 全球预报历史存档', 'ECMWF HRES 全球数值预报数据（0.25°）', 'GFS'],
+    };
+
+    function wf_updateDataset() {
+      const type  = document.getElementById('wf-ds-type')?.value;
+      const setEl = document.getElementById('wf-ds-set');
+      if (!setEl || !type) return;
+      const opts = WF_DATASET_MAP[type] || [];
+      setEl.innerHTML = opts.map(o => `<option>${o}</option>`).join('');
+    }
+
+    function wf_nodeExtraHTML(id) {
+      const g = WF_NODE_GROUP[id] || 'model';
+
+      if (g === 'datasource') {
+        return `
+        <div class="prop-group">
+          <div class="prop-label" style="margin-bottom:6px">数据来源</div>
+          <div class="node-extra-box">
+            <div>
+              <div class="prop-label">数据类型</div>
+              <select class="prop-select" style="margin-top:4px">
+                <option>气象卫星数据</option>
+                <option>预报数据</option>
+                <option>地面气象数据</option>
+              </select>
+            </div>
+            <div>
+              <div class="prop-label">数据集</div>
+              <select class="prop-select" style="margin-top:4px">
+                <option>NOAA GSOD全球逐日汇总数据</option>
+                <option>中国地面气象观测数据(CMA)</option>
+                <option>全球高空探空数据(IGRA，NOAA)</option>
+              </select>
+            </div>
+            <div class="ds-fields">
+              <div class="ds-field">
+                <span class="ds-field-lbl">时间范围</span>
+                <span class="ds-field-val">2020-01 ~ 2024-12</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-field-lbl">数据频率</span>
+                <span class="ds-field-val">逐日</span>
+              </div>
+              <div class="ds-field">
+                <span class="ds-field-lbl">数据质量</span>
+                <span class="ds-field-val">优</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      if (g === 'llm') {
+        return `
+        <div class="prop-group">
+          <button class="model-cmp-btn"
+                  onclick="window.open('https://ai-dev.insightst.com/home/evaluation?tab=weather','_blank')">
+            ⊞ 模型对比
+          </button>
+        </div>`;
+      }
+
+      if (g === 'api_input') {
+        return `
+        <div class="prop-group">
+          <div class="prop-label" style="margin-bottom:6px">数据接入配置</div>
+          <div class="node-extra-box">
+            <div>
+              <div class="prop-label">数据类型</div>
+              <select class="prop-select" id="wf-ds-type" style="margin-top:4px" onchange="wf_updateDataset()">
+                <option>再分析数据</option>
+                <option>预报数据</option>
+              </select>
+            </div>
+            <div>
+              <div class="prop-label">数据集</div>
+              <select class="prop-select" id="wf-ds-set" style="margin-top:4px">
+                <option>ERA5-single levels-40years</option>
+                <option>ERA5-pressure-levels-40years</option>
+              </select>
+            </div>
+          </div>
+          <div class="asset-link-row" style="margin-top:6px" onclick="showToast('跳转至资产平台...')">
+            🔗 <span>关联资产平台</span>
+            <span style="margin-left:auto;opacity:0.6">→</span>
+          </div>
+          <div class="prop-label" style="margin-top:10px;margin-bottom:4px">已同步标准化属性</div>
+          <div class="sync-table">
+            <div class="sync-row">
+              <span class="sync-row-lbl">额定功率</span>
+              <span class="sync-row-val">2000 kW</span>
+            </div>
+            <div class="sync-row highlight">
+              <span class="sync-row-lbl">切出风速</span>
+              <span class="sync-row-val">25 m/s</span>
+            </div>
+            <div class="sync-row">
+              <span class="sync-row-lbl">工作温度</span>
+              <span class="sync-row-val">-20 ~ 40 °C</span>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      if (g === 'rag_target') {
+        return `
+        <div class="prop-group">
+          <div class="prop-label" style="margin-bottom:6px">检索库范围</div>
+          <div class="check-group">
+            <label class="check-item"><input type="checkbox" checked> 风力发电领域知识库</label>
+            <label class="check-item"><input type="checkbox" checked> ERA5气象数据文档库</label>
+            <label class="check-item"><input type="checkbox"> 工业设备规范文档库</label>
+          </div>
+          <div class="semantic-preview" style="margin-top:8px">
+            <div class="semantic-preview-title">语义解析预览</div>
+            <div class="semantic-quote">
+              已提取关键实体：风速、切出风速阈值、山地地形修正系数，语义相似度 0.87
+            </div>
+          </div>
+        </div>`;
+      }
+
+      if (g === 'inference_compare') {
+        return `
+        <div class="prop-group">
+          <div class="prop-label">分析模式</div>
+          <select class="prop-select" style="margin-top:4px">
+            <option>差分比对</option>
+            <option>多模型融合</option>
+            <option>置信区间分析</option>
+          </select>
+          <div class="prop-label" style="margin-top:10px;margin-bottom:4px">差分比对结果</div>
+          <div class="diff-table">
+            <div class="diff-row">
+              <span class="diff-row-key">切出风速</span>
+              <span class="diff-badge diff-badge-warn">超标</span>
+            </div>
+            <div class="diff-row">
+              <span class="diff-row-key">环境温度</span>
+              <span class="diff-badge diff-badge-ok">通过</span>
+            </div>
+          </div>
+          <div class="diff-note" style="margin-top:6px">
+            切出风速偏差 +3.2 m/s，超出标准阈值 12.8%，建议复核山地地形修正系数。
+          </div>
+        </div>`;
+      }
+
+      if (g === 'doc_output') {
+        return `
+        <div class="prop-group">
+          <div class="audit-box">
+            <div class="audit-box-title">⚠ 审计结论</div>
+            <div class="audit-box-text">
+              检测到 1 项超标属性，建议在导出报告前确认修正意见。
+            </div>
+          </div>
+          <div class="doc-preview" style="margin-top:8px">
+            <div class="doc-preview-title">原文溯源</div>
+            <div class="doc-page">
+              …风速预测误差在山地地形条件下，受地形遮蔽影响，
+              <span class="doc-highlight">切出风速阈值应上调至 25~28 m/s</span>
+              区间，以降低非预期停机概率…
+            </div>
+          </div>
+          <button class="export-pdf-btn" style="margin-top:8px" onclick="showToast('正在生成 PDF 报告…')">
+            ↓ 导出 PDF 报告
+          </button>
+        </div>`;
+      }
+
+      // 其他节点：模型选择下拉
+      return `
+        <div class="prop-group">
+          <div class="prop-label">模型选择</div>
+          <select class="prop-select" style="margin-top:4px">
+            <option>星阙-WindForecast-v2</option>
+            <option>LSTM-Temporal-v1</option>
+            <option>Transformer-ERA5-v3</option>
+          </select>
+        </div>`;
+    }
+
+    let wf_selectedNode = null;
+
+    function wf_openDrawer(name) {
+      cp_closeDrawer(); // 互斥：关闭对比池
+      const d = document.getElementById('wf-drawer');
+      const t = document.getElementById('wf-drawerTitle');
+      if (t) t.textContent = '⚙ ' + name;
+      if (d) d.classList.add('open');
+    }
+
+    function wf_closeDrawer() {
+      const d = document.getElementById('wf-drawer');
+      if (d) d.classList.remove('open');
+      if (wf_selectedNode) {
+        const prev = document.getElementById(wf_selectedNode);
+        if (prev) prev.classList.remove('active');
+        wf_selectedNode = null;
+      }
+    }
+
+    function wf_selectNode(id, name, type, desc) {
+      if (wf_selectedNode) {
+        const prev = document.getElementById(wf_selectedNode);
+        if (prev) prev.classList.remove('active');
+      }
+      wf_selectedNode = id;
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+      wf_openDrawer(name);
+      document.getElementById('wf-propContent').innerHTML = `
+        <div class="prop-group"><div class="prop-label">节点名称</div>
+          <input class="prop-input" value="${name}"/></div>
+        <div class="prop-group"><div class="prop-label">节点类型</div>
+          <input class="prop-input" value="${type}"
+            style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent-cyan)"/></div>
+        ${wf_nodeExtraHTML(id)}
+        <div class="prop-group"><div class="prop-label">描述</div>
+          <textarea class="prop-input" rows="4" style="resize:none;line-height:1.5">${desc}</textarea></div>
+        <div class="prop-group"><div class="prop-label">超时时间 (ms)</div>
+          <input class="prop-input" value="5000" type="number"/></div>
+        <div class="prop-group"><div class="prop-label">重试次数</div>
+          <select class="prop-select">
+            <option>0</option><option selected>1</option><option>2</option><option>3</option>
+          </select></div>
+        <div class="prop-group"><div class="prop-label">状态</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px">
+            <span style="color:var(--accent-green)">●</span>
+            <span style="color:var(--text-dim)">就绪</span>
+          </div></div>`;
+    }
+
+    // ── Node status ──
+    const WF_NODE_ORDER = ['wf-n1','wf-n2','wf-n3','wf-n4','wf-n5','wf-n6','wf-n7','wf-n8','wf-n9','wf-n10','wf-n11','wf-n12'];
+    let wf_runCount = 0;
+
+    function wf_setNodeStatus(id, status) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const s = el.querySelector('.node-status');
+      if (!s) return;
+      const map = {
+        idle:    { c: 'status-idle',    t: '未知' },
+        running: { c: 'status-running', t: '执行中' },
+        done:    { c: 'status-done',    t: '完成' },
+      };
+      s.className = 'node-status ' + map[status].c;
+      s.innerHTML = `<div class="status-dot"></div>${map[status].t}`;
+    }
+
+    function wf_runFlow() {
+      const btn = document.getElementById('wf-runBtn');
+      if (btn && btn.dataset.running) return;
+      if (btn) { btn.dataset.running = '1'; btn.classList.add('running'); btn.textContent = '⏳ 执行中...'; }
+      wf_runCount++;
+      const countEl = document.getElementById('wf-runCountEl');
+      if (countEl) countEl.textContent = wf_runCount;
+
+      WF_NODE_ORDER.forEach(id => wf_setNodeStatus(id, 'idle'));
+      let delay = 0;
+      WF_NODE_ORDER.forEach((id, i) => {
+        setTimeout(() => {
+          wf_setNodeStatus(id, 'running');
+          setTimeout(() => {
+            wf_setNodeStatus(id, 'done');
+            if (i === WF_NODE_ORDER.length - 1 && btn) {
+              setTimeout(() => {
+                btn.removeAttribute('data-running');
+                btn.classList.remove('running');
+                btn.textContent = '▶ 执行流程';
+                // 流程完成：自动抓取并记录到运行历史
+                cp_captureSnapshot();
+                cp_autoSave();
+              }, 800);
+            }
+          }, 650);
+        }, delay);
+        delay += 720;
+      });
+    }
+
+    function wf_resetFlow() {
+      WF_NODE_ORDER.forEach(id => wf_setNodeStatus(id, 'idle'));
+      const btn = document.getElementById('wf-runBtn');
+      if (btn) {
+        btn.removeAttribute('data-running');
+        btn.classList.remove('running');
+        btn.textContent = '▶ 执行流程';
+      }
+    }
+
+    function wf_saveToGraph() {
+      const btn = document.getElementById('wf-saveBtn');
+      if (!btn) return;
+      btn.textContent = '✓ 已保存';
+      btn.style.color = 'var(--green)';
+      setTimeout(() => { btn.textContent = '⊞ 保存到 Neo4j'; btn.style.color = ''; }, 2000);
+    }
+
+    // ══════════════════════════════════════════════
+    //  WORKFLOW CANVAS ENGINE
+    // ══════════════════════════════════════════════
+
+    // Connection definitions matching the uploaded diagram:
+    //  协议  → RAG方法
+    //  规范  → RAG方法
+    //  因果链路 → RAG方法
+    //  多源数据接入 → 数据处理
+    //  RAG方法 → 数据处理
+    //  数据处理 → 星阙大模型
+    //  星阙大模型 → 功率预测结果输出
+    const WF_CONN_DEFS = [
+      { from: 'wf-n1', to: 'wf-n4', color: '#f59e0b' },
+      { from: 'wf-n2', to: 'wf-n4', color: '#f59e0b' },
+      { from: 'wf-n3', to: 'wf-n4', color: '#f59e0b' },
+      { from: 'wf-n5', to: 'wf-n6', color: '#8b5cf6' },
+      { from: 'wf-n4', to: 'wf-n6', color: '#06b6d4' },
+      { from: 'wf-n6', to: 'wf-n7', color: '#8b5cf6' },
+      { from: 'wf-n7', to: 'wf-n8', color: '#10b981' },
+      // 新增链路（独立，不连接上方节点）
+      { from: 'wf-n9',  to: 'wf-n10', color: '#8b5cf6' },
+      { from: 'wf-n10', to: 'wf-n11', color: '#06b6d4' },
+      { from: 'wf-n11', to: 'wf-n12', color: '#10b981' },
+    ];
+
+    const wf_svgEl      = document.getElementById('wf-svgLayer');
+    const wf_glowCanvas = document.getElementById('wf-glowCanvas');
+    const wf_glowCtx    = wf_glowCanvas.getContext('2d');
+    const wf_pCanvas    = document.getElementById('wf-pCanvas');
+    const wf_ctx        = wf_pCanvas.getContext('2d');
+
+    const WF_ORBS = [
+      { ax:0.38, ay:0.28, fx:0.041, fy:0.029, phase:0.00, r:200, color:'6,182,212',  baseA:0.022 },
+      { ax:0.65, ay:0.60, fx:0.027, fy:0.037, phase:1.80, r:170, color:'139,92,246', baseA:0.018 },
+      { ax:0.20, ay:0.68, fx:0.033, fy:0.024, phase:3.50, r:150, color:'6,182,212',  baseA:0.015 },
+      { ax:0.80, ay:0.25, fx:0.022, fy:0.031, phase:5.10, r:180, color:'16,185,129', baseA:0.013 },
+    ];
+
+    let wf_builtConns = [];
+    let wf_particles  = [];
+    let wf_spawnTimer = null;
+    let wf_rafId      = null;
+    let wf_animT0     = null;
+
+    function wf_getNodeEdge(nodeId, side) {
+      const node = document.getElementById(nodeId);
+      const x = node.offsetLeft;
+      const y = node.offsetTop + node.offsetHeight / 2;
+      return { x: side === 'right' ? x + node.offsetWidth : x, y };
+    }
+
+    function wf_buildSVG() {
+      wf_svgEl.innerHTML = '';
+      wf_builtConns = [];
+
+      const W = 980, H = 780;
+      wf_svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      wf_svgEl.setAttribute('width',  W);
+      wf_svgEl.setAttribute('height', H);
+      wf_pCanvas.width = wf_glowCanvas.width  = W;
+      wf_pCanvas.height= wf_glowCanvas.height = H;
+
+      const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+
+      // glow filter（白底：更紧、更淡的辉光，避免黑边/脏感）
+      const filt = document.createElementNS('http://www.w3.org/2000/svg','filter');
+      filt.setAttribute('id','wf-glow');
+      filt.setAttribute('x','-30%'); filt.setAttribute('y','-200%');
+      filt.setAttribute('width','160%'); filt.setAttribute('height','500%');
+      const feBlur = document.createElementNS('http://www.w3.org/2000/svg','feGaussianBlur');
+      feBlur.setAttribute('in','SourceGraphic'); feBlur.setAttribute('stdDeviation','2'); feBlur.setAttribute('result','b');
+      const feMerge = document.createElementNS('http://www.w3.org/2000/svg','feMerge');
+      ['SourceGraphic','b'].forEach(k => {
+        const n = document.createElementNS('http://www.w3.org/2000/svg','feMergeNode');
+        n.setAttribute('in',k); feMerge.appendChild(n);
+      });
+      filt.appendChild(feBlur); filt.appendChild(feMerge); defs.appendChild(filt);
+
+      // glowH filter（白底：柔和扩散晕，不是深色 shadow）
+      const filtH = document.createElementNS('http://www.w3.org/2000/svg','filter');
+      filtH.setAttribute('id','wf-glowH');
+      filtH.setAttribute('x','-40%'); filtH.setAttribute('y','-300%');
+      filtH.setAttribute('width','180%'); filtH.setAttribute('height','700%');
+      const feBlurH = document.createElementNS('http://www.w3.org/2000/svg','feGaussianBlur');
+      feBlurH.setAttribute('in','SourceGraphic'); feBlurH.setAttribute('stdDeviation','4'); feBlurH.setAttribute('result','b');
+      const feMergeH = document.createElementNS('http://www.w3.org/2000/svg','feMerge');
+      ['SourceGraphic','b','b'].forEach(k => {
+        const n = document.createElementNS('http://www.w3.org/2000/svg','feMergeNode');
+        n.setAttribute('in',k); feMergeH.appendChild(n);
+      });
+      filtH.appendChild(feBlurH); filtH.appendChild(feMergeH); defs.appendChild(filtH);
+
+      wf_svgEl.appendChild(defs);
+
+      WF_CONN_DEFS.forEach((cd, i) => {
+        const from = wf_getNodeEdge(cd.from, 'right');
+        const to   = wf_getNodeEdge(cd.to,   'left');
+        const cx   = (from.x + to.x) / 2;
+        const d    = `M${from.x},${from.y} C${cx},${from.y} ${cx},${to.y} ${to.x},${to.y}`;
+
+        const gid  = `wf-g${i}`;
+        const grad = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+        grad.setAttribute('id', gid);
+        grad.setAttribute('gradientUnits','userSpaceOnUse');
+        grad.setAttribute('x1', from.x); grad.setAttribute('y1', from.y);
+        grad.setAttribute('x2', to.x);   grad.setAttribute('y2', to.y);
+        [[0,.35],[1,1]].forEach(([o,op]) => {
+          const s = document.createElementNS('http://www.w3.org/2000/svg','stop');
+          s.setAttribute('offset', o*100+'%');
+          s.setAttribute('stop-color', cd.color);
+          s.setAttribute('stop-opacity', op);
+          grad.appendChild(s);
+        });
+        defs.appendChild(grad);
+
+        const base = document.createElementNS('http://www.w3.org/2000/svg','path');
+        base.setAttribute('d',d); base.setAttribute('fill','none');
+        base.setAttribute('stroke','#d1d5db'); base.setAttribute('stroke-width','2');
+        wf_svgEl.appendChild(base);
+
+        const main = document.createElementNS('http://www.w3.org/2000/svg','path');
+        main.setAttribute('d',d); main.setAttribute('fill','none');
+        main.setAttribute('stroke', cd.color);
+        main.setAttribute('stroke-width','2');
+        main.setAttribute('stroke-linecap','round');
+        wf_svgEl.appendChild(main);
+
+        const glow = document.createElementNS('http://www.w3.org/2000/svg','path');
+        glow.setAttribute('d',d); glow.setAttribute('fill','none');
+        glow.setAttribute('stroke',cd.color); glow.setAttribute('stroke-width','3.5');
+        glow.setAttribute('filter','url(#wf-glowH)'); glow.setAttribute('opacity','0');
+        glow.setAttribute('stroke-linecap','round');
+        wf_svgEl.appendChild(glow);
+
+        const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        dot.setAttribute('cx', to.x); dot.setAttribute('cy', to.y);
+        dot.setAttribute('r','3.5'); dot.setAttribute('fill', '#ffffff');
+        dot.setAttribute('stroke', cd.color);
+        dot.setAttribute('stroke-width','2');
+        wf_svgEl.appendChild(dot);
+
+        const pathLen = main.getTotalLength();
+        wf_builtConns.push({ color: cd.color, pathEl: main, glowEl: glow, length: pathLen });
+      });
+    }
+
+    function wf_hexRgb(hex) {
+      return {
+        r: parseInt(hex.slice(1,3),16),
+        g: parseInt(hex.slice(3,5),16),
+        b: parseInt(hex.slice(5,7),16),
+      };
+    }
+
+    function wf_loop(ts) {
+      if (!wf_animT0) wf_animT0 = ts;
+      const elapsed = (ts - wf_animT0) / 1000;
+
+      wf_ctx.clearRect(0, 0, wf_pCanvas.width, wf_pCanvas.height);
+
+      const W = wf_glowCanvas.width, H = wf_glowCanvas.height;
+      wf_glowCtx.clearRect(0, 0, W, H);
+      for (const orb of WF_ORBS) {
+        const cx  = orb.ax * W + Math.sin(elapsed * orb.fx + orb.phase) * W * 0.18;
+        const cy  = orb.ay * H + Math.cos(elapsed * orb.fy + orb.phase * 1.3) * H * 0.18;
+        const br  = (Math.sin(elapsed * 0.38 + orb.phase) + 1) / 2;
+        const al  = orb.baseA + br * orb.baseA * 1.1;
+        const gr  = wf_glowCtx.createRadialGradient(cx,cy,0,cx,cy,orb.r);
+        gr.addColorStop(0,    `rgba(${orb.color},${al.toFixed(3)})`);
+        gr.addColorStop(0.45, `rgba(${orb.color},${(al*0.35).toFixed(3)})`);
+        gr.addColorStop(1,    `rgba(${orb.color},0)`);
+        wf_glowCtx.beginPath(); wf_glowCtx.arc(cx,cy,orb.r,0,Math.PI*2);
+        wf_glowCtx.fillStyle = gr; wf_glowCtx.fill();
+      }
+
+      wf_builtConns.forEach((bc, i) => {
+        const breath = (Math.sin(elapsed * Math.PI * 2 / 2.8 + i * 1.1) + 1) / 2;
+        bc.glowEl.setAttribute('opacity', (0.18 + breath * 0.32).toFixed(3));
+      });
+
+      const now = performance.now();
+      for (let i = wf_particles.length - 1; i >= 0; i--) {
+        const p  = wf_particles[i];
+        const pt = Math.min((now - p.startMs) / p.dur, 1);
+        if (pt >= 1) { wf_particles.splice(i, 1); continue; }
+
+        const svgPt = p.bc.pathEl.getPointAtLength(pt * p.bc.length);
+        const x = svgPt.x, y = svgPt.y;
+        const alpha = pt < 0.08 ? pt/0.08 : pt > 0.88 ? (1-pt)/0.12 : 1;
+        const {r,g,b} = wf_hexRgb(p.bc.color);
+
+        const halo = wf_ctx.createRadialGradient(x,y,0,x,y,p.size*3.8);
+        halo.addColorStop(0, `rgba(${r},${g},${b},${(0.3*alpha).toFixed(3)})`);
+        halo.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        wf_ctx.beginPath(); wf_ctx.arc(x,y,p.size*3.8,0,Math.PI*2);
+        wf_ctx.fillStyle = halo; wf_ctx.fill();
+
+        const core = wf_ctx.createRadialGradient(x,y,0,x,y,p.size);
+        core.addColorStop(0,    `rgba(255,255,255,${(0.98*alpha).toFixed(3)})`);
+        core.addColorStop(0.45, `rgba(${r},${g},${b},${(0.92*alpha).toFixed(3)})`);
+        core.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+        wf_ctx.beginPath(); wf_ctx.arc(x,y,p.size,0,Math.PI*2);
+        wf_ctx.fillStyle = core; wf_ctx.fill();
+      }
+
+      wf_rafId = requestAnimationFrame(wf_loop);
+    }
+
+    function wf_spawnBatch() {
+      wf_builtConns.forEach((bc, i) => {
+        setTimeout(() => {
+          wf_particles.push({
+            bc,
+            startMs: performance.now(),
+            dur:  900 + Math.random() * 400,
+            size: 4.5 + Math.random() * 2.5,
+          });
+        }, i * 140);
+      });
+    }
+
+    function wf_startSpawner() {
+      if (wf_spawnTimer) return;
+      wf_spawnBatch();
+      wf_spawnTimer = setInterval(wf_spawnBatch, 1350);
+    }
+
+    // ── Viewport state (pan + zoom) ──────────────────────────
+    const VP = { tx: 0, ty: 0, scale: 1 };
+    let wf_firstScaleDone = false;
+
+    function vp_apply() {
+      const sw = document.getElementById('wf-scaleWrap');
+      if (sw) sw.style.transform = `translate(${VP.tx}px,${VP.ty}px) scale(${VP.scale})`;
+    }
+
+    function wf_scaleCanvas() {
+      const wrap = document.getElementById('wf-canvasWrap');
+      if (!wrap) return;
+      const DESIGN_W = 980, DESIGN_H = 780;
+      const availW = wrap.clientWidth, availH = wrap.clientHeight;
+      if (!availW || !availH) return;
+      VP.scale = Math.min(availW / DESIGN_W, availH / DESIGN_H, 1);
+      VP.tx    = Math.max(0, (availW - DESIGN_W * VP.scale) / 2);
+      VP.ty    = Math.max(0, (availH - DESIGN_H * VP.scale) / 2);
+      vp_apply();
+    }
+
+    // ── Canvas pan / zoom ─────────────────────────────────────
+    (function () {
+      const ZOOM_MIN = 0.25, ZOOM_MAX = 3, ZOOM_STEP = 0.12;
+      let drag = null, moved = false;
+      const wrap = document.getElementById('wf-canvasWrap');
+
+      // 滚轮缩放：以鼠标位置为缩放锚点
+      wrap.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        const rect = wrap.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const factor = e.deltaY < 0 ? 1 + ZOOM_STEP : 1 - ZOOM_STEP;
+        const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, VP.scale * factor));
+        // 保持鼠标下方内容位置不变
+        VP.tx = mx - (mx - VP.tx) * (newScale / VP.scale);
+        VP.ty = my - (my - VP.ty) * (newScale / VP.scale);
+        VP.scale = newScale;
+        vp_apply();
+      }, { passive: false });
+
+      // 鼠标拖拽平移（仅画布背景，不拦截节点）
+      wrap.addEventListener('mousedown', function (e) {
+        if (e.target.closest('.node') || e.target.closest('.cp-edge-tab')) return;
+        drag = { sx: e.clientX, sy: e.clientY, stx: VP.tx, sty: VP.ty };
+        moved = false;
+        wrap.classList.add('panning');
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', function (e) {
+        if (!drag) return;
+        const dx = e.clientX - drag.sx;
+        const dy = e.clientY - drag.sy;
+        if (!moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) moved = true;
+        VP.tx = drag.stx + dx;
+        VP.ty = drag.sty + dy;
+        vp_apply();
+      });
+
+      window.addEventListener('mouseup', function () {
+        if (!drag) return;
+        drag = null;
+        wrap.classList.remove('panning');
+      });
+
+      // 拖拽结束后抑制节点 click 误触发
+      wrap.addEventListener('click', function (e) {
+        if (moved) { e.stopPropagation(); moved = false; }
+      }, true);
+    })();
+
+    function wf_typewrite(el, text, speed = 18) {
+      el.innerHTML = '';
+      let i = 0;
+      const html = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text)">$1</strong>')
+        .replace(/\n/g, '<br>');
+      const chars = [...html];
+      let cur = '';
+      function next() {
+        if (i < chars.length) { cur += chars[i++]; el.innerHTML = cur; setTimeout(next, speed + Math.random()*10); }
+      }
+      next();
+    }
+
+    function wf_applyToCanvas() {
+      WF_NODE_ORDER.forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.animation = 'none';
+        setTimeout(() => {
+          el.style.animation = `nodeIn .6s cubic-bezier(.34,1.56,.64,1) ${i * .12}s both`;
+        }, 10);
+      });
+      setTimeout(() => { wf_buildSVG(); wf_animT0 = null; }, 160);
+    }
+
+    // ── Agent 选择器 ──
+    function toggleAgentDropdown() {
+      const sel = document.getElementById('agent-selector');
+      sel.classList.toggle('open');
+    }
+
+    function selectAgent(value) {
+      const agents = {
+        ontology: { name: '本体专家', icon: '🧠', desc: '根据本体帮你自动设计工作流画布' },
+        arrange:  { name: '服务编排', icon: '🛠', desc: '优化流程节点与执行顺序' },
+        reverse:  { name: '逆向推理', icon: '🔄', desc: '从目标输出反向推导所需节点' }
+      };
+      const a = agents[value];
+      if (!a) return;
+      document.getElementById('agent-name').textContent = a.name;
+      document.querySelectorAll('.agent-option').forEach(el => el.classList.toggle('active', el.dataset.value === value));
+      document.getElementById('agent-selector').classList.remove('open');
+
+      // 更新欢迎语
+      const flow = document.getElementById('chat-flow');
+      const firstMsg = flow.querySelector('.chat-msg.ai .chat-bubble');
+      if (firstMsg) {
+        firstMsg.innerHTML = `你好！我是 <strong>${a.name}</strong> 助手。<br>${a.desc}。你可以用自然语言描述你需要的流程，例如：`;
+      }
+    }
+
+    // ── 聊天交互 ──
+    function handleChatInputKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChat();
+      }
+    }
+
+    function sendExample(el) {
+      const text = el.querySelector('div:last-child').textContent;
+      appendUserMsg(text);
+      respondWithAI(text);
+    }
+
+    function sendChat() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      input.style.height = 'auto';
+      appendUserMsg(text);
+      respondWithAI(text);
+    }
+
+    function appendUserMsg(text) {
+      const flow = document.getElementById('chat-flow');
+      const msg = document.createElement('div');
+      msg.className = 'chat-msg user';
+      msg.innerHTML = `<div class="chat-avatar">我</div><div class="chat-bubble">${escapeHtml(text)}</div>`;
+      flow.appendChild(msg);
+      flow.scrollTop = flow.scrollHeight;
+    }
+
+    function appendAIMsg(html) {
+      const flow = document.getElementById('chat-flow');
+      const msg = document.createElement('div');
+      msg.className = 'chat-msg ai';
+      msg.innerHTML = `<div class="chat-avatar">AI</div><div class="chat-bubble">${html}</div>`;
+      flow.appendChild(msg);
+      flow.scrollTop = flow.scrollHeight;
+      return msg.querySelector('.chat-bubble');
+    }
+
+    function respondWithAI(text) {
+      const agentName = document.getElementById('agent-name').textContent;
+      setTimeout(() => {
+        const reply = `收到你的描述。作为 <strong>${agentName}</strong>，我已识别出这是一个<strong>应急响应流程</strong>需求，包含灾害信息接报、灾害类型识别、灾害等级评估、预警信息发布 4 个关键节点。点击画布右上角「▶ 执行」即可运行。`;
+        const bubble = appendAIMsg(reply);
+        typewriteBubble(bubble, reply);
+      }, 400);
+    }
+
+    function typewriteBubble(bubble, html) {
+      bubble.innerHTML = '';
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      const plain = temp.textContent;
+      let i = 0;
+      function next() {
+        if (i <= plain.length) {
+          bubble.innerHTML = html.slice(0, html.indexOf(plain) >= 0 ? html.indexOf(plain) + i : i);
+          i++;
+          setTimeout(next, 12);
+        } else {
+          bubble.innerHTML = html;
+        }
+      }
+      next();
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;' }[m]));
+    }
+
+    // ── 左侧面板标签切换 ──
+    let ASSISTANT_HTML = null;
+
+    function getPanelContent(tab) {
+      if (tab === 'assistant') {
+        if (!ASSISTANT_HTML) ASSISTANT_HTML = document.getElementById('panel-content').innerHTML;
+        return ASSISTANT_HTML;
+      }
+      if (tab === 'algo') return renderAlgoLibrary();
+      if (tab === 'workflow') return renderWorkflowLibrary();
+      if (tab === 'skill') return renderAssetManager('SKILL', SKILL_DATA);
+      if (tab === 'mcp') return renderAssetManager('MCP', MCP_DATA);
+      return '';
+    }
+
+    function switchPanelTab(tab) {
+      const panel = document.querySelector('.wf-left-panel');
+      const content = document.getElementById('panel-content');
+
+      document.querySelectorAll('.ptab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+
+      // SKILL/MCP 用更宽面板
+      if (tab === 'skill' || tab === 'mcp') {
+        panel.classList.add('wide');
+      } else {
+        panel.classList.remove('wide');
+      }
+
+      content.innerHTML = getPanelContent(tab);
+
+      // 重新绑定 agent 事件（如果回到 assistant）
+      if (tab === 'assistant') {
+        bindAgentEvents();
+      }
+    }
+
+    function bindAgentEvents() {
+      const input = document.getElementById('chat-input');
+      if (input) {
+        input.addEventListener('keydown', handleChatInputKey);
+      }
+    }
+
+    function renderAlgoLibrary() {
+      const categories = [
+        { name: '优化分配', items: [
+          { name: 'AGC机组级功率分配', ver: 'v1.0.0' }
+        ]},
+        { name: '深度学习', items: [
+          { name: 'BiLSTM超短期风速预测', ver: 'v1.0.0' },
+          { name: 'GRU风功率映射', ver: 'v1.0.0' }
+        ]},
+        { name: '统计建模', items: [
+          { name: 'Copula多变量相关建模', ver: 'v1.0.0' }
+        ]},
+        { name: '流程触发', items: [
+          { name: '灾害预警阈值触发', ver: 'v1.0.0' }
+        ]}
+      ];
+
+      return `
+        <div class="lib-panel">
+          <div class="lib-search">
+            <span>🔍</span>
+            <input type="text" placeholder="搜索算法...">
+          </div>
+          <div class="lib-body">
+            ${categories.map(cat => `
+              <div class="algo-category">
+                <div class="algo-cat-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                  <span class="arrow">▼</span>
+                  <span>${cat.name}</span>
+                  <span class="algo-cat-count">${cat.items.length}</span>
+                </div>
+                <div class="algo-cat-body">
+                  ${cat.items.map(it => `
+                    <div class="algo-card">
+                      <div>
+                        <div class="algo-card-title">${it.name}</div>
+                        <div class="algo-card-ver">${it.ver}</div>
+                      </div>
+                      <div class="algo-card-actions">
+                        <span class="badge-enable">启用</span>
+                        <button class="btn-add">+</button>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="lib-footer">拖拽算法到画布中</div>
+        </div>
+      `;
+    }
+
+    function renderWorkflowLibrary() {
+      const items = [
+        '恢复重建流程 (v1.0.0) · 3个算法',
+        '风电场风速预测简单场景 (v1.0.0) · 2个算法',
+        '风电场超短期出力预测流程 (v2.0.0) · 7个算法',
+        '风电机组疲劳评估流程 (v2.0.0) · 3个算法',
+        '风况分型与异常识别流程 (v2.0.0) · 3个算法',
+        '川西复杂地形降尺度高精度风速预测流程 (v1.0.0) · 4个算法',
+        '完整应急响应流程 (v1.0.0) · 12个算法',
+        '并行响应流程 (v1.0.0) · 5个算法',
+        '简单线性测试流程 (v1.0.0) · 4个算法',
+        '并行融合测试流程 (v1.0.0) · 8个算法',
+        '条件分支测试流程 (v1.0.0) · 7个算法',
+        '综合测试流程_条件并行融合 (v1.0.0) · 11个算法',
+        '风电超短期滚动预测与爬坡预警流程 (v2.0.0) · 6个算法',
+        '机组健康管理与智能检修流程 (v2.0.0) · 7个算法',
+        '风电参与日前市场申报流程 (v2.0.0) · 5个算法'
+      ];
+
+      return `
+        <div class="lib-panel">
+          <div class="lib-search">
+            <span>🔍</span>
+            <input type="text" placeholder="搜索算法...">
+          </div>
+          <div class="lib-body">
+            ${items.map(it => `
+              <div class="wf-list-item">
+                <span class="wf-list-name">${it}</span>
+                <button class="wf-list-btn">使用</button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="lib-footer">拖拽流程到画布中</div>
+        </div>
+      `;
+    }
+
+    const SKILL_DATA = [
+      { id: 'skill-001', name: '气象要素提取', protocol: 'http', desc: '从多源气象数据中提取关键要素', status: 'enabled' },
+      { id: 'skill-002', name: '功率曲线拟合', protocol: 'http', desc: '根据历史数据拟合风机功率曲线', status: 'disabled' },
+      { id: 'skill-003', name: '灾害阈值判定', protocol: 'http', desc: '根据灾害等级规则判定响应级别', status: 'enabled' },
+      { id: 'skill-004', name: '报告生成', protocol: 'http', desc: '自动生成流程执行审计报告', status: 'draft' },
+      { id: 'skill-005', name: '数据质量检查', protocol: 'http', desc: '检查输入数据完整性与一致性', status: 'enabled' },
+      { id: 'skill-006', name: '预警信息发布', protocol: 'http', desc: '向指定渠道发布预警信息', status: 'disabled' }
+    ];
+
+    const MCP_DATA = [
+      { id: 'baidu-maps', name: '百度地图', protocol: 'stdio', desc: '地图与地理编码服务', status: 'disabled' },
+      { id: 'plinth-weather-mcp', name: '测试02', protocol: 'stdio', desc: '测试用气象 MCP 服务', status: 'disabled' },
+      { id: 'chuk-mcp-open-meteo', name: '测试', protocol: 'stdio', desc: 'Open-Meteo 数据访问', status: 'disabled' },
+      { id: 'weather-forecast', name: '天气预报', protocol: 'stdio', desc: '全球各地当前天气状况和预报', status: 'enabled' },
+      { id: 'weather-mcp', name: '测试03', protocol: 'stdio', desc: '本地气象数据 MCP 服务', status: 'draft' },
+      { id: 'weather_plus', name: 'weather_plus', protocol: 'stdio', desc: '增强型天气预报服务', status: 'enabled' }
+    ];
+
+    function renderAssetManager(title, data) {
+      const rows = data.map(r => `
+        <tr>
+          <td><span class="cell-name">${r.id}</span></td>
+          <td><span class="cell-name">${r.name}</span></td>
+          <td><span class="asset-tag">${r.protocol}</span></td>
+          <td style="white-space:normal;min-width:160px">${r.desc}</td>
+          <td><span class="asset-status ${r.status}">${r.status.toUpperCase()}</span></td>
+          <td>
+            <div class="asset-actions">
+              <button>探测</button>
+              <button>编辑</button>
+              <button>${r.status === 'enabled' ? '禁用' : '启用'}</button>
+              <button class="danger">删除</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="lib-panel">
+          <div class="lib-search">
+            <span>🔍</span>
+            <input type="text" placeholder="搜索 server_id / 名称 / 描述">
+            <button class="wf-list-btn" style="margin-left:auto">按状态筛选 ▾</button>
+            <button class="wf-list-btn">⟳ 刷新</button>
+            <button class="wf-list-btn" style="background:var(--blue);color:#fff;border-color:var(--blue)">+ 新建 ${title} server</button>
+          </div>
+          <div class="asset-table-wrap">
+            <table class="asset-table">
+              <thead>
+                <tr>
+                  <th>${title.toLowerCase()}_id</th>
+                  <th>名称</th>
+                  <th>协议</th>
+                  <th>描述</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+          <div class="asset-pagination">
+            <span>‹</span>
+            <span class="active">1</span>
+            <span>›</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // agent 外部点击关闭
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.agent-selector')) {
+        document.getElementById('agent-selector').classList.remove('open');
+      }
+    });
+
+    // ── INIT ──
+    window.addEventListener('resize', () => {
+      clearTimeout(window._resizeTimer);
+      window._resizeTimer = setTimeout(() => { wf_buildSVG(); wf_animT0 = null; wf_scaleCanvas(); }, 120);
+    });
+
+    // 立即计算画布缩放（页面仍在隐藏状态）
+    wf_scaleCanvas();
+
+    setTimeout(() => {
+      wf_buildSVG();
+      wf_startSpawner();
+      wf_rafId = requestAnimationFrame(wf_loop);
+      wf_scaleCanvas();
+
+      // 所有元素准备就绪后，整体淡入 page-wrap
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.querySelector('.page-wrap')?.classList.add('ready');
+        });
+      });
+
+      // 左侧智能助手内容由 HTML 静态呈现，无需初始化打字机
+    }, 80);
+
+    // ══════════════════════════════════════════════
+    //  COMPARISON POOL MODULE
+    // ══════════════════════════════════════════════
+
+    const CP_STORE   = [];
+    let   CP_VERSION = 1;
+    let   CP_SEL     = new Set();
+    let   CP_SNAP    = null;
+    let   CP_PIN_ID  = null;
+    let   CP_CMP_IDS = [];
+
+    // AI摘要预设池
+    const CP_SUMMARIES = [
+      '本次流程顺利完成，各节点执行正常，数据处理阶段完成了多源数据融合与特征归一化，最终星阙大模型输出了高置信度的风速与功率预测结果。',
+      '流程执行完成，RAG检索模块成功关联协议与规范文档，数据处理节点在时序对齐阶段出现短暂延迟，整体预测结果处于合理范围。',
+      '本次运行整体耗时较前次有所优化，因果链路节点提供了更精确的推理路径，功率预测输出置信度有明显提升。',
+      '流程完成度100%，星阙大模型结合最新ERA5气象数据输出了本轮最优预测，建议与历史结果对比以验证模型泛化能力。',
+    ];
+
+    function cp_captureSnapshot() {
+      const RAG_PROMPTS = [
+        '基于ERA5气象数据，检索风速预测相关的领域知识与因果链路',
+        '结合切出风速阈值与山地地形修正系数，执行语义增强检索',
+        '融合协议规范与功率曲线知识库，提取风机运行约束条件',
+      ];
+      const DS_SETS = {
+        '再分析数据': ['ERA5-single levels-40years', 'ERA5-pressure-levels-40years'],
+        '预报数据':   ['NCEP GFS 全球预报历史存档', 'ECMWF HRES 全球数值预报数据（0.25°）', 'GFS'],
+      };
+      const dsType   = document.getElementById('wf-ds-type')?.value || '再分析数据';
+      const allSets  = DS_SETS[dsType] || DS_SETS['再分析数据'];
+      const pickedSets = allSets.slice(0, 1 + Math.floor(Math.random() * Math.min(2, allSets.length)));
+
+      const OUTPUT_PREVIEWS = {
+        'wf-n4': '检索到 12 条相关知识片段，语义相似度 0.87，覆盖切出风速、地形修正系数',
+        'wf-n6': '完成 3 路数据时序对齐，特征张量维度 [96, 128]，缺失率 0.3%',
+        'wf-n7': '生成 48h 风速预测序列，峰值 18.4 m/s，RMSE 1.23 m/s',
+      };
+
+      CP_SNAP = {
+        id: Date.now().toString(),
+        runName: '',
+        isPinned: false,
+        timestamp: Date.now(),
+
+        configSnapshot: {
+          ragPrompt: RAG_PROMPTS[Math.floor(Math.random() * RAG_PROMPTS.length)],
+          dataSourceIds: pickedSets,
+          modelTemperature: parseFloat((0.3 + Math.random() * 0.5).toFixed(2)),
+        },
+
+        nodeMetrics: WF_NODE_ORDER.map(id => {
+          const el = document.getElementById(id);
+          return {
+            nodeId: id,
+            nodeName: el?.querySelector('.node-name')?.textContent || id,
+            durationMs: Math.floor(150 + Math.random() * 700),
+            status: 'success',
+            ...(OUTPUT_PREVIEWS[id] ? { outputPreview: OUTPUT_PREVIEWS[id] } : {}),
+          };
+        }),
+
+        aiSummary: CP_SUMMARIES[Math.floor(Math.random() * CP_SUMMARIES.length)],
+
+        finalOutputs: {
+          powerKw: Math.floor(820 + Math.random() * 160),
+          confidenceRatio: parseFloat((0.86 + Math.random() * 0.11).toFixed(3)),
+        },
+      };
+    }
+
+    // ── Auto-save ──
+    function cp_autoSave() {
+      if (!CP_SNAP) return;
+      const rec = { ...CP_SNAP, version: CP_VERSION++ };
+      CP_STORE.unshift(rec);
+      try { localStorage.setItem('cp_store', JSON.stringify(CP_STORE)); localStorage.setItem('cp_ver', CP_VERSION); } catch(e) {}
+      if (document.getElementById('cp-drawer')?.classList.contains('open')) cp_renderTimeline();
+    }
+
+    // ── Pin modal ──
+    function cp_openPinModal(id) {
+      CP_PIN_ID = id;
+      const rec = CP_STORE.find(r => r.id === id);
+      const m = document.getElementById('cp-pin-modal');
+      if (!m) return;
+      const input = document.getElementById('cp-pin-label');
+      if (input) input.value = rec?.runName || '';
+      m.classList.add('show');
+      setTimeout(() => input?.focus(), 80);
+    }
+    function cp_closePinModal() {
+      document.getElementById('cp-pin-modal')?.classList.remove('show');
+      CP_PIN_ID = null;
+    }
+    function cp_confirmPin() {
+      if (!CP_PIN_ID) return;
+      const input = document.getElementById('cp-pin-label');
+      const name = input?.value?.trim();
+      if (!name) { showToast('请输入名称'); return; }
+      const rec = CP_STORE.find(r => r.id === CP_PIN_ID);
+      if (rec) { rec.runName = name; rec.isPinned = true; }
+      cp_closePinModal();
+      showToast(`📌 已固化为基准：${name}`);
+      if (document.getElementById('cp-drawer')?.classList.contains('open')) cp_renderTimeline();
+    }
+
+    // ── Drawer open/close ──
+    function cp_toggleDrawer() {
+      const d = document.getElementById('cp-drawer');
+      if (d?.classList.contains('open')) cp_closeDrawer();
+      else { wf_closeDrawer(); cp_openDrawer(); }
+    }
+    function cp_openDrawer() {
+      const d = document.getElementById('cp-drawer');
+      if (d) d.classList.add('open');
+      document.getElementById('cp-edge-tab')?.classList.add('active');
+      cp_renderTimeline();
+    }
+    function cp_closeDrawer() {
+      const d = document.getElementById('cp-drawer');
+      if (d) { d.classList.remove('open'); d.innerHTML = ''; }
+      document.getElementById('cp-edge-tab')?.classList.remove('active');
+      CP_SEL.clear();
+    }
+
+    // ── Record helpers ──
+    function cp_recordStatus(r) {
+      if (!r.nodeMetrics?.length) return 'success';
+      if (r.nodeMetrics.every(n => n.status === 'success')) return 'success';
+      if (r.nodeMetrics.some(n => n.status === 'failed')) return 'failed';
+      return 'partial';
+    }
+    function cp_totalDurS(r) {
+      return (r.nodeMetrics.reduce((s, n) => s + n.durationMs, 0) / 1000).toFixed(1);
+    }
+
+    // ── Timeline rendering ──
+    function cp_renderTimeline() {
+      const d = document.getElementById('cp-drawer');
+      if (!d) return;
+      const selCount = CP_SEL.size;
+      d.innerHTML = `
+        <div class="cp-drw-header">
+          <div class="cp-drw-top">
+            <div class="cp-drw-title">运行历史</div>
+            <div style="font-size:10px;color:var(--text-muted)">${CP_STORE.length} 条</div>
+          </div>
+          <div class="cp-meta-row">
+            <div class="cp-meta-left">
+              <button class="cp-meta-btn" onclick="cp_selAll()">全选</button>
+              <button class="cp-meta-btn" onclick="cp_clearSel()">清除</button>
+            </div>
+          </div>
+        </div>
+        <div class="cp-list" id="cp-list" style="padding-bottom:${selCount > 0 ? '56px' : '8px'}">
+          ${cp_timelineHTML()}
+        </div>
+        <div class="cp-float-bar ${selCount > 0 ? 'show' : ''}" id="cp-float-bar">
+          <div class="cp-float-bar-cnt">已选 ${selCount} / 4</div>
+          ${selCount >= 2
+            ? `<button class="btn btn-primary btn-sm" onclick="cp_startCompareFullscreen()">开始对比 (${selCount})</button>`
+            : `<div style="font-size:10px;color:var(--text-muted)">再选 ${2 - selCount} 个</div>`}
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:3px 8px" onclick="cp_clearSel()">取消</button>
+        </div>`;
+    }
+
+    function cp_timelineHTML() {
+      if (CP_STORE.length === 0) return `
+        <div style="text-align:center;padding:40px 20px;font-size:11px;color:var(--text-muted);opacity:.5">
+          <div style="font-size:28px;margin-bottom:8px">📭</div>执行流程后自动记录
+        </div>`;
+      return `<div class="cp-tl">` + CP_STORE.map((r, idx) => {
+        const status  = cp_recordStatus(r);
+        const dotCls  = { success: 'cpd-ok', partial: 'cpd-par', failed: 'cpd-err' }[status];
+        const isSel   = CP_SEL.has(r.id);
+        const dt      = new Date(r.timestamp);
+        const timeStr = dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const isLast  = idx === CP_STORE.length - 1;
+        return `
+        <div class="cp-tl-row">
+          <div class="cp-tl-spine">
+            <div class="cp-tl-dot ${dotCls}"></div>
+            ${!isLast ? `<div class="cp-tl-line"></div>` : ''}
+          </div>
+          <div class="cp-tl-body">
+            <div class="cp-tl-card ${isSel ? 'on' : ''} ${r.isPinned ? 'pinned' : ''}">
+              <div class="cp-tl-r1">
+                <span class="cp-tl-ver">V${r.version}</span>
+                <span class="cp-tl-name">${r.runName || `运行 #${r.version}`}</span>
+                ${r.isPinned ? `<span class="cp-tl-pin-icon" title="已固化">📌</span>` : ''}
+                <div class="cp-tl-chk ${isSel ? 'on' : ''}" onclick="event.stopPropagation();cp_toggleSel('${r.id}')">${isSel ? '✓' : ''}</div>
+              </div>
+              <div class="cp-tl-metrics">
+                <div class="cp-tl-metric"><span>⏱</span><span class="cp-tl-metric-val">${cp_totalDurS(r)}s</span></div>
+                <div class="cp-tl-metric"><span>⚡</span><span class="cp-tl-metric-val">${r.finalOutputs.powerKw}kW</span></div>
+                <div class="cp-tl-metric"><span>✦</span><span class="cp-tl-metric-val">${Math.round(r.finalOutputs.confidenceRatio * 100)}%</span></div>
+              </div>
+              <div style="font-size:9px;color:var(--text-muted);margin-bottom:4px">${timeStr}</div>
+              <div class="cp-tl-actions">
+                ${r.isPinned
+                  ? `<button class="cp-tl-btn pin-btn" onclick="event.stopPropagation();cp_openPinModal('${r.id}')">✏ 重命名</button>`
+                  : `<button class="cp-tl-btn pin-btn" onclick="event.stopPropagation();cp_openPinModal('${r.id}')">📌 固化</button>`}
+                <button class="cp-tl-btn del-btn" onclick="event.stopPropagation();cp_delete('${r.id}')">✕ 删除</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('') + `</div>`;
+    }
+
+    // ── Selection helpers ──
+    function cp_toggleSel(id) {
+      if (CP_SEL.has(id)) { CP_SEL.delete(id); }
+      else if (CP_SEL.size < 4) { CP_SEL.add(id); }
+      else { showToast('最多同时选择4条'); return; }
+      cp_renderTimeline();
+    }
+    function cp_selAll() {
+      CP_STORE.slice(0, 4).forEach(r => CP_SEL.add(r.id));
+      if (CP_STORE.length > 4) showToast('已选前4条，最多同时对比4条');
+      cp_renderTimeline();
+    }
+    function cp_clearSel() { CP_SEL.clear(); cp_renderTimeline(); }
+    function cp_delete(id) {
+      const idx = CP_STORE.findIndex(r => r.id === id);
+      if (idx < 0) return;
+      const ver = CP_STORE[idx].version;
+      CP_STORE.splice(idx, 1);
+      CP_SEL.delete(id);
+      showToast(`已删除 V${ver}`);
+      cp_renderTimeline();
+      try { localStorage.setItem('cp_store', JSON.stringify(CP_STORE)); } catch(e) {}
+    }
+
+    // ── Full-screen compare ──
+    function cp_startCompareFullscreen() {
+      CP_CMP_IDS = [...CP_SEL];
+      cmp_renderFullscreen();
+      cmp_openFullscreen();
+    }
+    function cmp_openFullscreen() {
+      document.getElementById('cmp-fullscreen')?.classList.add('open');
+    }
+    function cmp_closeFullscreen() {
+      document.getElementById('cmp-fullscreen')?.classList.remove('open');
+    }
+
+    // ── Config diff ──
+    function cfgDiff_HTML(records) {
+      const baseline = records[0].configSnapshot;
+      const cols = `90px ${Array(records.length).fill('1fr').join(' ')}`;
+      const keys = [
+        { key: 'ragPrompt',        label: 'RAG Prompt' },
+        { key: 'dataSourceIds',    label: '数据源', fmt: v => Array.isArray(v) ? v.join('<br>') : String(v) },
+        { key: 'modelTemperature', label: '温度参数' },
+      ];
+      return keys.map(({ key, label, fmt }) => {
+        const baseVal = baseline[key];
+        const cells = records.map((r, i) => {
+          const val    = r.configSnapshot[key];
+          const valStr = fmt ? fmt(val) : String(val);
+          const isBase = i === 0;
+          const isDiff = JSON.stringify(val) !== JSON.stringify(baseVal);
+          const cls    = isBase ? 'baseline' : isDiff ? 'changed' : 'same';
+          return `<div class="cfgdiff-cell ${cls}">${valStr}${isDiff && !isBase ? ' <span style="font-size:8px;opacity:.7">≠ 基准</span>' : ''}</div>`;
+        }).join('');
+        return `<div style="display:grid;grid-template-columns:${cols};gap:6px;margin-bottom:4px">
+          <div class="cfgdiff-key">${label}</div>${cells}
+        </div>`;
+      }).join('');
+    }
+
+    // ── Node diff ──
+    function ndiff_HTML(records) {
+      const baseline = records[0];
+      const cols = `90px ${Array(records.length).fill('1fr').join(' ')}`;
+      return WF_NODE_ORDER.slice(0, 8).map(nid => {
+        const el     = document.getElementById(nid);
+        const nm     = el?.querySelector('.node-name')?.textContent || nid;
+        const baseMs = baseline.nodeMetrics.find(n => n.nodeId === nid)?.durationMs ?? 0;
+        const cells  = records.map((r, i) => {
+          const nd = r.nodeMetrics.find(n => n.nodeId === nid);
+          if (!nd) return `<div class="ndiff-cell">─</div>`;
+          const ms     = nd.durationMs;
+          const ratio  = baseMs > 0 ? (ms - baseMs) / baseMs : 0;
+          const isBase = i === 0;
+          if (nd.status === 'failed') return `<div class="ndiff-cell failed" onclick="ndiff_toggleBubble('${nid}')">✗ 失败</div>`;
+          if (!isBase && Math.abs(ratio) > 0.2) {
+            const cls = ratio < 0 ? 'fast' : 'slow';
+            return `<div class="ndiff-cell ${cls}" onclick="ndiff_toggleBubble('${nid}')">${ratio < 0 ? '↓' : '↑'} ${(ms/1000).toFixed(2)}s</div>`;
+          }
+          const hasP = !!nd.outputPreview;
+          return `<div class="ndiff-cell${isBase ? '' : ' hidden-same'}" onclick="ndiff_toggleBubble('${nid}')">${(ms/1000).toFixed(2)}s${hasP ? ' 💬' : ''}</div>`;
+        }).join('');
+        const hasPreviews = records.some(r => r.nodeMetrics.find(n => n.nodeId === nid)?.outputPreview);
+        const bubbleRows  = records.map(r => {
+          const nd = r.nodeMetrics.find(n => n.nodeId === nid);
+          if (!nd?.outputPreview) return '';
+          return `<div class="ndiff-bubble-row"><span class="ndiff-bubble-ver">V${r.version}</span><span>${nd.outputPreview}</span></div>`;
+        }).join('');
+        return `
+        <div style="display:grid;grid-template-columns:${cols};gap:0;margin-bottom:3px">
+          <div class="ndiff-key">${nm}</div>${cells}
+        </div>
+        ${hasPreviews ? `<div class="ndiff-bubble" id="ndiff-bubble-${nid}"><div class="ndiff-bubble-title">节点中间态输出</div>${bubbleRows}</div>` : ''}`;
+      }).join('');
+    }
+    function ndiff_toggleBubble(nid) {
+      document.getElementById(`ndiff-bubble-${nid}`)?.classList.toggle('show');
+    }
+
+    // ── Dynamic output renderer ──
+    function dynOut_HTML(records) {
+      const cols = Array(records.length).fill('1fr').join(' ');
+      const statBlock = (label, vals, unit, bestIsMax) => {
+        const baseVal = vals[0];
+        const cards   = vals.map((v, i) => {
+          const diff  = v - baseVal;
+          const isBase = i === 0;
+          let trendHTML = `<div class="dyn-stat-trend trend-eq">— 基准</div>`;
+          if (!isBase && diff !== 0) {
+            const arrow = diff > 0 ? (bestIsMax ? '↑' : '↓') : (bestIsMax ? '↓' : '↑');
+            const cls   = (diff > 0) === bestIsMax ? 'trend-up' : 'trend-dn';
+            trendHTML   = `<div class="dyn-stat-trend ${cls}">${arrow} ${diff > 0 ? '+' : ''}${Math.round(diff)}${unit}</div>`;
+          }
+          return `<div class="dyn-stat-card">
+            <div class="dyn-stat-label">V${records[i].version}</div>
+            <div class="dyn-stat-val" style="color:${isBase ? 'var(--accent-amber)' : 'var(--accent-cyan)'}">${v}</div>
+            <div style="font-size:9px;color:var(--text-muted)">${unit}</div>
+            ${trendHTML}
+          </div>`;
+        }).join('');
+        return `
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${label}</div>
+          <div style="display:grid;grid-template-columns:${cols};gap:8px">${cards}</div>
+        </div>`;
+      };
+      return statBlock('输出功率', records.map(r => r.finalOutputs.powerKw), ' kW', true)
+           + statBlock('置信度',   records.map(r => Math.round(r.finalOutputs.confidenceRatio * 100)), '%', true)
+           + `<div class="dyn-placeholder">🗺 地图 / 可视化渲染区（预留 GeoJSON · Canvas · 图表接入）</div>`;
+    }
+
+    // ── Fullscreen rendering ──
+    function cmp_renderFullscreen() {
+      const records = CP_CMP_IDS.map(id => CP_STORE.find(r => r.id === id)).filter(Boolean);
+      const d = document.getElementById('cmp-fullscreen');
+      if (!d || records.length === 0) return;
+
+      const vPills = records.map((r, i) =>
+        `<span class="cmpfs-vpill ${i===0?'baseline':''}">${i===0?'📌 ':''}V${r.version}</span>`).join('');
+      const cols = `90px ${Array(records.length).fill('1fr').join(' ')}`;
+
+      const verCols = `
+        <div style="display:grid;grid-template-columns:${cols};gap:8px;margin-bottom:20px">
+          <div></div>
+          ${records.map((r, i) => {
+            const st   = cp_recordStatus(r);
+            const sc   = { success: 'var(--accent-green)', partial: 'var(--accent-amber)', failed: '#ef4444' }[st];
+            const stxt = { success: '✓ 成功', partial: '⚠ 部分完成', failed: '✗ 失败' }[st];
+            return `<div class="cmpfs-ver-col ${i===0?'baseline-col':''}">
+              <div class="cmpfs-ver-num ${i===0?'b':''}">V${r.version}</div>
+              <div class="cmpfs-ver-lbl">${r.runName || `运行 #${r.version}`}</div>
+              <div class="cmpfs-ver-st" style="color:${sc}">${stxt}</div>
+              <button class="cmpfs-apply-btn ${i===0?'b':''}" onclick="cp_applyConfig('${r.id}')">应用此配置</button>
+            </div>`;
+          }).join('')}
+        </div>`;
+
+      d.innerHTML = `
+        <div class="cmpfs-topbar">
+          <div class="cmpfs-title">深度对比台</div>
+          <div class="cmpfs-vpills">${vPills}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-left:8px">最左侧版本为基准</div>
+          <div class="cmpfs-spacer"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-right:6px" onclick="showToast('正在生成对比报告…')">导出</button>
+          <button class="cmpfs-close" onclick="cmp_closeFullscreen()">×</button>
+        </div>
+        <div class="cmpfs-body">
+          <div class="cmpfs-nav">
+            <div class="cmpfs-ns act" onclick="cmpfs_goto('cmpfs-s-versions')">▼ 版本概览</div>
+            <div class="cmpfs-ns" onclick="cmpfs_goto('cmpfs-s-config')">▼ 配置差异</div>
+            <div class="cmpfs-ns" onclick="cmpfs_goto('cmpfs-s-nodes')">▼ 节点状态</div>
+            ${WF_NODE_ORDER.slice(0,8).map(nid => {
+              const el = document.getElementById(nid);
+              return `<div class="cmpfs-ni" onclick="cmpfs_goto('cmpfs-s-nodes')">${el?.querySelector('.node-name')?.textContent||nid}</div>`;
+            }).join('')}
+            <div class="cmpfs-ns" onclick="cmpfs_goto('cmpfs-s-output')">▼ 输出结果</div>
+          </div>
+          <div class="cmpfs-cont" id="cmpfs-cont">
+
+            <div class="cmpfs-sec" id="cmpfs-s-versions">
+              <div class="cmpfs-sec-ttl">版本概览
+                <span class="cmpfs-sec-badge" style="background:rgba(245,158,11,.15);color:var(--accent-amber)">📌 Baseline = V${records[0].version}</span>
+              </div>
+              ${verCols}
+            </div>
+
+            <div class="cmpfs-sec" id="cmpfs-s-config">
+              <div class="cmpfs-sec-ttl">配置差异 (Config Diff)
+                <span class="cmpfs-sec-badge" style="background:rgba(245,158,11,.12);color:var(--accent-amber)">黄色 = 已修改</span>
+                <span class="cmpfs-sec-badge" style="background:rgba(6,182,212,.1);color:var(--accent-cyan)">蓝色 = 基准</span>
+              </div>
+              ${cfgDiff_HTML(records)}
+            </div>
+
+            <div class="cmpfs-sec" id="cmpfs-s-nodes">
+              <div class="cmpfs-sec-ttl">节点状态
+                <span class="cmpfs-sec-badge" style="background:rgba(16,185,129,.12);color:var(--accent-green)">↓ 更快</span>
+                <span class="cmpfs-sec-badge" style="background:rgba(239,68,68,.1);color:#ef4444">↑ 更慢</span>
+              </div>
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px">耗时差异 &gt;20% 或失败时高亮；灰显表示无差异。点击节点可展开中间态输出。</div>
+              ${ndiff_HTML(records)}
+            </div>
+
+            <div class="cmpfs-sec" id="cmpfs-s-output">
+              <div class="cmpfs-sec-ttl">最终输出 (Dynamic Renderer)</div>
+              ${dynOut_HTML(records)}
+            </div>
+
+          </div>
+        </div>`;
+    }
+
+    function cmpfs_goto(id) {
+      const el = document.getElementById(id);
+      const cont = document.getElementById('cmpfs-cont');
+      if (el && cont) cont.scrollTo({ top: el.offsetTop - 8, behavior: 'smooth' });
+    }
+
+    // ── Apply configuration ──
+    function cp_applyConfig(recId) {
+      const rec = CP_STORE.find(r => r.id === recId);
+      if (!rec) return;
+      const cfg = rec.configSnapshot;
+      const dsType = document.getElementById('wf-ds-type');
+      if (dsType) {
+        const isReanalysis = cfg.dataSourceIds.some(s => s.includes('ERA5'));
+        dsType.value = isReanalysis ? '再分析数据' : '预报数据';
+        wf_updateDataset();
+        const dsSet = document.getElementById('wf-ds-set');
+        if (dsSet && cfg.dataSourceIds.length > 0) {
+          const opt = [...dsSet.options].find(o => o.value === cfg.dataSourceIds[0]);
+          if (opt) dsSet.value = cfg.dataSourceIds[0];
+        }
+      }
+      cmp_closeFullscreen();
+      showToast(`✅ 已应用配置：${rec.runName || 'V' + rec.version} → 画布节点参数已更新`);
+      setTimeout(() => wf_applyToCanvas(), 300);
+    }
+
+  </script>
+</body>
+</html>

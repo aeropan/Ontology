@@ -250,6 +250,194 @@ body {
   /* transition 已去除：本地文件加载极快，opacity 过渡反而产生 race condition */
 }
 
+/* ── 全屏转场动效：跳转 Arrange_white.html 时播放 ── */
+#fullscreen-transition {
+  position: fixed;
+  inset: 0;
+  background-color: #0a0a0c;
+  z-index: 99999;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#fullscreen-transition.active {
+  display: flex;
+  opacity: 1;
+}
+#fs-stage-3d {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+/* 流光球体舞台 */
+#fs-orb-stage {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 32px;
+  z-index: 20;
+  transform: translateZ(300px);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+#fs-orb-stage.active {
+  display: flex;
+  animation: fsOrbStageIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+#fs-orb-stage.fade-out {
+  animation: fsOrbStageOut 0.25s ease forwards;
+}
+#fs-orb {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e0e7ff 25%, #6366f1 60%, #312e81 100%);
+  box-shadow:
+    0 0 40px rgba(99, 102, 241, 0.45),
+    0 0 80px rgba(99, 102, 241, 0.25),
+    inset 0 0 30px rgba(255, 255, 255, 0.35);
+  animation: fsOrbFloat 2.2s ease-in-out infinite;
+}
+#fs-orb::before,
+#fs-orb::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  inset: -12px;
+  border: 2px solid transparent;
+  border-top-color: rgba(165, 180, 252, 0.9);
+  border-right-color: rgba(99, 102, 241, 0.6);
+  animation: fsOrbSpin 1.6s linear infinite;
+}
+#fs-orb::after {
+  inset: -24px;
+  border-top-color: rgba(199, 210, 254, 0.5);
+  border-right-color: rgba(129, 140, 248, 0.35);
+  animation-duration: 2.4s;
+  animation-direction: reverse;
+}
+#fs-orb-glow {
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0) 70%);
+  animation: fsOrbPulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+#fs-progress-track {
+  width: 180px;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
+}
+#fs-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #818cf8, #c7d2fe, #ffffff, #818cf8);
+  background-size: 200% 100%;
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(165, 180, 252, 0.8);
+}
+#fs-progress-bar.fs-fill {
+  animation:
+    fsFillBar 0.74s linear forwards,
+    fsShimmer 1.1s linear infinite;
+}
+#fs-progress-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.12em;
+  margin-top: -20px;
+  text-transform: uppercase;
+}
+#fs-matrix-grid {
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  width: 104vw;
+  height: 104vh;
+  transform-style: preserve-3d;
+  display: none;
+  z-index: 10;
+}
+.fs-cube-mesh {
+  background-color: #ffffff;
+  border: 0.5px solid #ffffff;
+  position: relative;
+  transform-style: preserve-3d;
+  opacity: 0;
+  transform: scale(0) translateZ(0);
+}
+.fs-cube-mesh::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: #f0f2f5;
+  transform: translateZ(-5px);
+  pointer-events: none;
+}
+.fs-cube-mesh.animating {
+  animation: fsCubePopAndDrop 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+@keyframes fsOrbStageIn {
+  0% { transform: scale(0.6) translateZ(0); opacity: 0; }
+  100% { transform: scale(1) translateZ(300px); opacity: 1; }
+}
+@keyframes fsOrbStageOut {
+  0% { transform: scale(1) translateZ(300px); opacity: 1; }
+  100% { transform: scale(0.85) translateZ(350px); opacity: 0; }
+}
+@keyframes fsOrbFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes fsOrbSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes fsOrbPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+@keyframes fsFillBar {
+  to { width: 100%; }
+}
+@keyframes fsShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes fsCubePopAndDrop {
+  0% {
+    transform: scale(0) translateZ(0);
+    opacity: 0;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+  }
+  15% { opacity: 1; }
+  45% {
+    transform: scale(1.15) translateZ(160px);
+    box-shadow: 0 35px 45px rgba(0, 0, 0, 0.3);
+  }
+  90%, 100% {
+    transform: scale(1.02) translateZ(0px);
+    opacity: 1;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+  }
+}
+
 /* ── Toast 提示 ── */
 .toast {
   position: fixed;
@@ -395,6 +583,22 @@ body {
   </iframe>
 </div>
 
+<!-- 全屏转场动效容器（跳转 Arrange_white.html 时播放） -->
+<div id="fullscreen-transition" aria-hidden="true">
+  <div id="fs-stage-3d">
+    <div id="fs-orb-stage">
+      <div id="fs-orb">
+        <div id="fs-orb-glow"></div>
+      </div>
+      <div id="fs-progress-track">
+        <div id="fs-progress-bar"></div>
+      </div>
+      <div id="fs-progress-text">Loading</div>
+    </div>
+    <div id="fs-matrix-grid"></div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -462,9 +666,15 @@ function goToSettingSection(section) {
   }
 }
 
+// 是否需要全屏展示的白色编排页集合
+const FULLSCREEN_FILES = new Set([
+  'Arrange_white.html'
+]);
+
 // ── 核心导航函数 ──────────────────────────────
 function navigate(file, page, crumbs) {
   const frame = document.getElementById('content-frame');
+  const sidebar = document.querySelector('.sidebar');
 
   if (file !== currentFile) {
     // 切换文件时先将 iframe 隐藏，避免看到旧页面或 main.html 默认首页的闪烁
@@ -483,6 +693,25 @@ function navigate(file, page, crumbs) {
     // 同一文件内切换页面，直接发消息
     currentPage = page;
     if (page) sendPageCmd(page);
+  }
+
+  // 全屏页面：隐藏左侧侧边栏，iframe 占满整屏
+  if (FULLSCREEN_FILES.has(file)) {
+    if (sidebar) sidebar.style.display = 'none';
+    frame.style.width = '100vw';
+    frame.style.position = 'absolute';
+    frame.style.left = '0';
+    frame.style.top = '0';
+    frame.style.height = '100vh';
+    frame.style.zIndex = '100';
+  } else {
+    if (sidebar) sidebar.style.display = '';
+    frame.style.width = '';
+    frame.style.position = '';
+    frame.style.left = '';
+    frame.style.top = '';
+    frame.style.height = '';
+    frame.style.zIndex = '';
   }
 
   // 更新导航高亮
@@ -506,6 +735,70 @@ function sendPageCmd(page) {
   frame.contentWindow.postMessage({ type: 'GOTO', page: page }, '*');
 }
 
+// ── 全屏 3D 纯白矩阵转场 ───────────────────────
+const FS_GRID_SIZE = 8;
+let fsTransitionTarget = '';
+
+function initFSMatrix() {
+  const grid = document.getElementById('fs-matrix-grid');
+  grid.innerHTML = '';
+  const center = (FS_GRID_SIZE - 1) / 2;
+  const maxDistance = Math.hypot(center, center);
+  for (let r = 0; r < FS_GRID_SIZE; r++) {
+    for (let c = 0; c < FS_GRID_SIZE; c++) {
+      const cube = document.createElement('div');
+      cube.className = 'fs-cube-mesh';
+      const distance = Math.hypot(r - center, c - center);
+      const delay = (distance / maxDistance) * 0.22;
+      cube.style.animationDelay = `${delay}s`;
+      grid.appendChild(cube);
+    }
+  }
+}
+
+function playFullscreenTransition(targetUrl) {
+  fsTransitionTarget = targetUrl;
+  const container = document.getElementById('fullscreen-transition');
+  const orbStage = document.getElementById('fs-orb-stage');
+  const matrixGrid = document.getElementById('fs-matrix-grid');
+  const progressBar = document.getElementById('fs-progress-bar');
+
+  // 重置舞台
+  container.style.display = 'flex';
+  void container.offsetWidth; // 触发 reflow
+  container.classList.add('active');
+  orbStage.classList.remove('active', 'fade-out');
+  orbStage.style.display = 'none';
+  orbStage.style.opacity = '';
+  matrixGrid.style.display = 'none';
+  progressBar.classList.remove('fs-fill');
+
+  initFSMatrix();
+
+  // 第一阶段：流光球体 + 进度条入场
+  orbStage.style.display = 'flex';
+  void orbStage.offsetWidth;
+  orbStage.classList.add('active');
+  progressBar.classList.add('fs-fill');
+
+  // 第二阶段：矩阵在球体后方爆发
+  setTimeout(() => {
+    matrixGrid.style.display = 'grid';
+    matrixGrid.querySelectorAll('.fs-cube-mesh').forEach(cube => {
+      void cube.offsetWidth;
+      cube.classList.add('animating');
+    });
+  }, 250);
+
+  // 第三阶段：方块拍平前将球体淡出，随后执行顶层全屏跳转
+  setTimeout(() => {
+    orbStage.classList.add('fade-out');
+    setTimeout(() => {
+      window.top.location.href = fsTransitionTarget;
+    }, 250);
+  }, 740);
+}
+
 // ── 监听 iframe 内部的页面切换消息 ───────────
 window.addEventListener('message', function(e) {
   if (!e.data) return;
@@ -519,6 +812,12 @@ window.addEventListener('message', function(e) {
 
   // 子页面请求 Shell 代为导航（避免 iframe 内部 location.href 绕过 opacity 遮罩）
   if (e.data.type === 'NAVIGATE_TO') {
+    const target = e.data.file || '';
+    // 跳转到需要全屏展示的白色编排页时，先播放 3D 纯白矩阵转场，再顶层跳转
+    if (target.split('?')[0] === 'Arrange_white.html') {
+      playFullscreenTransition(target);
+      return;
+    }
     navigate(e.data.file, e.data.page || null, e.data.crumbs || []);
     return;
   }
@@ -552,6 +851,28 @@ function showToast(msg) {
 document.getElementById('content-frame').onload = function() {
   this.onload = null;
 };
+
+// ── 从 Arrange_white.html 全屏返回时，恢复 Shell iframe 到来源页 ──
+(function recoverFromFullscreen() {
+  const params = new URLSearchParams(window.location.search);
+  const recoverFile = params.get('recoverIframe');
+  if (!recoverFile) return;
+  // 清理 URL，避免刷新后重复触发
+  if (window.history.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  // 延迟一帧导航，确保 iframe 已经初始化
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      if (recoverFile === 'main.html') {
+        navigate('main.html', 'home', ['概览', '主页']);
+      } else {
+        // 其它页面直接在 iframe 内加载
+        navigate(recoverFile, null, []);
+      }
+    }, 0);
+  });
+})();
 </script>
 </body>
 </html>
