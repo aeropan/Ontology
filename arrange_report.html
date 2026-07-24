@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>算法能力报告</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/shared.css">
+  <style>
+    body {
+      min-height: 100vh;
+      background: #ffffff;
+      color: #111827;
+      font-family: 'Noto Sans SC', sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .topbar {
+      height: 48px;
+      background: #111827;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+    .topbar-title { font-size: 14px; font-weight: 600; }
+    .topbar-actions { display: flex; gap: 8px; }
+    .btn-sm {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-family: inherit;
+      transition: all .15s;
+    }
+    .btn-export {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+    .btn-export:hover { background: #1d4ed8; }
+    .btn-text {
+      background: transparent;
+      color: rgba(255,255,255,.85);
+      border-color: rgba(255,255,255,.25);
+      position: relative;
+    }
+    .btn-text:hover {
+      color: #ffffff;
+      border-color: rgba(255,255,255,.5);
+      background: rgba(255,255,255,.08);
+    }
+    .btn-tooltip {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      width: max-content;
+      max-width: 220px;
+      background: #1f2937;
+      color: #e5e7eb;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .1s, visibility .1s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .btn-tooltip::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      right: 14px;
+      border: 5px solid transparent;
+      border-bottom-color: #1f2937;
+    }
+    .btn-text:hover .btn-tooltip,
+    .btn-text:focus-visible .btn-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+    .page-wrap {
+      flex: 1;
+      overflow: auto;
+      padding: 20px 32px 32px;
+    }
+    .report-header {
+      margin-bottom: 20px;
+    }
+    .report-title-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 6px;
+    }
+    .report-title { font-size: 20px; font-weight: 700; }
+    .report-meta {
+      font-size: 12px;
+      color: #6b7280;
+      display: flex;
+      gap: 16px;
+    }
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .metric-card {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111827;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 6px;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    .metric-green { color: #10b981; }
+    .metric-yellow { color: #f59e0b; }
+    .metric-red { color: #ef4444; }
+    .metric-blue { color: #3b82f6; }
+    .report-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .version-select {
+      padding: 6px 28px 6px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #374151;
+      background: #ffffff;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%236b7280' stroke-width='1.8'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      cursor: pointer;
+      outline: none;
+    }
+    .version-select:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+    .compare-table-wrap { overflow-x: auto; }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 600px;
+    }
+    .compare-table th {
+      text-align: center;
+      padding: 12px 10px;
+      font-weight: 500;
+      color: #6b7280;
+      border-bottom: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    .compare-table th:first-child { text-align: left; color: #111827; }
+    .compare-table td {
+      padding: 14px 10px;
+      text-align: center;
+      border-bottom: 1px solid #f3f4f6;
+      color: #374151;
+    }
+    .compare-table td:first-child { text-align: left; font-weight: 500; color: #111827; }
+    .compare-table tr:hover td { background: #f9fafb; }
+    .station-table td { text-align: center; }
+    .station-table td:first-child { text-align: left; }
+    .station-table td.model-cell { text-align: center; }
+    .station-table tbody tr:nth-child(6n+1),
+    .station-table tbody tr:nth-child(6n+2),
+    .station-table tbody tr:nth-child(6n+3) { background: #ffffff; }
+    .station-table tbody tr:nth-child(6n+4),
+    .station-table tbody tr:nth-child(6n+5),
+    .station-table tbody tr:nth-child(6n+6) { background: #f9fafb; }
+    .station-table tbody tr:hover td { background: #e5e7eb !important; }
+    .station-name {
+      font-weight: 600;
+      color: #111827;
+      font-size: 12px;
+    }
+    .station-coord {
+      font-size: 10px;
+      color: #9ca3af;
+      font-weight: 400;
+    }
+    .metric-pair {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 12px;
+    }
+    .metric-pair .rmse { color: #374151; }
+    .metric-pair .mae { color: #9ca3af; font-size: 11px; }
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .model-xq { background: rgba(37,99,235,.1); color: #2563eb; }
+    .model-fw { background: rgba(16,185,129,.1); color: #059669; }
+    .model-fx { background: rgba(245,158,11,.1); color: #d97706; }
+    .station-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .station-search-input {
+      padding: 6px 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #374151;
+      background: #ffffff;
+      outline: none;
+      width: 160px;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    .station-search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+    .station-search-btn {
+      padding: 6px 12px;
+      border: 1px solid #2563eb;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    .station-search-btn:hover { background: #1d4ed8; }
+    .station-search-btn.secondary {
+      background: #ffffff;
+      color: #374151;
+      border-color: #d1d5db;
+    }
+    .station-search-btn.secondary:hover { background: #f3f4f6; }
+    .model-cell { text-align: center; }
+    .station-table td.model-cell { text-align: center; }
+    .station-empty-cell {
+      text-align: center;
+      padding: 28px;
+      color: #6b7280;
+    }
+    .station-suggest-wrap {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      width: 220px;
+      max-height: 220px;
+      overflow-y: auto;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      z-index: 50;
+      display: none;
+    }
+    .station-suggest-wrap.open { display: block; }
+    .station-suggest-item {
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #374151;
+      cursor: pointer;
+      border-bottom: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .station-suggest-item:last-child { border-bottom: none; }
+    .station-suggest-item:hover,
+    .station-suggest-item.active {
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .station-suggest-item .match {
+      color: #2563eb;
+      font-weight: 600;
+    }
+    .station-suggest-empty {
+      padding: 12px;
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+    }
+    .best-cell {
+      background: rgba(16,185,129,.08) !important;
+      color: #047857 !important;
+      font-weight: 600;
+    }
+    .best-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      margin-left: 4px;
+      font-size: 10px;
+      color: #047857;
+    }
+    .report-section {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+    }
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .chart-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+    .chart-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .chart-subtitle {
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .chart-canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .line-chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .line-var-select {
+      padding: 5px 24px 5px 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #374151;
+      background: #ffffff;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 16 16' fill='none' stroke='%236b7280' stroke-width='1.8'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      cursor: pointer;
+      outline: none;
+    }
+    .line-var-select:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.12); }
+    .chart-legend {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-color {
+      width: 10px; height: 10px; border-radius: 2px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #111827;
+    }
+    .section-desc {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.7;
+    }
+    .capability-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .capability-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+    .capability-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(37,99,235,.12);
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .capability-name { font-weight: 500; color: #111827; }
+    .capability-score {
+      margin-left: auto;
+      font-size: 14px;
+      font-weight: 700;
+      color: #2563eb;
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-title">📊 算法能力报告</div>
+    <div class="topbar-actions">
+      <button class="btn-sm btn-text" id="mode-toggle-btn" onclick="toggleReportMode()">
+        切换为纠偏
+        <span class="btn-tooltip">仅做原型展示，真实开发不需要</span>
+      </button>
+      <button class="btn-sm btn-export" onclick="window.print()">⬇ 导出 PDF</button>
+    </div>
+  </div>
+
+  <div class="page-wrap">
+    <div class="report-header">
+      <div class="report-title-wrap">
+        <div class="report-title">算法能力报告 - 星阙与其他气象大模型对比评估报告</div>
+        <select class="version-select" id="compare-version-select">
+          <option>对比版本 - v1.0   2026-07-22 09:30:00  华东地区2026年 - 1周</option>
+          <option>对比版本 - v1.1   2026-07-23 12:30:00  华东地区2026年 - 1周</option>
+        </select>
+      </div>
+      <div class="report-meta">
+        <span>生成时间：2026-07-23 09:30:00</span>
+        <span>版本号：v1.0.0</span>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="section-title">一、报告摘要</div>
+      <div class="section-desc">
+        本报告基于「气象大模型」+「纠偏算法」流程最近一次完整执行结果生成，用来评估「星阙大模型」与「风乌」、「伏羲」在同等纠偏算法下的预测精准度。预测要素包括：风速 U、风速 V、温度 T2M、海平面气压 MSL。
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="section-title">二、数据集</div>
+      <div class="report-grid" style="margin-bottom:0">
+        <div class="metric-card">
+          <div class="metric-value metric-green">华东地区</div>
+          <div class="metric-label">空间维度</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value metric-yellow">1周</div>
+          <div class="metric-label">数据维度</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value metric-red">2026年</div>
+          <div class="metric-label">数据年份</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value metric-blue">968</div>
+          <div class="metric-label">样本数</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-mode-panel" id="report-main-panel">
+      <div class="report-section">
+        <div class="report-toolbar">
+          <div class="section-title" style="margin:0">三、模型对比数据</div>
+        </div>
+        <div class="compare-table-wrap">
+          <table class="compare-table" id="compare-table">
+            <thead>
+              <tr>
+                <th>模型 / 指标</th>
+                <th>风速 U (m/s)</th>
+                <th>风速 V (m/s)</th>
+                <th>温度 T2M (°C)</th>
+                <th>海平面气压 MSL (hPa)</th>
+              </tr>
+            </thead>
+            <tbody id="compare-tbody">
+              <!-- JS 按模式生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">多维性能雷达图</div>
+          <div class="chart-subtitle">面积越大代表综合表现越优</div>
+          <canvas id="radarCanvas" class="chart-canvas" width="240" height="240"></canvas>
+          <div class="chart-legend" id="radarLegend"></div>
+        </div>
+        <div class="chart-card">
+          <div class="line-chart-header">
+            <div class="chart-title" style="margin:0">预测值与真值时序对比</div>
+            <select class="line-var-select" id="lineVarSelect" onchange="renderLineChart()">
+              <option value="u">风速 U</option>
+              <option value="v">风速 V</option>
+              <option value="t2m">温度 T2M</option>
+              <option value="msl">海平面气压 MSL</option>
+            </select>
+          </div>
+          <canvas id="lineCanvas" class="chart-canvas" width="900" height="300"></canvas>
+          <div class="chart-legend" id="lineLegend"></div>
+        </div>
+      </div>
+
+      <div class="report-section">
+        <div class="report-toolbar">
+          <div class="section-title" style="margin:0">四、站点详细数据</div>
+          <div class="station-search" style="position:relative">
+            <input type="text" id="station-search-input" class="station-search-input" placeholder="搜索站点名称..." autocomplete="off">
+            <div id="station-suggest" class="station-suggest-wrap"></div>
+            <button class="station-search-btn" onclick="filterStationTable()">搜索</button>
+            <button class="station-search-btn secondary" onclick="resetStationTable()">重置</button>
+          </div>
+        </div>
+        <div class="compare-table-wrap" id="station-table-wrap">
+          <table class="compare-table station-table" id="station-table">
+            <thead>
+              <tr>
+                <th>站点</th>
+                <th>模型</th>
+                <th>风速 U (m/s)</th>
+                <th>风速 V (m/s)</th>
+                <th>温度 T2M (°C)</th>
+                <th>海平面气压 MSL (hPa)</th>
+              </tr>
+            </thead>
+            <tbody id="station-tbody">
+              <!-- JS 生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    let currentReportMode = 'llm';
+    function toggleReportMode() {
+      currentReportMode = currentReportMode === 'llm' ? 'geo' : 'llm';
+      const btn = document.getElementById('mode-toggle-btn');
+      // 保留 tooltip 子元素，仅更新文本节点
+      btn.childNodes.forEach(n => {
+        if (n.nodeType === Node.TEXT_NODE && n.textContent.trim()) {
+          n.textContent = currentReportMode === 'llm' ? '切换为纠偏 ' : '切换为大模型对比 ';
+        }
+      });
+      refreshReport();
+    }
+
+    // ── 模式配置 ──
+    const MODELS = {
+      llm: ['星阙', '风乌', '伏羲'],
+      geo: ['星阙+纠偏+地理地形要素', '星阙+纠偏', '星阙']
+    };
+
+    const MODEL_DISPLAY_NAMES = {
+      llm: { '星阙': '星阙+纠偏', '风乌': '风乌+纠偏', '伏羲': '伏羲+纠偏' },
+      geo: { '星阙+纠偏+地理地形要素': '星阙+纠偏+地理地形要素', '星阙+纠偏': '星阙+纠偏', '星阙': '星阙' }
+    };
+
+    const MODE_META = {
+      llm: {
+        title: '算法能力报告 - 星阙与其他气象大模型对比评估报告',
+        summary: '本报告基于「气象大模型」+「纠偏算法」流程最近一次完整执行结果生成，用来评估「星阙大模型」与「风乌」、「伏羲」在同等纠偏算法下的预测精准度。预测要素包括：风速 U、风速 V、温度 T2M、海平面气压 MSL。',
+        compareLegendPrefix: '模型 / 指标'
+      },
+      geo: {
+        title: '算法能力报告 - 纠偏算法与地理地形要素影响评估报告',
+        summary: '本报告基于「星阙大模型」叠加不同纠偏算法与地理地形要素后的预测结果生成，用来对比评估“基础星阙”、“星阙+纠偏”、“星阙+纠偏+地理地形要素”三档方案的预测精准度提升。预测要素包括：风速 U、风速 V、温度 T2M、海平面气压 MSL。',
+        compareLegendPrefix: '方案 / 指标'
+      }
+    };
+
+    const MODEL_COLORS = {
+      '真值': { stroke: '#6b7280', dash: [6, 4] }
+    };
+
+    const MODEL_STYLES = {
+      llm: {
+        '星阙': { stroke: '#2563eb', fill: 'rgba(37,99,235,0.18)', badgeClass: 'model-xq', short: '星阙+纠偏' },
+        '风乌': { stroke: '#059669', fill: 'rgba(16,185,129,0.18)', badgeClass: 'model-fw', short: '风乌+纠偏' },
+        '伏羲': { stroke: '#d97706', fill: 'rgba(245,158,11,0.18)', badgeClass: 'model-fx', short: '伏羲+纠偏' }
+      },
+      geo: {
+        '星阙+纠偏+地理地形要素': { stroke: '#2563eb', fill: 'rgba(37,99,235,0.18)', badgeClass: 'model-xq', short: '星阙+纠偏+地理地形要素' },
+        '星阙+纠偏': { stroke: '#0891b2', fill: 'rgba(8,145,178,0.18)', badgeClass: 'model-fw', short: '星阙+纠偏' },
+        '星阙': { stroke: '#6b7280', fill: 'rgba(107,114,128,0.18)', badgeClass: 'model-fx', short: '星阙' }
+      }
+    };
+
+    function getCurrentModels() { return MODELS[currentReportMode]; }
+    function getModelStyle(model) { return MODEL_STYLES[currentReportMode][model] || {}; }
+
+    const RADAR_DIMENSIONS = [
+      '风速U RMSE', '风速U MAE',
+      '风速V RMSE', '风速V MAE',
+      '温度T2M RMSE', '温度T2M MAE',
+      'MSL RMSE', 'MSL MAE'
+    ];
+
+    const STATIONS = [
+      { name: '上海虹桥', coord: '31.20°N, 121.34°E' },
+      { name: '杭州萧山', coord: '30.23°N, 120.43°E' },
+      { name: '南京禄口', coord: '31.74°N, 118.86°E' },
+      { name: '合肥新桥', coord: '31.99°N, 116.97°E' },
+      { name: '宁波栎社', coord: '29.83°N, 121.47°E' },
+      { name: '苏州太湖', coord: '31.25°N, 120.35°E' },
+    ];
+
+    // 各站点 mock 指标数据：按模式分别存储 [rmse, mae]
+    const STATION_METRICS = {
+      llm: {
+        '上海虹桥': {
+          '星阙': { u: [1.08,0.82], v: [1.02,0.76], t2m: [0.62,0.46], msl: [0.78,0.58] },
+          '风乌': { u: [1.34,1.04], v: [1.26,0.98], t2m: [0.81,0.60], msl: [1.01,0.76] },
+          '伏羲': { u: [1.42,1.10], v: [1.33,1.05], t2m: [0.88,0.67], msl: [1.09,0.83] }
+        },
+        '杭州萧山': {
+          '星阙': { u: [1.14,0.86], v: [1.07,0.79], t2m: [0.66,0.49], msl: [0.83,0.62] },
+          '风乌': { u: [1.40,1.08], v: [1.31,1.01], t2m: [0.85,0.63], msl: [1.06,0.80] },
+          '伏羲': { u: [1.48,1.15], v: [1.39,1.09], t2m: [0.93,0.70], msl: [1.14,0.87] }
+        },
+        '南京禄口': {
+          '星阙': { u: [1.11,0.84], v: [1.04,0.78], t2m: [0.64,0.47], msl: [0.80,0.60] },
+          '风乌': { u: [1.37,1.06], v: [1.29,0.99], t2m: [0.83,0.62], msl: [1.03,0.78] },
+          '伏羲': { u: [1.45,1.12], v: [1.36,1.07], t2m: [0.90,0.68], msl: [1.12,0.85] }
+        },
+        '合肥新桥': {
+          '星阙': { u: [1.19,0.90], v: [1.12,0.83], t2m: [0.69,0.51], msl: [0.87,0.65] },
+          '风乌': { u: [1.46,1.13], v: [1.37,1.06], t2m: [0.89,0.66], msl: [1.11,0.84] },
+          '伏羲': { u: [1.54,1.19], v: [1.45,1.14], t2m: [0.97,0.73], msl: [1.20,0.92] }
+        },
+        '宁波栎社': {
+          '星阙': { u: [1.16,0.88], v: [1.09,0.81], t2m: [0.67,0.50], msl: [0.85,0.63] },
+          '风乌': { u: [1.43,1.10], v: [1.34,1.03], t2m: [0.86,0.64], msl: [1.08,0.82] },
+          '伏羲': { u: [1.51,1.17], v: [1.42,1.11], t2m: [0.94,0.71], msl: [1.17,0.89] }
+        },
+        '苏州太湖': {
+          '星阙': { u: [1.13,0.85], v: [1.06,0.79], t2m: [0.65,0.48], msl: [0.82,0.61] },
+          '风乌': { u: [1.39,1.07], v: [1.30,1.00], t2m: [0.84,0.62], msl: [1.05,0.79] },
+          '伏羲': { u: [1.47,1.14], v: [1.38,1.08], t2m: [0.91,0.69], msl: [1.13,0.86] }
+        }
+      },
+      geo: {
+        '上海虹桥': {
+          '星阙+纠偏+地理地形要素': { u: [0.82,0.58], v: [0.78,0.52], t2m: [0.42,0.28], msl: [0.58,0.40] },
+          '星阙+纠偏': { u: [0.94,0.68], v: [0.88,0.62], t2m: [0.52,0.36], msl: [0.68,0.48] },
+          '星阙': { u: [1.08,0.82], v: [1.02,0.76], t2m: [0.62,0.46], msl: [0.78,0.58] }
+        },
+        '杭州萧山': {
+          '星阙+纠偏+地理地形要素': { u: [0.88,0.62], v: [0.82,0.56], t2m: [0.46,0.30], msl: [0.62,0.42] },
+          '星阙+纠偏': { u: [1.00,0.72], v: [0.94,0.66], t2m: [0.56,0.38], msl: [0.72,0.50] },
+          '星阙': { u: [1.14,0.86], v: [1.07,0.79], t2m: [0.66,0.49], msl: [0.83,0.62] }
+        },
+        '南京禄口': {
+          '星阙+纠偏+地理地形要素': { u: [0.85,0.60], v: [0.80,0.54], t2m: [0.44,0.29], msl: [0.60,0.41] },
+          '星阙+纠偏': { u: [0.97,0.70], v: [0.91,0.64], t2m: [0.54,0.36], msl: [0.70,0.49] },
+          '星阙': { u: [1.11,0.84], v: [1.04,0.78], t2m: [0.64,0.47], msl: [0.80,0.60] }
+        },
+        '合肥新桥': {
+          '星阙+纠偏+地理地形要素': { u: [0.92,0.66], v: [0.86,0.60], t2m: [0.48,0.32], msl: [0.66,0.45] },
+          '星阙+纠偏': { u: [1.04,0.76], v: [0.98,0.70], t2m: [0.58,0.40], msl: [0.76,0.54] },
+          '星阙': { u: [1.19,0.90], v: [1.12,0.83], t2m: [0.69,0.51], msl: [0.87,0.65] }
+        },
+        '宁波栎社': {
+          '星阙+纠偏+地理地形要素': { u: [0.89,0.63], v: [0.84,0.57], t2m: [0.46,0.31], msl: [0.64,0.43] },
+          '星阙+纠偏': { u: [1.01,0.73], v: [0.95,0.67], t2m: [0.56,0.39], msl: [0.74,0.52] },
+          '星阙': { u: [1.16,0.88], v: [1.09,0.81], t2m: [0.67,0.50], msl: [0.85,0.63] }
+        },
+        '苏州太湖': {
+          '星阙+纠偏+地理地形要素': { u: [0.86,0.61], v: [0.81,0.55], t2m: [0.45,0.30], msl: [0.61,0.42] },
+          '星阙+纠偏': { u: [0.98,0.71], v: [0.92,0.65], t2m: [0.55,0.37], msl: [0.71,0.50] },
+          '星阙': { u: [1.13,0.85], v: [1.06,0.79], t2m: [0.65,0.48], msl: [0.82,0.61] }
+        }
+      }
+    };
+
+    // 归一化分数（越高越好）
+    const RADAR_DATA = {
+      llm: {
+        '星阙': [0.90, 0.85, 0.88, 0.92, 0.95, 0.91, 0.93, 0.89],
+        '风乌': [0.72, 0.78, 0.70, 0.74, 0.75, 0.80, 0.73, 0.77],
+        '伏羲': [0.65, 0.70, 0.74, 0.66, 0.68, 0.72, 0.70, 0.75]
+      },
+      geo: {
+        '星阙+纠偏+地理地形要素': [0.96, 0.94, 0.95, 0.97, 0.98, 0.96, 0.97, 0.95],
+        '星阙+纠偏': [0.88, 0.85, 0.87, 0.89, 0.90, 0.87, 0.89, 0.86],
+        '星阙': [0.80, 0.76, 0.79, 0.82, 0.84, 0.80, 0.83, 0.80]
+      }
+    };
+
+    // 折线图时序 mock 数据：72 小时
+    const LINE_DATA_LLM = {
+      u: {
+        label: '风速 U (m/s)',
+        truth: [8.75,12.48,13.29,13.76,14.09,12.25,14.82,15.09,13.81,13.43,14.49,16.0,15.57,15.90,13.22,14.01,12.77,11.69,13.37,10.53,9.35,9.56,8.59,8.94,7.89,7.94,9.07,8.98,7.29,7.97,8.53,9.85,8.14,11.21,10.55,10.37,13.08,12.66,12.62,11.53,13.73,13.81,14.46,14.72,13.25,14.54,15.55,12.64,13.04,13.90,11.37,12.78,11.84,8.27,8.09,8.09,9.16,6.81,6.43,7.16,4.39,5.15,5.51,2.71,4.58,6.16,5.74,4.13,3.86,7.52,7.34,8.39],
+        '星阙': [8.74,12.71,13.52,14.02,14.07,12.09,14.72,15.19,13.78,13.59,14.56,16.36,15.88,15.86,13.23,13.88,13.14,11.57,13.18,10.38,9.60,9.63,8.66,8.89,8.27,7.90,9.16,9.17,7.58,8.18,8.41,9.88,8.47,11.48,10.78,10.22,12.89,12.65,12.89,11.52,13.62,14.15,14.84,14.64,13.07,14.57,15.54,12.89,13.19,13.75,11.76,12.60,11.93,8.58,8.35,8.15,9.23,7.19,6.59,7.16,4.57,5.13,5.71,2.64,4.51,6.05,5.87,4.39,3.69,7.75,7.63,8.46],
+        '风乌': [10.21,13.43,14.26,15.08,15.96,13.32,16.55,16.21,14.78,15.00,15.83,17.05,16.08,16.68,13.85,15.21,14.56,12.31,14.50,11.67,10.68,10.47,9.56,10.62,8.49,9.16,10.05,10.04,8.24,8.98,10.01,11.02,9.40,12.38,12.12,11.31,14.51,13.33,14.50,12.66,15.33,14.97,16.09,15.44,13.88,15.67,17.22,14.26,14.72,15.07,13.17,13.70,13.54,9.94,8.71,9.05,10.32,7.59,7.02,7.93,5.19,5.68,7.35,3.29,6.26,7.10,7.50,5.60,4.82,9.19,8.86,10.28],
+        '伏羲': [8.41,11.18,12.05,13.61,12.94,12.03,14.26,13.90,12.33,13.22,12.62,14.87,14.57,15.73,12.92,13.70,11.65,10.36,11.49,10.36,9.18,8.51,7.42,8.63,7.69,6.19,7.29,7.12,6.43,7.69,6.83,8.70,6.95,9.92,8.87,8.97,12.79,11.07,10.90,10.16,12.25,12.97,14.10,12.95,12.77,14.37,14.00,11.27,11.17,13.77,10.63,11.76,11.05,7.24,7.21,7.68,7.32,5.86,5.25,5.94,4.19,3.97,4.50,2.35,4.10,5.56,4.79,2.37,2.33,6.12,6.23,7.77]
+      },
+      v: {
+        label: '风速 V (m/s)',
+        truth: [4.5,5.72,6.02,5.32,7.28,6.68,6.55,7.49,6.77,8.33,7.50,6.83,7.48,8.08,7.60,7.62,7.35,6.05,6.32,6.17,6.38,5.12,4.47,5.07,4.01,4.28,4.13,4.91,4.82,4.31,5.18,5.22,4.39,4.69,4.55,6.34,5.53,5.78,5.63,6.29,6.60,6.77,7.13,7.57,7.89,6.32,6.38,5.98,6.20,5.50,5.40,5.93,5.92,4.78,4.17,4.22,4.32,3.99,3.21,3.46,2.07,1.65,1.76,1.79,2.31,2.71,3.02,1.95,2.06,3.02,3.98,3.93],
+        '星阙': [4.70,6.10,6.38,5.36,7.62,6.90,6.60,7.60,7.08,8.26,7.46,6.84,7.32,8.10,7.88,7.85,7.45,6.13,6.29,6.45,6.74,5.18,4.63,5.18,4.01,4.47,4.03,4.77,5.14,4.46,5.01,5.39,4.57,4.75,4.46,6.24,5.87,5.78,5.73,6.58,6.74,7.04,7.52,7.70,7.75,6.20,6.35,6.22,6.16,5.72,5.77,5.81,5.78,4.61,4.44,4.57,4.28,4.07,3.03,3.57,2.05,1.51,1.96,1.60,2.13,2.96,2.82,2.05,2.26,2.84,4.16,4.06],
+        '风乌': [5.60,7.03,7.34,5.93,8.12,8.23,7.34,8.10,8.41,8.98,8.38,7.49,8.02,9.90,9.15,9.28,8.64,7.80,7.84,7.15,8.15,6.00,5.89,6.14,4.86,5.40,5.16,6.33,6.15,6.08,6.33,6.99,5.96,5.82,6.22,6.88,7.08,6.74,6.76,7.51,7.83,7.65,8.42,8.08,8.49,7.26,8.20,6.85,6.99,6.11,6.27,7.22,6.46,5.77,4.71,5.60,4.89,5.02,5.08,5.00,2.62,2.29,3.10,3.13,3.05,4.16,3.61,3.59,3.90,4.55,4.69,4.89],
+        '伏羲': [3.13,3.84,4.35,3.96,6.34,5.80,5.51,6.50,5.58,6.78,7.06,5.81,6.25,6.51,5.88,7.08,6.06,5.25,5.43,5.80,5.43,4.73,3.30,3.38,2.32,4.18,2.33,3.43,3.47,2.93,4.62,3.76,3.69,3.56,3.12,5.39,4.52,5.51,4.14,5.41,5.74,5.17,6.06,6.99,6.59,5.71,5.70,5.61,5.38,3.87,5.07,4.51,5.82,4.41,3.60,2.52,2.42,3.50,1.40,2.93,0.51,1.22,1.39,1.29,1.62,2.16,2.90,0.44,0.88,1.22,2.26,2.69]
+      },
+      t2m: {
+        label: '温度 T2M (°C)',
+        truth: [21.4,21.22,22.43,22.58,23.09,23.48,23.76,23.74,24.05,24.49,24.54,24.24,24.61,24.23,23.93,23.48,23.27,22.86,22.38,22.43,21.61,21.47,21.29,20.98,20.38,20.54,19.96,20.0,20.44,20.58,20.39,20.84,21.21,21.37,21.77,22.01,21.88,22.49,22.53,23.47,23.63,23.89,23.64,23.51,23.98,23.57,23.57,23.61,23.23,22.98,22.58,22.23,21.78,20.58,20.16,19.51,19.35,18.89,18.39,17.82,17.76,17.46,17.24,17.56,17.31,16.96,17.13,17.63,18.22,18.52,18.26,19.38],
+        '星阙': [21.51,21.32,22.48,22.75,23.14,23.53,24.06,24.03,24.16,24.42,24.92,24.50,24.53,24.61,23.92,23.66,23.40,22.83,22.36,22.67,21.81,21.85,21.41,20.79,20.44,20.63,19.85,19.83,20.75,20.72,20.62,21.04,21.55,21.48,21.60,22.02,21.94,22.43,22.39,23.50,23.97,23.94,23.93,23.37,23.78,23.83,23.67,23.82,23.28,23.06,22.39,22.45,21.82,20.84,20.22,19.37,19.47,19.17,18.29,18.11,18.16,17.74,17.63,17.61,17.36,17.33,17.46,17.78,18.30,18.66,18.23,19.27],
+        '风乌': [22.58,22.54,24.15,23.14,24.54,24.37,24.63,25.44,25.34,25.04,25.62,25.89,25.87,25.64,25.34,24.06,23.99,24.27,24.10,23.35,23.10,22.29,23.10,21.71,21.68,21.98,21.69,21.77,22.08,21.44,21.71,21.98,22.36,22.65,23.01,23.89,23.18,23.29,23.88,25.33,25.19,25.57,24.51,24.25,24.61,24.34,24.96,25.47,24.16,24.50,23.41,22.75,22.85,21.79,21.73,21.20,20.32,20.47,20.26,18.52,19.17,18.54,18.70,18.80,17.90,18.51,17.68,19.01,19.51,19.07,18.90,21.07],
+        '伏羲': [20.94,21.06,20.65,21.23,21.71,22.26,22.63,22.77,22.86,23.21,23.84,23.85,24.44,23.35,22.35,22.46,21.43,21.25,21.48,20.69,21.14,19.69,20.06,19.18,20.07,19.51,19.15,18.88,18.61,19.97,19.71,19.03,21.01,20.88,21.50,21.54,20.60,22.23,21.18,22.12,22.04,22.56,22.58,22.28,23.09,21.97,23.39,23.12,21.51,22.47,22.28,21.77,21.57,19.13,18.40,19.06,18.34,18.65,18.21,17.06,16.61,17.09,17.10,16.83,16.38,16.33,15.92,17.04,16.47,18.42,17.86,18.28]
+      },
+      msl: {
+        label: '海平面气压 MSL (hPa)',
+        truth: [1013.3,1012.8,1013.4,1014.3,1014.9,1014.7,1014.6,1015.7,1015.4,1015.6,1015.9,1015.7,1015.2,1015.2,1014.6,1014.3,1015.1,1014.9,1013.8,1013.5,1013.2,1013.7,1013.4,1012.7,1012.5,1013.1,1012.6,1012.7,1012.9,1012.3,1012.9,1013.1,1013.1,1012.7,1012.9,1013.4,1014.0,1014.0,1014.3,1014.1,1014.6,1014.4,1014.9,1015.3,1015.1,1015.3,1014.9,1015.1,1014.5,1014.7,1014.0,1014.0,1013.4,1013.4,1013.0,1012.7,1011.5,1011.0,1011.1,1011.3,1010.5,1010.8,1010.8,1010.1,1009.8,1010.4,1010.1,1010.4,1010.6,1010.9,1011.2,1011.8],
+        '星阙': [1013.1,1012.7,1013.5,1014.3,1015.1,1014.6,1014.5,1016.0,1015.3,1015.6,1016.3,1016.1,1015.2,1015.5,1014.5,1014.7,1015.1,1015.3,1014.1,1013.9,1013.3,1013.6,1013.4,1013.1,1012.6,1013.0,1012.9,1012.9,1013.0,1012.3,1013.2,1013.1,1012.9,1013.1,1012.9,1013.2,1013.9,1014.2,1014.6,1014.3,1014.6,1014.7,1014.9,1015.3,1015.4,1015.5,1014.8,1015.3,1014.4,1014.8,1014.2,1014.1,1013.4,1013.4,1012.9,1012.6,1011.3,1011.1,1011.1,1011.2,1010.4,1010.7,1010.9,1010.3,1010.2,1010.6,1010.3,1010.7,1010.5,1010.8,1011.4,1012.1],
+        '风乌': [1014.1,1013.7,1015.0,1015.7,1016.5,1015.8,1015.5,1017.4,1016.6,1016.2,1017.4,1016.2,1016.3,1017.0,1015.8,1015.5,1017.0,1016.4,1015.6,1014.2,1014.5,1015.1,1014.8,1014.2,1014.3,1014.5,1014.0,1013.5,1013.6,1013.6,1014.7,1014.5,1013.7,1014.6,1013.5,1014.7,1015.6,1015.0,1015.7,1015.7,1016.1,1015.0,1015.5,1016.2,1017.0,1016.0,1016.7,1016.7,1016.3,1016.5,1015.1,1015.1,1013.9,1014.0,1014.6,1014.1,1013.0,1012.2,1012.6,1012.9,1012.2,1011.9,1012.1,1011.8,1010.5,1011.3,1010.9,1011.4,1012.2,1011.5,1012.2,1012.8],
+        '伏羲': [1012.0,1011.9,1011.5,1014.1,1014.1,1013.8,1014.0,1014.9,1015.1,1013.9,1015.7,1015.0,1013.4,1014.5,1013.1,1013.6,1013.8,1013.3,1012.3,1012.0,1011.7,1012.7,1013.2,1011.1,1010.9,1012.3,1010.8,1012.5,1012.3,1012.1,1012.4,1012.8,1012.2,1011.4,1011.1,1011.6,1013.1,1012.7,1013.1,1012.3,1013.6,1013.1,1013.2,1014.9,1013.4,1013.6,1014.4,1014.2,1013.0,1013.8,1012.6,1013.4,1013.1,1012.4,1012.7,1012.5,1009.8,1010.4,1010.9,1010.4,1009.8,1009.4,1009.7,1009.7,1008.6,1009.8,1009.0,1010.0,1008.9,1010.8,1010.0,1010.3]
+      }
+    };
+
+    function addBias(arr, factor) {
+      // 给数组每个值加一个与真值反向的小扰动，factor 越大越接近真值（误差减小）
+      return arr.map(v => v + (Math.random() - 0.5) * factor * 0.2);
+    }
+
+    function generateGeoLineData(base) {
+      const out = {};
+      for (const key of Object.keys(base)) {
+        const ds = base[key];
+        const truth = ds.truth;
+        const xq = ds['星阙'];
+        const bias = xq.map((v, i) => v + (truth[i] - v) * 0.45);
+        const geo = xq.map((v, i) => v + (truth[i] - v) * 0.70);
+        out[key] = {
+          label: ds.label,
+          truth: truth,
+          '星阙+纠偏+地理地形要素': geo,
+          '星阙+纠偏': bias,
+          '星阙': xq
+        };
+      }
+      return out;
+    }
+
+    const LINE_DATA_GEO = generateGeoLineData(LINE_DATA_LLM);
+
+    const LINE_DATA = {
+      llm: LINE_DATA_LLM,
+      geo: LINE_DATA_GEO
+    };
+
+    function getCurrentLineData() { return LINE_DATA[currentReportMode]; }
+    function getCurrentRadarData() { return RADAR_DATA[currentReportMode]; }
+    function getCurrentStationMetrics() { return STATION_METRICS[currentReportMode]; }
+
+    function drawRadar() {
+      const canvas = document.getElementById('radarCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const cx = W / 2, cy = H / 2;
+      const radius = Math.min(W, H) / 2 - 36;
+      const n = RADAR_DIMENSIONS.length;
+      const angleAt = i => -Math.PI / 2 + (i * 2 * Math.PI / n);
+
+      ctx.clearRect(0, 0, W, H);
+
+      // 网格
+      for (let level = 1; level <= 4; level++) {
+        ctx.beginPath();
+        for (let i = 0; i < n; i++) {
+          const r = radius * level / 4;
+          const a = angleAt(i);
+          const x = cx + r * Math.cos(a);
+          const y = cy + r * Math.sin(a);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // 轴线
+      for (let i = 0; i < n; i++) {
+        const a = angleAt(i);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + radius * Math.cos(a), cy + radius * Math.sin(a));
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.stroke();
+      }
+
+      // 数据
+      const radarData = getCurrentRadarData();
+      Object.entries(radarData).forEach(([name, values]) => {
+        const cfg = getModelStyle(name);
+        ctx.beginPath();
+        values.forEach((v, i) => {
+          const a = angleAt(i);
+          const r = radius * v;
+          const x = cx + r * Math.cos(a);
+          const y = cy + r * Math.sin(a);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.closePath();
+        ctx.fillStyle = cfg.fill;
+        ctx.fill();
+        ctx.strokeStyle = cfg.stroke;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        // 数据点
+        values.forEach((v, i) => {
+          const a = angleAt(i);
+          const r = radius * v;
+          const x = cx + r * Math.cos(a);
+          const y = cy + r * Math.sin(a);
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = cfg.stroke;
+          ctx.fill();
+        });
+      });
+
+      // 维度标签
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '10px Noto Sans SC, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      RADAR_DIMENSIONS.forEach((dim, i) => {
+        const a = angleAt(i);
+        const x = cx + (radius + 18) * Math.cos(a);
+        const y = cy + (radius + 18) * Math.sin(a);
+        ctx.fillText(dim, x, y);
+      });
+
+      // 图例
+      const legendEl = document.getElementById('radarLegend');
+      if (legendEl) {
+        legendEl.innerHTML = Object.keys(radarData).map(name => {
+          const cfg = getModelStyle(name);
+          return `<div class="legend-item"><span class="legend-color" style="background:${cfg.stroke}"></span>${name}</div>`;
+        }).join('');
+      }
+    }
+
+    function renderLineChart() {
+      const varKey = document.getElementById('lineVarSelect')?.value || 'u';
+      const ds = getCurrentLineData()[varKey];
+      const canvas = document.getElementById('lineCanvas');
+      if (!canvas || !ds) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const pad = { top: 30, right: 30, bottom: 40, left: 50 };
+      const w = W - pad.left - pad.right;
+      const h = H - pad.top - pad.bottom;
+      const n = ds.truth.length;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // 计算 Y 范围
+      let minY = Infinity, maxY = -Infinity;
+      const allSeries = [ds.truth];
+      getCurrentModels().forEach(m => { if (ds[m]) allSeries.push(ds[m]); });
+      allSeries.flat().forEach(v => {
+        minY = Math.min(minY, v);
+        maxY = Math.max(maxY, v);
+      });
+      const range = maxY - minY || 1;
+      minY -= range * 0.08;
+      maxY += range * 0.08;
+
+      // 网格
+      ctx.strokeStyle = '#f3f4f6';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + h * i / 4;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(W - pad.right, y);
+        ctx.stroke();
+      }
+      for (let i = 0; i <= 6; i++) {
+        const x = pad.left + w * i / 6;
+        ctx.beginPath();
+        ctx.moveTo(x, pad.top);
+        ctx.lineTo(x, H - pad.bottom);
+        ctx.stroke();
+      }
+
+      // 坐标轴
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, pad.top);
+      ctx.lineTo(pad.left, H - pad.bottom);
+      ctx.lineTo(W - pad.right, H - pad.bottom);
+      ctx.stroke();
+
+      // Y 轴标签
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '10px Noto Sans SC, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      for (let i = 0; i <= 4; i++) {
+        const y = pad.top + h * i / 4;
+        const v = maxY - (maxY - minY) * i / 4;
+        ctx.fillText(v.toFixed(varKey === 'msl' ? 1 : (varKey === 't2m' ? 1 : 1)), pad.left - 8, y);
+      }
+
+      // X 轴标签（时间索引）
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      for (let i = 0; i <= 6; i++) {
+        const x = pad.left + w * i / 6;
+        const idx = Math.round((n - 1) * i / 6);
+        ctx.fillText(idx + 'h', x, H - pad.bottom + 8);
+      }
+
+      // 单位
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(ds.label, pad.left, 6);
+
+      function drawSeries(arr, cfg) {
+        ctx.beginPath();
+        arr.forEach((v, i) => {
+          const x = pad.left + w * i / (n - 1);
+          const y = pad.top + h * (1 - (v - minY) / (maxY - minY));
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = cfg.stroke;
+        ctx.lineWidth = 2;
+        if (cfg.dash) ctx.setLineDash(cfg.dash);
+        else ctx.setLineDash([]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      drawSeries(ds.truth, MODEL_COLORS['真值']);
+      getCurrentModels().forEach(m => {
+        if (ds[m]) drawSeries(ds[m], getModelStyle(m));
+      });
+
+      // 图例
+      const legendEl = document.getElementById('lineLegend');
+      if (legendEl) {
+        legendEl.innerHTML = ['真值', ...getCurrentModels()].map(name => {
+          const cfg = name === '真值' ? MODEL_COLORS['真值'] : getModelStyle(name);
+          return `<div class="legend-item"><span class="legend-color" style="background:${cfg.stroke}"></span>${name}</div>`;
+        }).join('');
+      }
+    }
+
+    function getModelBadgeClass(model) {
+      const style = getModelStyle(model);
+      return style.badgeClass || 'model-xq';
+    }
+
+    function buildStationRows(stations) {
+      const models = getCurrentModels();
+      const cells = ['u','v','t2m','msl'];
+      const metrics = getCurrentStationMetrics();
+      let rows = '';
+      stations.forEach((st) => {
+        const metric = metrics[st.name];
+        if (!metric) return;
+        models.forEach((model, mIdx) => {
+          const data = metric[model];
+          const shortName = getModelStyle(model).short || model;
+          rows += `
+            <tr>
+              ${mIdx === 0 ? `<td rowspan="3"><div class="station-name">${st.name}</div><div class="station-coord">${st.coord}</div></td>` : ''}
+              <td class="model-cell"><span class="model-badge ${getModelBadgeClass(model)}">${shortName}</span></td>
+              ${cells.map(c => `<td><div class="metric-pair"><span class="rmse">RMSE ${data[c][0].toFixed(2)}</span><span class="mae">MAE ${data[c][1].toFixed(2)}</span></div></td>`).join('')}
+            </tr>
+          `;
+        });
+      });
+      return rows;
+    }
+
+    function renderStationTable(filteredStations) {
+      const tbody = document.getElementById('station-tbody');
+      if (!tbody) return;
+      const stations = filteredStations && filteredStations.length ? filteredStations : STATIONS;
+      if (!stations.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="station-empty-cell">暂无匹配站点</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = buildStationRows(stations);
+    }
+
+    function renderCompareTable() {
+      const cells = ['u','v','t2m','msl'];
+      const models = getCurrentModels();
+      // 汇总全部站点的平均值作为总体对比数据
+      const summary = {};
+      models.forEach(m => {
+        summary[m] = { u: [0,0], v: [0,0], t2m: [0,0], msl: [0,0] };
+        let count = 0;
+        STATIONS.forEach(st => {
+          const metrics = getCurrentStationMetrics();
+          const metric = metrics[st.name] && metrics[st.name][m];
+          if (!metric) return;
+          cells.forEach(c => {
+            summary[m][c][0] += metric[c][0];
+            summary[m][c][1] += metric[c][1];
+          });
+          count += 1;
+        });
+        cells.forEach(c => {
+          summary[m][c][0] /= count;
+          summary[m][c][1] /= count;
+        });
+      });
+      // 每条指标最佳值（数值越小越好）
+      cells.forEach(c => {
+        let best = Infinity, bestModel = null;
+        models.forEach(m => {
+          if (summary[m][c][0] < best) { best = summary[m][c][0]; bestModel = m; }
+        });
+        summary[bestModel][c].best = true;
+      });
+
+      const meta = MODE_META[currentReportMode];
+      const theadRow = document.querySelector('#compare-table thead tr');
+      if (theadRow) {
+        theadRow.innerHTML = `<th>${meta.compareLegendPrefix}</th>` +
+          cells.map(c => {
+            const label = c === 'u' ? '风速 U (m/s)' : c === 'v' ? '风速 V (m/s)' : c === 't2m' ? '温度 T2M (°C)' : '海平面气压 MSL (hPa)';
+            return `<th>${label}</th>`;
+          }).join('');
+      }
+      const tbody = document.getElementById('compare-tbody');
+      if (!tbody) return;
+      const cellNames = ['u','v','t2m','msl'];
+      tbody.innerHTML = models.map(m => {
+        const style = getModelStyle(m);
+        const shortName = style.short || m;
+        const isBest = models.indexOf(m) === 0; // 首个模型为最优方案
+        const badgeContent = isBest ? `⭐ ${shortName}` : shortName;
+        return `<tr>
+          <td><span class="model-badge ${getModelBadgeClass(m)}">${badgeContent}</span></td>
+          ${cellNames.map(c => {
+            const cls = summary[m][c].best ? 'best-cell' : '';
+            const tag = summary[m][c].best ? '<span class="best-tag">⭐</span>' : '';
+            return `<td class="${cls}">RMSE: ${summary[m][c][0].toFixed(2)}${tag}<br><small style="color:#6b7280">MAE: ${summary[m][c][1].toFixed(2)}</small></td>`;
+          }).join('')}
+        </tr>`;
+      }).join('');
+    }
+
+    function renderReportHeader() {
+      const meta = MODE_META[currentReportMode];
+      const titleEl = document.querySelector('.report-title');
+      const summaryEl = document.querySelector('.section-desc');
+      if (titleEl) titleEl.textContent = meta.title;
+      if (summaryEl) summaryEl.textContent = meta.summary;
+    }
+
+    function refreshReport() {
+      renderReportHeader();
+      renderCompareTable();
+      drawRadar();
+      renderLineChart();
+      renderStationTable();
+    }
+
+    function fuzzyMatch(name, keyword) {
+      // 判断 keyword 是否是 name 按顺序的子序列
+      let i = 0;
+      for (let j = 0; j < name.length && i < keyword.length; j += 1) {
+        if (name[j] === keyword[i]) i += 1;
+      }
+      return i === keyword.length;
+    }
+
+    function filterStationTable() {
+      const keyword = document.getElementById('station-search-input')?.value.trim().toLowerCase();
+      if (!keyword) {
+        renderStationTable(STATIONS);
+        return;
+      }
+      const filtered = STATIONS.filter(st =>
+        st.name.toLowerCase().includes(keyword) || fuzzyMatch(st.name.toLowerCase(), keyword)
+      );
+      renderStationTable(filtered);
+    }
+
+    function resetStationTable() {
+      const input = document.getElementById('station-search-input');
+      if (input) input.value = '';
+      renderStationTable(STATIONS);
+      hideSuggest();
+    }
+
+    // ── 站点搜索自动完成下拉框 ──
+    function highlightMatch(name, keyword) {
+      if (!keyword) return escapeHtml(name);
+      const lowerName = name.toLowerCase();
+      const lowerKeyword = keyword.toLowerCase();
+      // 优先完整子串高亮
+      const idx = lowerName.indexOf(lowerKeyword);
+      if (idx >= 0) {
+        return escapeHtml(name.slice(0, idx)) +
+          `<span class="match">${escapeHtml(name.slice(idx, idx + keyword.length))}</span>` +
+          escapeHtml(name.slice(idx + keyword.length));
+      }
+      // 否则按模糊匹配顺序高亮
+      const result = [];
+      let k = 0;
+      let matched = 0;
+      for (let i = 0; i < name.length && k < keyword.length; i += 1) {
+        if (name[i].toLowerCase() === keyword[k].toLowerCase()) {
+          result.push(`<span class="match">${escapeHtml(name[i])}</span>`);
+          k += 1;
+          matched += 1;
+        } else {
+          result.push(escapeHtml(name[i]));
+        }
+      }
+      return result.join('');
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function getSuggestions(keyword) {
+      if (!keyword) return [];
+      const lowerKeyword = keyword.toLowerCase();
+      return STATIONS.filter(st =>
+        st.name.toLowerCase().includes(lowerKeyword) || fuzzyMatch(st.name.toLowerCase(), lowerKeyword)
+      );
+    }
+
+    function renderSuggest(keyword) {
+      const wrap = document.getElementById('station-suggest');
+      if (!wrap) return;
+      const list = getSuggestions(keyword);
+      if (!keyword) {
+        hideSuggest();
+        return;
+      }
+      if (!list.length) {
+        wrap.innerHTML = '<div class="station-suggest-empty">无匹配站点</div>';
+        wrap.classList.add('open');
+        suggestIndex = -1;
+        return;
+      }
+      wrap.innerHTML = list.map((st, idx) =>
+        `<div class="station-suggest-item" data-idx="${idx}" data-name="${escapeHtml(st.name)}">${highlightMatch(st.name, keyword)}</div>`
+      ).join('');
+      wrap.classList.add('open');
+      suggestIndex = -1;
+    }
+
+    function hideSuggest() {
+      const wrap = document.getElementById('station-suggest');
+      if (wrap) wrap.classList.remove('open');
+      suggestIndex = -1;
+    }
+
+    function selectSuggest(stationName) {
+      const input = document.getElementById('station-search-input');
+      if (input) input.value = stationName;
+      renderStationTable(STATIONS.filter(st => st.name === stationName));
+      hideSuggest();
+    }
+
+    function navigateSuggest(delta) {
+      const wrap = document.getElementById('station-suggest');
+      if (!wrap || !wrap.classList.contains('open')) return;
+      const items = Array.from(wrap.querySelectorAll('.station-suggest-item'));
+      if (!items.length) return;
+      if (suggestIndex >= 0) items[suggestIndex].classList.remove('active');
+      suggestIndex += delta;
+      if (suggestIndex < 0) suggestIndex = items.length - 1;
+      if (suggestIndex >= items.length) suggestIndex = 0;
+      items[suggestIndex].classList.add('active');
+      items[suggestIndex].scrollIntoView({ block: 'nearest' });
+    }
+
+    let suggestIndex = -1;
+    function bindStationSearch() {
+      const input = document.getElementById('station-search-input');
+      const wrap = document.getElementById('station-suggest');
+      if (!input || !wrap) return;
+
+      input.addEventListener('input', () => {
+        renderSuggest(input.value.trim());
+      });
+
+      input.addEventListener('focus', () => {
+        renderSuggest(input.value.trim());
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          navigateSuggest(1);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          navigateSuggest(-1);
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          const wrap = document.getElementById('station-suggest');
+          const active = wrap?.querySelector('.station-suggest-item.active');
+          if (active) {
+            selectSuggest(active.dataset.name);
+          } else {
+            filterStationTable();
+            hideSuggest();
+          }
+        } else if (e.key === 'Escape') {
+          hideSuggest();
+        }
+      });
+
+      wrap.addEventListener('mousedown', (e) => {
+        const item = e.target.closest('.station-suggest-item');
+        if (item) selectSuggest(item.dataset.name);
+      });
+
+      // 点击输入框外部关闭下拉
+      document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !wrap.contains(e.target)) hideSuggest();
+      });
+    }
+
+    window.addEventListener('load', () => {
+      refreshReport();
+      bindStationSearch();
+    });
+
+  </script>
+</body>
+</html>
