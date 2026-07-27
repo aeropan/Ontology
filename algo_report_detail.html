@@ -103,6 +103,32 @@
       gap: 16px;
       margin-bottom: 6px;
     }
+    .report-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px 5px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-2);
+      background: transparent;
+      border: 1px solid var(--border-1);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+    .btn-back:hover {
+      color: var(--text-1);
+      background: var(--bg-3);
+      border-color: var(--border-2);
+    }
     .report-title { font-size: 20px; font-weight: 700; color: var(--text-1); }
     .report-meta {
       font-size: 12px;
@@ -358,6 +384,8 @@
       width: 100%;
       height: auto;
       display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
     }
     .line-chart-header {
       display: flex;
@@ -445,10 +473,6 @@
   <div class="topbar">
     <div class="topbar-title">📊 算法能力报告</div>
     <div class="topbar-actions">
-      <button class="btn-sm btn-text" id="mode-toggle-btn" onclick="toggleReportMode()">
-        切换为纠偏
-        <span class="btn-tooltip">仅做原型展示，真实开发不需要</span>
-      </button>
       <button class="btn-sm btn-export" onclick="window.print()">⬇ 导出 PDF</button>
     </div>
   </div>
@@ -456,11 +480,13 @@
   <div class="page-wrap">
     <div class="report-header">
       <div class="report-title-wrap">
-        <div class="report-title">算法能力报告 - 星阙与其他气象大模型对比评估报告</div>
-        <select class="version-select" id="compare-version-select">
-          <option>对比版本 - v1.0   2026-07-22 09:30:00  华东地区2026年 - 1周</option>
-          <option>对比版本 - v1.1   2026-07-23 12:30:00  华东地区2026年 - 1周</option>
-        </select>
+        <div class="report-title-group">
+          <button class="btn-back" onclick="goBack()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3L5 8l5 5"/></svg>
+            返回
+          </button>
+          <div class="report-title">算法能力报告 - 星阙与其他气象大模型对比评估报告</div>
+        </div>
       </div>
       <div class="report-meta">
         <span>生成时间：2026-07-23 09:30:00</span>
@@ -799,11 +825,27 @@
     function getCurrentRadarData() { return RADAR_DATA[currentReportMode]; }
     function getCurrentStationMetrics() { return STATION_METRICS[currentReportMode]; }
 
+    function setupHiDPICanvas(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const cssWidth = rect.width || canvas.clientWidth || canvas.width;
+      const cssHeight = rect.height || canvas.clientHeight || canvas.height;
+      if (canvas.width !== Math.floor(cssWidth * dpr) || canvas.height !== Math.floor(cssHeight * dpr)) {
+        canvas.width = Math.floor(cssWidth * dpr);
+        canvas.height = Math.floor(cssHeight * dpr);
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return ctx;
+    }
+
     function drawRadar() {
       const canvas = document.getElementById('radarCanvas');
       if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width, H = canvas.height;
+      const ctx = setupHiDPICanvas(canvas);
+      const cssW = canvas.width / (window.devicePixelRatio || 1);
+      const cssH = canvas.height / (window.devicePixelRatio || 1);
+      const W = cssW, H = cssH;
       const cx = W / 2, cy = H / 2;
       const radius = Math.min(W, H) / 2 - 36;
       const n = RADAR_DIMENSIONS.length;
@@ -897,8 +939,10 @@
       const ds = getCurrentLineData()[varKey];
       const canvas = document.getElementById('lineCanvas');
       if (!canvas || !ds) return;
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width, H = canvas.height;
+      const ctx = setupHiDPICanvas(canvas);
+      const cssW = canvas.width / (window.devicePixelRatio || 1);
+      const cssH = canvas.height / (window.devicePixelRatio || 1);
+      const W = cssW, H = cssH;
       const pad = { top: 30, right: 30, bottom: 40, left: 50 };
       const w = W - pad.left - pad.right;
       const h = H - pad.top - pad.bottom;
@@ -1295,6 +1339,14 @@
             n.textContent = currentReportMode === 'llm' ? '切换为纠偏 ' : '切换为大模型对比 ';
           }
         });
+      }
+    }
+
+    function goBack() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'NAVIGATE_TO', file: 'algo_report_list.html' }, '*');
+      } else {
+        location.href = 'algo_report_list.html';
       }
     }
 
