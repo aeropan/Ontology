@@ -432,7 +432,117 @@
       font-size: 12px;
       color: var(--text-3);
       line-height: 1.7;
+      margin-bottom: 20px;
     }
+
+    /* ── 科技感流程图 ── */
+    .flow-chart { position: relative; padding: 16px 8px; }
+    .flow-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .flow-row:last-child { margin-bottom: 0; }
+    .flow-branch-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex: 1;
+    }
+    .flow-branch {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .flow-node {
+      position: relative;
+      min-width: 138px;
+      padding: 12px 14px;
+      background: var(--bg-2);
+      border: 1px solid var(--border-1);
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.04);
+      overflow: hidden;
+      transition: transform .15s, border-color .15s, box-shadow .15s;
+    }
+    .flow-node:hover {
+      transform: translateY(-2px);
+      border-color: var(--blue);
+      box-shadow: 0 8px 24px rgba(0,0,0,.35), 0 0 0 1px var(--blue-dim), inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .flow-node::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--accent, var(--blue));
+      box-shadow: 0 0 8px var(--accent, var(--blue));
+    }
+    .flow-node.accent-blue { --accent: var(--blue); }
+    .flow-node.accent-cyan { --accent: var(--cyan); }
+    .flow-node.accent-green { --accent: var(--green); }
+    .flow-node.accent-amber { --accent: var(--amber); }
+    .flow-node.accent-purple { --accent: var(--purple); }
+    .flow-node-label {
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .flow-node-label::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent, var(--blue));
+      box-shadow: 0 0 6px var(--accent, var(--blue));
+    }
+    .flow-node-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-1);
+      line-height: 1.4;
+    }
+    .flow-node-sub {
+      font-size: 10px;
+      color: var(--text-3);
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--text-3);
+      flex-shrink: 0;
+    }
+    .flow-arrow svg { width: 18px; height: 18px; }
+    .flow-splitter {
+      width: 1px;
+      align-self: stretch;
+      background: linear-gradient(180deg, transparent, var(--border-2) 20%, var(--border-2) 80%, transparent);
+      margin: 0 4px;
+    }
+    .flow-collect {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .flow-end {
+      border: 1px dashed var(--border-2);
+      background: transparent;
+      box-shadow: none;
+    }
+    .flow-end::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .flow-end:hover {
+      border-color: var(--green);
+      box-shadow: 0 0 0 1px var(--green-dim);
+    }
+    .flow-hidden { display: none; }
     .capability-list {
       display: flex;
       flex-direction: column;
@@ -496,8 +606,91 @@
 
     <div class="report-section">
       <div class="section-title">一、报告摘要</div>
-      <div class="section-desc">
-        本报告基于「气象大模型」+「纠偏算法」流程最近一次完整执行结果生成，用来评估「星阙大模型」与「风乌」、「伏羲」在同等纠偏算法下的预测精准度。预测要素包括：风速 U、风速 V、温度 T2M、海平面气压 MSL。
+      <div class="section-desc" id="report-summary-text">
+        本报告基于「气象大模型」+「纠偏算法」流程，对星阙、风乌、伏羲三个气象大模型在同等站点订正算法与地理地形本体增强条件下的预测能力进行综合评估。预测要素包括风速 U、风速 V、温度 T2M、海平面气压 MSL。
+      </div>
+
+      <div class="section-title">评估流程</div>
+
+      <!-- 模型对比模式流程 -->
+      <div class="flow-chart" id="flow-llm">
+        <div class="flow-row">
+          <div class="flow-node accent-cyan">
+            <div class="flow-node-label">开始</div>
+            <div class="flow-node-title">输入</div>
+          </div>
+          <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+          <div class="flow-branch-wrap">
+            <div class="flow-branch">
+              <div class="flow-node accent-blue"><div class="flow-node-label">模型</div><div class="flow-node-title">星阙大模型</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-purple"><div class="flow-node-label">算法</div><div class="flow-node-title">站点订正算法</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-amber"><div class="flow-node-label">评估</div><div class="flow-node-title">预测值与观测值对比</div></div>
+            </div>
+            <div class="flow-branch">
+              <div class="flow-node accent-blue"><div class="flow-node-label">模型</div><div class="flow-node-title">伏羲大模型</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-purple"><div class="flow-node-label">算法</div><div class="flow-node-title">站点订正算法</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-amber"><div class="flow-node-label">评估</div><div class="flow-node-title">预测值与观测值对比</div></div>
+            </div>
+            <div class="flow-branch">
+              <div class="flow-node accent-blue"><div class="flow-node-label">模型</div><div class="flow-node-title">风乌大模型</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-purple"><div class="flow-node-label">算法</div><div class="flow-node-title">站点订正算法</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-amber"><div class="flow-node-label">评估</div><div class="flow-node-title">预测值与观测值对比</div></div>
+            </div>
+          </div>
+          <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+          <div class="flow-node flow-end">
+            <div class="flow-node-label">结束</div>
+            <div class="flow-node-title">输出</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 纠偏算法模式流程 -->
+      <div class="flow-chart flow-hidden" id="flow-geo">
+        <div class="flow-row">
+          <div class="flow-node accent-cyan">
+            <div class="flow-node-label">开始</div>
+            <div class="flow-node-title">输入</div>
+          </div>
+          <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+          <div class="flow-branch-wrap">
+            <div class="flow-branch">
+              <div class="flow-node accent-blue"><div class="flow-node-label">模型</div><div class="flow-node-title">星阙大模型</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-purple"><div class="flow-node-label">算法</div><div class="flow-node-title">站点订正算法</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-amber"><div class="flow-node-label">评估</div><div class="flow-node-title">预测值与观测值对比</div></div>
+            </div>
+            <div class="flow-branch">
+              <div class="flow-node accent-blue"><div class="flow-node-label">模型</div><div class="flow-node-title">星阙大模型</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-green"><div class="flow-node-label">算法</div><div class="flow-node-title">S14 的集合预报</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-amber"><div class="flow-node-label">评估</div><div class="flow-node-title">预测值与观测值对比</div></div>
+            </div>
+            <div class="flow-branch">
+              <div class="flow-node accent-blue"><div class="flow-node-label">模型</div><div class="flow-node-title">星阙大模型</div></div>
+              <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+              <div class="flow-node accent-amber"><div class="flow-node-label">评估</div><div class="flow-node-title">预测值与观测值对比</div></div>
+            </div>
+          </div>
+          <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+          <div class="flow-node accent-green">
+            <div class="flow-node-label">评估</div>
+            <div class="flow-node-title">基准测试</div>
+          </div>
+          <div class="flow-arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8h12M9 4l5 4-5 4"/></svg></div>
+          <div class="flow-node flow-end">
+            <div class="flow-node-label">结束</div>
+            <div class="flow-node-title">输出</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -630,12 +823,12 @@
     const MODE_META = {
       llm: {
         title: '算法能力报告 - 星阙与其他气象大模型对比评估报告',
-        summary: '本报告基于「气象大模型」+「纠偏算法」流程最近一次完整执行结果生成，用来评估「星阙大模型」与「风乌」、「伏羲」在同等纠偏算法下的预测精准度。预测要素包括：风速 U、风速 V、温度 T2M、海平面气压 MSL。',
+        summary: '本报告基于「气象大模型」+「纠偏算法」流程，对星阙、风乌、伏羲三个气象大模型在同等站点订正算法与地理地形本体增强条件下的预测能力进行综合评估。预测要素包括风速 U、风速 V、温度 T2M、海平面气压 MSL。',
         compareLegendPrefix: '模型 / 指标'
       },
       geo: {
         title: '算法能力报告 - 纠偏算法与地理地形要素影响评估报告',
-        summary: '本报告基于「星阙大模型」叠加不同纠偏算法与地理地形要素后的预测结果生成，用来对比评估“基础星阙”、“星阙+纠偏”、“星阙+纠偏+地理地形要素”三档方案的预测精准度提升。预测要素包括：风速 U、风速 V、温度 T2M、海平面气压 MSL。',
+        summary: '本报告基于「星阙大模型」，分别叠加“站点订正算法”、“S14 集合预报”及无增强基准条件，评估不同纠偏方案及地理地形要素对预测精准度的影响。预测要素包括风速 U、风速 V、温度 T2M、海平面气压 MSL。',
         compareLegendPrefix: '方案 / 指标'
       }
     };
@@ -1147,9 +1340,13 @@
     function renderReportHeader() {
       const meta = MODE_META[currentReportMode];
       const titleEl = document.querySelector('.report-title');
-      const summaryEl = document.querySelector('.section-desc');
+      const summaryEl = document.getElementById('report-summary-text');
       if (titleEl) titleEl.textContent = meta.title;
       if (summaryEl) summaryEl.textContent = meta.summary;
+
+      // 切换流程图
+      document.getElementById('flow-llm')?.classList.toggle('flow-hidden', currentReportMode !== 'llm');
+      document.getElementById('flow-geo')?.classList.toggle('flow-hidden', currentReportMode !== 'geo');
     }
 
     function refreshReport() {
