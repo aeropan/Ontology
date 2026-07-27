@@ -454,11 +454,15 @@
     .flow-branch {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 18px;
+      flex-wrap: wrap;
     }
     .flow-node {
       position: relative;
-      min-width: 138px;
+      min-width: 120px;
+      max-width: 170px;
+      flex: 1 1 auto;
       padding: 12px 14px;
       background: var(--bg-2);
       border: 1px solid var(--border-1);
@@ -521,6 +525,34 @@
       flex-shrink: 0;
     }
     .flow-arrow svg { width: 18px; height: 18px; }
+
+    /* 小屏下流程图改为纵向堆叠 */
+    @media (max-width: 1024px) {
+      .flow-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 24px;
+      }
+      .flow-branch-wrap { gap: 16px; }
+      .flow-branch {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+      }
+      .flow-arrow {
+        justify-content: center;
+        transform: rotate(90deg);
+      }
+      .flow-node {
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .flow-node-title { font-size: 12px; }
+      .flow-node-label { font-size: 9px; }
+    }
+
     .flow-splitter {
       width: 1px;
       align-self: stretch;
