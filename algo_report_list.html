@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>算法能力报告 · 列表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/shared.css">
+<style>
+body { min-height: 100vh; }
+
+.page-header,
+.filter-bar,
+#report-card-view {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+/* 页头 */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-title { font-size: 18px; font-weight: 600; color: var(--text-1); }
+.page-desc  { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+
+/* 筛选栏：仅保留搜索输入框 */
+.filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.filter-input {
+  flex: 1; max-width: 360px;
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; color: var(--text-1); font-family: inherit;
+  outline: none; transition: border-color 0.15s;
+}
+.filter-input::placeholder { color: var(--text-3); }
+.filter-input:focus { border-color: var(--blue); }
+
+/* 卡片网格 */
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+.report-card {
+  background: var(--bg-2); border: 1px solid var(--border-1);
+  border-top: 4px solid var(--green);
+  border-radius: 12px; padding: 18px; cursor: pointer;
+  transition: all 0.15s; display: flex; flex-direction: column; gap: 12px;
+}
+.report-card:hover { border-color: var(--blue); background: var(--bg-3); }
+.report-card:hover { border-top-color: var(--green); }
+.report-card-name { font-size: 14px; font-weight: 500; color: var(--text-1); line-height: 1.4; }
+.report-card-meta {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 11px; color: var(--text-3);
+}
+.report-card-meta span { display: flex; align-items: center; gap: 4px; }
+</style>
+</head>
+<body>
+
+<!-- 顶部导航栏 -->
+<div class="page-topbar">
+  <nav class="topbar-breadcrumb">
+    <a href="algo_report_list.html" class="topbar-module">算法能力报告</a>
+    <span class="topbar-sep">›</span>
+    <span class="topbar-current">列表</span>
+  </nav>
+</div>
+
+<!-- 页头 -->
+<div class="page-header">
+  <div>
+    <div class="page-title">算法能力报告</div>
+    <div class="page-desc">管理和查看所有算法能力评估报告</div>
+  </div>
+</div>
+
+<!-- 筛选栏 -->
+<div class="filter-bar">
+  <input class="filter-input" placeholder="搜索算法能力报告…" oninput="filterCards(this.value)" />
+</div>
+
+<!-- 卡片列表 -->
+<div class="report-grid" id="report-card-view">
+  <div class="report-card" data-mode="llm" onclick="goDetail('llm')">
+    <div class="report-card-name">星阙与其他大模型基于纠偏算法的对比</div>
+    <div class="report-card-meta">
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 3-5 6-5s6 2 6 5"/></svg>
+        admin
+      </span>
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        2026-07-23 09:30:00
+      </span>
+    </div>
+  </div>
+
+  <div class="report-card" data-mode="geo" onclick="goDetail('geo')">
+    <div class="report-card-name">纠偏与地理地形要素本体对星阙的影响</div>
+    <div class="report-card-meta">
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3 3-5 6-5s6 2 6 5"/></svg>
+        admin
+      </span>
+      <span>
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        2026-07-22 14:15:30
+      </span>
+    </div>
+  </div>
+</div>
+
+<script>
+function gotoExternal(file) {
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'NAVIGATE_TO', file: file }, '*');
+  } else {
+    location.href = file;
+  }
+}
+function goDetail(mode) {
+  gotoExternal('algo_report_detail.html?mode=' + encodeURIComponent(mode));
+}
+
+function filterCards(keyword) {
+  const kw = keyword.toLowerCase();
+  document.querySelectorAll('.report-card').forEach(card => {
+    const name = card.querySelector('.report-card-name').textContent.toLowerCase();
+    card.style.display = name.includes(kw) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

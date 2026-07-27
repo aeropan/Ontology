@@ -74,6 +74,7 @@ body {
 .logo-text { font-size: 14px; font-weight: 700; color: var(--text1); }
 
 .nav-section { padding: 12px 0; }
+.nav-section.collapsed { padding-bottom: 8px; }
 
 .nav-label {
   font-size: 9px;
@@ -82,6 +83,31 @@ body {
   text-transform: uppercase;
   padding: 0 16px;
   margin-bottom: 4px;
+}
+.nav-label.collapse-toggle {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+.nav-label.collapse-toggle::after {
+  content: '▾';
+  font-size: 10px;
+  color: var(--text3);
+  transition: transform 0.2s ease;
+}
+.nav-section.collapsed .nav-label.collapse-toggle::after {
+  transform: rotate(-90deg);
+}
+.nav-section-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: opacity 0.2s ease;
+}
+.nav-section.collapsed .nav-section-body {
+  display: none;
 }
 
 .nav-item {
@@ -474,67 +500,77 @@ body {
     <div class="nav-label">概览</div>
     <div class="nav-item active" id="nav-home" onclick="navigate('main.html', 'home', ['概览','主页'])">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 7l7-5 7 5v7a1 1 0 01-1 1H2a1 1 0 01-1-1V7z"/><path d="M6 15V9h4v6"/></svg>
-      主页
-    </div>
-    <div class="nav-item" id="nav-tc" onclick="navigate('main.html', 'tc-list', ['任务中心'])">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
-      任务中心
+      首页
     </div>
   </div>
 
   <div class="nav-section">
     <div class="nav-label">知识工厂</div>
-    <div class="nav-item" id="nav-ke" onclick="navigate('main.html', 'ke-tasks', ['知识抽取与融合','抽取任务'])">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h7M3 12h5"/><circle cx="12" cy="11" r="2.5"/></svg>
-      知识抽取与融合
-    </div>
     <div class="nav-item" id="nav-global-library" onclick="navigate('main.html', 'global-library', ['知识工厂','文献库'])">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3z"/><path d="M5 6h6M5 10h4"/></svg>
       文献库
     </div>
-    <div class="nav-item" id="nav-onto-overview" onclick="navigate('ontology_overview.html', null, ['本体中心'])">
+    <div class="nav-item" id="nav-industry-v2" onclick="navigate('IndustryInsights_list.html', null, ['知识工厂','行业洞察'])">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="10" width="4" height="5" rx="0.5"/><rect x="6" y="6" width="4" height="9" rx="0.5"/><rect x="11" y="2" width="4" height="13" rx="0.5"/></svg>
+      行业洞察
+    </div>
+    <div class="nav-item" id="nav-onto-overview" onclick="navigate('ontology_overview.html', null, ['知识工厂','本体中心'])">
       <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="3" r="2.5"/><circle cx="8" cy="13" r="2.5"/><path d="M3 8h10M8 5.5v5"/></svg>
       本体中心
     </div>
-    <div class="nav-sub-item" id="nav-onto-element" onclick="navigate('graph_list.html', null, ['本体中心','要素本体'])">
-      <span class="nav-sub-dot"></span>
-      要素本体
-    </div>
-    <div class="nav-sub-item" id="nav-onto-causal" onclick="navigate('graph_list_causal.html', null, ['本体中心','因果本体'])">
-      <span class="nav-sub-dot"></span>
-      因果本体
-    </div>
-    <div class="nav-item" id="nav-rag" onclick="navigate('RAGrule_list.html', null, ['RAG增强管理'])">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v2H2zM2 7h9v2H2zM2 11h11v2H2z"/><circle cx="13.5" cy="12" r="2" fill="none"/><path d="M12.5 12h2M13.5 11v2"/></svg>
-      RAG增强管理
+    <div class="nav-item" id="nav-biz" onclick="navigate('arrange_select.html', null, ['知识工厂','业务本体中心'])">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="5" height="5" rx="1"/><rect x="10" y="4" width="5" height="5" rx="1"/><path d="M6 6.5h4M8 4V2M8 9v2.5M4 11.5c0 1 .5 2 2 2h4c1.5 0 2-1 2-2"/></svg>
+      业务本体中心
     </div>
   </div>
 
   <div class="nav-section">
     <div class="nav-label">服务中心</div>
-    <div class="nav-item" id="nav-biz" onclick="navigate('arrange_select.html', null, ['业务本体生成'])">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="5" height="5" rx="1"/><rect x="10" y="4" width="5" height="5" rx="1"/><path d="M6 6.5h4M8 4V2M8 9v2.5M4 11.5c0 1 .5 2 2 2h4c1.5 0 2-1 2-2"/></svg>
-      业务本体生成
+    <div class="nav-item" id="nav-ke" onclick="navigate('main.html', 'ke-tasks', ['服务中心','知识抽取与融合','抽取任务'])">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h10M3 8h7M3 12h5"/><circle cx="12" cy="11" r="2.5"/></svg>
+      知识抽取与融合
     </div>
-    <div class="nav-item" id="nav-industry-v2" onclick="navigate('IndustryInsights_list.html', null, ['行业洞察'])">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="10" width="4" height="5" rx="0.5"/><rect x="6" y="6" width="4" height="9" rx="0.5"/><rect x="11" y="2" width="4" height="13" rx="0.5"/></svg>
-      行业洞察
-    </div>
-    <div class="nav-item" onclick="showToast('API管理模块建设中…')">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v2H3zM3 7h7v2H3zM3 11h5v2H3z"/></svg>
-      API管理
+    <div class="nav-item" id="nav-algo-report" onclick="navigate('algo_report_list.html', null, ['服务中心','算法能力报告'])">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M6 11V7l4 4V6"/></svg>
+      算法能力报告
     </div>
   </div>
 
-  <div class="nav-section">
-    <div class="nav-label">备份</div>
-    <div class="nav-item" id="nav-industry" onclick="navigate('data_explorer.html', null, ['备份', '行业洞察（旧版备份）'])">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="10" width="4" height="5" rx="0.5"/><rect x="6" y="6" width="4" height="9" rx="0.5"/><rect x="11" y="2" width="4" height="13" rx="0.5"/></svg>
-      行业洞察（旧版备份）
-    </div>
-    <div class="nav-item" id="nav-setting-backup" onclick="navigate('setting_backup.html', null, ['备份', '数据分析设置'])">
-      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42"/></svg>
-      数据分析设置
+  <div class="nav-section collapsed" id="nav-section-backup">
+    <div class="nav-label collapse-toggle" onclick="this.parentElement.classList.toggle('collapsed')">备份</div>
+    <div class="nav-section-body">
+      <div class="nav-item" id="nav-tc" onclick="navigate('main.html', 'tc-list', ['备份','任务中心'])">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+        任务中心
+      </div>
+      <div class="nav-item" id="nav-rag" onclick="navigate('RAGrule_list.html', null, ['备份','RAG增强管理'])">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v2H2zM2 7h9v2H2zM2 11h11v2H2z"/><circle cx="13.5" cy="12" r="2" fill="none"/><path d="M12.5 12h2M13.5 11v2"/></svg>
+        RAG增强管理
+      </div>
+      <div class="nav-sub-item" id="nav-onto-element" onclick="navigate('graph_list.html', null, ['备份','本体中心','要素本体'])">
+        <span class="nav-sub-dot"></span>
+        要素本体
+      </div>
+      <div class="nav-sub-item" id="nav-onto-causal" onclick="navigate('graph_list_causal.html', null, ['备份','本体中心','因果本体'])">
+        <span class="nav-sub-dot"></span>
+        因果本体
+      </div>
+      <div class="nav-item" id="nav-biz-old" onclick="navigate('arrange_list.html', null, ['备份','业务本体生成'])">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="5" height="5" rx="1"/><rect x="10" y="4" width="5" height="5" rx="1"/><path d="M6 6.5h4M8 4V2M8 9v2.5M4 11.5c0 1 .5 2 2 2h4c1.5 0 2-1 2-2"/></svg>
+        业务本体生成
+      </div>
+      <div class="nav-item" onclick="showToast('API管理模块建设中…')">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v2H3zM3 7h7v2H3zM3 11h5v2H3z"/></svg>
+        API管理
+      </div>
+      <div class="nav-item" id="nav-industry" onclick="navigate('data_explorer.html', null, ['备份', '行业洞察（旧版备份）'])">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="10" width="4" height="5" rx="0.5"/><rect x="6" y="6" width="4" height="9" rx="0.5"/><rect x="11" y="2" width="4" height="13" rx="0.5"/></svg>
+        行业洞察（旧版备份）
+      </div>
+      <div class="nav-item" id="nav-setting-backup" onclick="navigate('setting_backup.html', null, ['备份', '数据分析设置'])">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.42 1.42M11.36 11.36l1.42 1.42M3.22 12.78l1.42-1.42M11.36 4.64l1.42-1.42"/></svg>
+        数据分析设置
+      </div>
     </div>
   </div>
 
@@ -607,17 +643,19 @@ body {
 // 每个导航项对应：加载哪个文件、传什么 page 参数、面包屑显示什么
 const NAV_MAP = {
   'nav-home':           { file: 'main.html',          page: 'home',           crumbs: ['概览', '主页'] },
-  'nav-tc':             { file: 'main.html',          page: 'tc-list',        crumbs: ['任务中心'] },
-  'nav-ke':             { file: 'main.html',          page: 'ke-tasks',       crumbs: ['知识抽取与融合', '抽取任务'] },
+  'nav-tc':             { file: 'main.html',          page: 'tc-list',        crumbs: ['备份', '任务中心'] },
+  'nav-ke':             { file: 'main.html',          page: 'ke-tasks',       crumbs: ['服务中心', '知识抽取与融合', '抽取任务'] },
   'nav-global-library': { file: 'main.html',          page: 'global-library', crumbs: ['知识工厂', '文献库'] },
-  'nav-onto-overview':  { file: 'ontology_overview.html',    page: null, crumbs: ['本体中心'] },
-  'nav-onto-element':  { file: 'graph_list.html',         page: null, crumbs: ['本体中心', '要素本体'] },
-  'nav-onto-causal':   { file: 'graph_list_causal.html',  page: null, crumbs: ['本体中心', '因果本体'] },
-  'nav-biz':            { file: 'arrange_select.html', page: null,             crumbs: ['业务本体生成'] },
-  'nav-industry-v2':      { file: 'IndustryInsights_list.html', page: null, crumbs: ['行业洞察'] },
+  'nav-onto-overview':  { file: 'ontology_overview.html',    page: null, crumbs: ['知识工厂', '本体中心'] },
+  'nav-onto-element':  { file: 'graph_list.html',         page: null, crumbs: ['备份', '本体中心', '要素本体'] },
+  'nav-onto-causal':   { file: 'graph_list_causal.html',  page: null, crumbs: ['备份', '本体中心', '因果本体'] },
+  'nav-biz':            { file: 'arrange_select.html', page: null,             crumbs: ['知识工厂', '业务本体中心'] },
+  'nav-biz-old':        { file: 'arrange_list.html',   page: null,             crumbs: ['备份', '业务本体生成'] },
+  'nav-industry-v2':      { file: 'IndustryInsights_list.html', page: null, crumbs: ['知识工厂', '行业洞察'] },
   'nav-industry':         { file: 'data_explorer.html',         page: null, crumbs: ['备份', '行业洞察（旧版备份）'] },
   'nav-setting-backup':   { file: 'setting_backup.html',        page: null, crumbs: ['备份', '数据分析设置'] },
-  'nav-rag':              { file: 'RAGrule_list.html',          page: null, crumbs: ['RAG增强管理'] },
+  'nav-rag':              { file: 'RAGrule_list.html',          page: null, crumbs: ['备份', 'RAG增强管理'] },
+  'nav-algo-report':      { file: 'algo_report_list.html',      page: null, crumbs: ['服务中心', '算法能力报告'] },
   'nav-system-setting':   { file: 'system_setting.html',        page: null, crumbs: ['系统设置'] },
 };
 
